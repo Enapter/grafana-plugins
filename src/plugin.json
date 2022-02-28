@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "telemetry",
+  "id": "enapter-telemetry",
+  "metrics": true,
+  "backend": true,
+  "executable": "gpx_telemetry",
+  "info": {
+    "description": "",
+    "author": {
+      "name": "Roman Novatorov",
+      "url": ""
+    },
+    "keywords": [],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/Enapter/grafana-plugins/telemetry-datasource"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/Enapter/grafana-plugins/telemetry-datasource/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=8.0.0",
+    "plugins": []
+  }
+}

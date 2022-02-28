@@ -1,0 +1,175 @@
+run:
+  timeout: 5m
+
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    # - cyclop
+      # Measuring code complexity is hard. Cyclomatic complexity is doubtfully
+      # a reliable metric for this purpose. Some problems are complex by nature
+      # and therefore more cyclomatically complex code might actually be
+      # simpler.
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - errname
+    - errcheck
+    - errorlint
+    - exhaustive
+    # - exhaustivestruct
+      # We frequently make use of zero-values and partial initialization.
+    - exportloopref
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gci
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    # - godox
+      # TODOs and FIXMEs function as a big warning sign: "Beware! This code has
+      # bugs and other problems. Be careful not to make things worse when
+      # editing. Or better fix the issues before implementing a new feature on
+      # top.". The idea of [`godox` comment
+      # extractor](https://github.com/766b/godox) seems to be different from
+      # the idea of [`godox` linter](https://github.com/matoous/godox). The
+      # first one lets you quickly browse through the code problems, while the
+      # second one asks you to remove that big warning sign in favor of tasks.
+      # Though tasks are great, they will not help you while editing.
+    - goerr113
+    - gofmt
+    - gofumpt
+    - goheader
+    - goimports
+    # - golint # Replaced by `revive`.
+    - gomnd
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ifshort
+    - importas
+    # - ireturn # See: https://github.com/go-proverbs/go-proverbs.github.io/issues/37.
+    - ineffassign
+    # - interfacer # Is prone to bad suggestions (officialy deprecated).
+    - lll
+    # - maligned # Replaced by `govet`'s `fieldalignment`
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilnil # Zero-value of maps, slices and channels is `nil` but useful.
+    - nilerr
+    # - nlreturn # Too subjective.
+    - noctx
+    - nolintlint
+    - paralleltest
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    # - scopelint # Replaced by `exportloopref`.
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - tagliatelle
+    - tenv
+    - testpackage
+    - thelper
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    # - varnamelen
+      # Though the idea is idiomatic, the length is not the only thing that
+      # determines whether a variable is "easy to use".
+    - unused
+    - varcheck
+    - wastedassign
+    - whitespace
+    # - wrapcheck # Is prone to bad suggestions (especially see issue #1).
+    # - wsl # Too aggressive. Might be useful if it could do auto fix.
+
+linters-settings:
+  forbidigo:
+    forbid:
+      - os.Exit # it's not safe to exit in random places, because defer will not work.
+      - log.Fatal.* # it calls os.Exit (see above)
+  lll:
+    line-length: 110
+  gci:
+    local-prefixes: github.com/Enapter/grafana-plugins
+  nilnil:
+    checked-types:
+      - ptr
+      - func
+      - iface
+  nolintlint:
+    require-explanation: true
+    require-specific: true
+  gocritic:
+    disabled-checks:
+      - ifElseChain
+  tagliatelle:
+    case:
+      use-field-name: false
+      rules:
+        json: snake
+        yaml: snake
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - forcetypeassert # it's ok to have some type risks in tests
+        - gosec # security is not make sense in tests
+        - noctx # it's ok to do simple http request without context in tests
+
+    # Exclude lll issues for long lines with go:generate.
+    - linters:
+        - lll
+      source: "^//go:generate "
+
+    # Internal import paths can be long.
+    - linters:
+        - lll
+      source: "github.com/Enapter/grafana-plugins"
+
+    # Links to articles can be long.
+    - linters:
+        - lll
+      source: "//.*(http|https)://"
+
+    # We have a lot of undocumented types and methods.
+    - linters:
+        - revive
+      text: should have comment .*or be unexported
+
+      # False positives.
+      #
+      # For example, there are two variables `k` and `v`. Each has its own
+      # index in some slice. If indices are called `kIndex` and `vIndex` then
+      # `revive` considers prefix `k` in `kIndex` a sign of hungarian notation.
+    - linters:
+        - revive
+      text: "var-naming: don't use leading .+ in Go names"
+
+    # We allow to os.Exit in main, tests, scripts and generators.
+    - path: main.go|main_test.go
+      linters:
+        - forbidigo
+      text: "forbidden by pattern `os.Exit`"
