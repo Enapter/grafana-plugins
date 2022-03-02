@@ -12,7 +12,7 @@ To install the plugin:
    web page.
 2. Download the plugin distribution (`dist.tar.gz`).
 3. Unarchive and extract the `dist` dir from the downloaded file.
-4. Move the extracted `dist` dir to `/var/lib/grafana/plugins/telemetry/dist`
+4. Move the extracted `dist` dir to `/var/lib/grafana/plugins/telemetry/dist`.
 
 ## Development
 
