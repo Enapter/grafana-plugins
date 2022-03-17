@@ -5,7 +5,8 @@ analyze device telemetry.
 
 In order to use the plugin one needs to obtain an Enapter Telemetry API
 token. At the moment we provide it only to selected partners. Please, contact
-us at [support@enapter.com](mailto:support@enapter.com) to get your token.
+us at [developers@enapter.com](mailto:developers@enapter.com) to get your token.
+Write
 
 ## Installation
 
