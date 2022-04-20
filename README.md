@@ -4,9 +4,8 @@ This repo contains a Grafana datasource plugin that helps to visualize and
 analyze device telemetry.
 
 In order to use the plugin one needs to obtain an Enapter Telemetry API
-token. At the moment we provide it only to selected partners. Please, contact
+token. At the moment we provide it on an individual basis. Please, contact
 us at [developers@enapter.com](mailto:developers@enapter.com) to get your token.
-Write
 
 ## Installation
 
