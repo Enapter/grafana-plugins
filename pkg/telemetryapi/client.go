@@ -60,28 +60,28 @@ func (c *client) Close() {
 }
 
 func (c *client) Ready(ctx context.Context) error {
-	req, err := c.newReadyRequest(ctx)
-	if err != nil {
-		return fmt.Errorf("new ready request: %w", err)
+	_, err := c.Timeseries(ctx, TimeseriesParams{
+		User: "<not specified>",
+		Query: `{
+			"telemetry":	"<does not exist>",
+			"device":	"<does not exist>",
+			"granularity":	"1m",
+			"aggregation":	"auto"
+		}`,
+		From: time.Now().Add(-time.Hour),
+		To:   time.Now(),
+	})
+	if err == nil {
+		return errUnexpectedAbsenceOfError
 	}
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("do HTTP request: %w", err)
+	var multiErr *MultiError
+	if ok := errors.As(err, &multiErr); !ok || len(multiErr.Errors) != 1 {
+		return err
 	}
-	defer c.closeRespBody(resp.Body)
 
-	return c.processReadyResponse(resp)
-}
-
-func (c *client) newReadyRequest(ctx context.Context) (*http.Request, error) {
-	urlString := c.baseURL + "/_/ready"
-	return http.NewRequestWithContext(ctx, http.MethodGet, urlString, nil)
-}
-
-func (c *client) processReadyResponse(resp *http.Response) error {
-	if resp.StatusCode != http.StatusOK {
-		return c.processUnexpectedStatus(resp)
+	if multiErr.Errors[0].Code != "unprocessable_entity" {
+		return err
 	}
 
 	return nil

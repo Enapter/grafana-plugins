@@ -11,7 +11,6 @@ import (
 type MockServer struct {
 	t                 *testing.T
 	server            *httptest.Server
-	readyHandler      http.HandlerFunc
 	timeseriesHandler http.HandlerFunc
 }
 
@@ -21,7 +20,6 @@ func StartMockServer(t *testing.T) *MockServer {
 	s := new(MockServer)
 
 	s.t = t
-	s.readyHandler = s.unexpectedRequestHandler
 	s.timeseriesHandler = s.unexpectedRequestHandler
 	s.server = httptest.NewServer(s)
 
@@ -42,21 +40,11 @@ func (s *MockServer) NewClient() *http.Client {
 
 func (s *MockServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
-	case "/_/ready":
-		s.readyHandler(w, r)
 	case "/v1/timeseries":
 		s.timeseriesHandler(w, r)
 	default:
 		http.NotFound(w, r)
 	}
-}
-
-func (s *MockServer) ExpectReadyRequestAndReturnCode(code int, description string) {
-	s.replaceReadyHandler(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(code)
-		_, err := w.Write([]byte(description))
-		require.NoError(s.t, err)
-	})
 }
 
 func (s *MockServer) ExpectTimeseriesRequestAndReturnZeroContentLength() {
@@ -106,10 +94,6 @@ func (s *MockServer) ExpectTimeseriesRequestAndReturnData(types string, data str
 		_, err := w.Write([]byte(data))
 		require.NoError(s.t, err)
 	})
-}
-
-func (s *MockServer) replaceReadyHandler(h http.HandlerFunc) {
-	s.replaceHandler(&s.readyHandler, h)
 }
 
 func (s *MockServer) replaceTimeseriesHandler(h http.HandlerFunc) {

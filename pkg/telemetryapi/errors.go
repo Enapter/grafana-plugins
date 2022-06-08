@@ -6,6 +6,7 @@ var (
 	ErrEmptyUser                    = errors.New("empty user")
 	errEmptyHeaderField             = errors.New("empty header field")
 	errUnexpectedStatus             = errors.New("unexpected status")
+	errUnexpectedAbsenceOfError     = errors.New("unexpected absence of error")
 	errUnexpectedNumberOfFields     = errors.New("unexpected number of fields")
 	errUnexpectedContentType        = errors.New("unexpected content type")
 	errUnexpectedTimeseriesDataType = errors.New("unexpected timeseries data type")

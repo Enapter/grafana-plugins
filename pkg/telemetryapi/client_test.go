@@ -46,26 +46,36 @@ func (s *ClientSuite) TearDownTest() {
 }
 
 func (s *ClientSuite) TestReadyOK() {
-	s.server.ExpectReadyRequestAndReturnCode(http.StatusOK, ``)
+	const errorJSON = `{"errors":[{"code":"unprocessable_entity","message":"Oops."}]}`
+	s.server.ExpectTimeseriesRequestAndReturnCode(
+		http.StatusUnprocessableEntity, errorJSON)
+
 	err := s.client.Ready(s.ctx)
 	s.Require().NoError(err)
 }
 
-func (s *ClientSuite) TestReadyUnexpectedStatus() {
-	s.server.ExpectReadyRequestAndReturnCode(http.StatusTeapot, `oops`)
+func (s *ClientSuite) TestReadyUnexpectedCode() {
+	const errorJSON = `{"errors":[{"code":"invalid_query_parameter_format","message":"Oops."}]}`
+	s.server.ExpectTimeseriesRequestAndReturnCode(
+		http.StatusUnprocessableEntity, errorJSON)
 	err := s.client.Ready(s.ctx)
 	s.Require().Error(err)
 	s.Require().Equal(
-		"unexpected status: 418 I'm a teapot: body dump: oops",
+		`process timeseries response: code=invalid_query_parameter_format, message="Oops."`,
 		err.Error())
 }
 
-func (s *ClientSuite) TestReadyUnexpectedStatusWithNoDescription() {
-	s.server.ExpectReadyRequestAndReturnCode(http.StatusTeapot, ``)
+func (s *ClientSuite) TestReadyUnexpectedAbsenseOfError() {
+	s.server.ExpectTimeseriesRequestAndReturnData("float64", `
+ts,k=v
+1,2.1
+3,4.2
+5,6.3
+`)
 	err := s.client.Ready(s.ctx)
 	s.Require().Error(err)
 	s.Require().Equal(
-		"unexpected status: 418 I'm a teapot: body dump: <not available>: empty data",
+		"unexpected absence of error",
 		err.Error())
 }
 
