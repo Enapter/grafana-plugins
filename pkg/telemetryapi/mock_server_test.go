@@ -44,7 +44,7 @@ func (s *MockServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/_/ready":
 		s.readyHandler(w, r)
-	case "/api/v1/timeseries":
+	case "/v1/timeseries":
 		s.timeseriesHandler(w, r)
 	default:
 		http.NotFound(w, r)

@@ -124,7 +124,7 @@ func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (
 	q.Set("from", p.From.UTC().Format(time.RFC3339))
 	q.Set("to", p.To.UTC().Format(time.RFC3339))
 
-	urlString := c.baseURL + "/api/v1/timeseries?" + q.Encode()
+	urlString := c.baseURL + "/v1/timeseries?" + q.Encode()
 
 	req, err := http.NewRequestWithContext(
 		ctx, http.MethodGet, urlString, strings.NewReader(p.Query))
