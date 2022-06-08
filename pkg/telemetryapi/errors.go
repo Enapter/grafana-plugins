@@ -4,7 +4,6 @@ import "errors"
 
 var (
 	ErrEmptyUser                    = errors.New("empty user")
-	errEmptyBaseURL                 = errors.New("empty base URL")
 	errEmptyHeaderField             = errors.New("empty header field")
 	errUnexpectedStatus             = errors.New("unexpected status")
 	errUnexpectedNumberOfFields     = errors.New("unexpected number of fields")

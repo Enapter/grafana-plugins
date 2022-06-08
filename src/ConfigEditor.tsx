@@ -58,8 +58,8 @@ export class ConfigEditor extends PureComponent<Props, State> {
             labelWidth={20}
             inputWidth={40}
             onChange={this.onTelemetryAPIBaseURLChange}
-            value={jsonData.telemetryAPIBaseURL || ''}
-            placeholder="127.0.0.1:8080"
+            value={jsonData.telemetryAPIBaseURL || 'https://api.enapter.com/telemetry'}
+            placeholder="Enapter Telemetry API base URL."
           />
         </div>
 

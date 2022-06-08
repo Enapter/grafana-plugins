@@ -37,7 +37,7 @@ func NewClient(p ClientParams) (Client, error) {
 		}
 	}
 	if p.BaseURL == "" {
-		return nil, errEmptyBaseURL
+		p.BaseURL = "https://api.enapter.com/telemetry"
 	}
 
 	return &client{
