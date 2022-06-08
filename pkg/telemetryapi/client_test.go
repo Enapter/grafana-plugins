@@ -21,17 +21,20 @@ import (
 type ClientSuite struct {
 	suite.Suite
 	ctx    context.Context
+	token  string
 	server *MockServer
 	client telemetryapi.Client
 }
 
 func (s *ClientSuite) SetupTest() {
 	s.ctx = context.Background()
+	s.token = faker.Word()
 	s.server = StartMockServer(s.T())
 	client, err := telemetryapi.NewClient(telemetryapi.ClientParams{
 		Logger:     hclog.New(hclog.DefaultOptions),
 		HTTPClient: s.server.NewClient(),
 		BaseURL:    s.server.Address(),
+		Token:      s.token,
 	})
 	s.Require().NoError(err)
 	s.client = client
@@ -187,6 +190,7 @@ func (s *ClientSuite) TestGetRequestParams() {
 	}
 	checkFn := func(r *http.Request) {
 		s.Require().Equal([]string{user}, r.Header["X-Enapter-Auth-User"])
+		s.Require().Equal([]string{s.token}, r.Header["X-Enapter-Auth-Token"])
 		q, err := url.ParseQuery(r.URL.RawQuery)
 		s.Require().NoError(err)
 		s.Require().Equal([]string{"2020-11-06T05:04:03Z"}, q["from"])

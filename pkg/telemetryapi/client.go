@@ -25,6 +25,7 @@ type ClientParams struct {
 	Logger     hclog.Logger
 	HTTPClient *http.Client
 	BaseURL    string
+	Token      string
 }
 
 const DefaultTimeout = 15 * time.Second
@@ -43,6 +44,7 @@ func NewClient(p ClientParams) (Client, error) {
 		logger:     p.Logger.Named("telemetry_api_client"),
 		httpClient: p.HTTPClient,
 		baseURL:    p.BaseURL,
+		token:      p.Token,
 	}, nil
 }
 
@@ -50,6 +52,7 @@ type client struct {
 	logger     hclog.Logger
 	httpClient *http.Client
 	baseURL    string
+	token      string
 }
 
 func (c *client) Close() {
@@ -131,6 +134,9 @@ func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (
 
 	const userField = "X-Enapter-Auth-User"
 	req.Header[userField] = []string{p.User}
+
+	const tokenField = "X-Enapter-Auth-Token"
+	req.Header[tokenField] = []string{c.token}
 
 	return req, nil
 }
