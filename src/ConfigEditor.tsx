@@ -55,8 +55,8 @@ export class ConfigEditor extends PureComponent<Props, State> {
         <div className="gf-form">
           <FormField
             label="Telemetry API base URL"
-            labelWidth={20}
-            inputWidth={40}
+            labelWidth={10}
+            inputWidth={30}
             onChange={this.onTelemetryAPIBaseURLChange}
             value={jsonData.telemetryAPIBaseURL || 'https://api.enapter.com/telemetry'}
             placeholder="Enapter Telemetry API base URL."
@@ -70,8 +70,8 @@ export class ConfigEditor extends PureComponent<Props, State> {
               value={secureJsonData.telemetryAPIToken || ''}
               label="Telemetry API token"
               placeholder="Your Enapter Telemetry API token."
-              labelWidth={20}
-              inputWidth={40}
+              labelWidth={10}
+              inputWidth={30}
               onReset={this.onResetTelemetryAPIToken}
               onChange={this.onTelemetryAPITokenChange}
             />
