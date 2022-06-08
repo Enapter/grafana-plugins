@@ -20,27 +20,27 @@ export class ConfigEditor extends PureComponent<Props, State> {
   };
 
   // Secure field (only sent to the backend)
-  onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
+  onTelemetryAPITokenChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     onOptionsChange({
       ...options,
       secureJsonData: {
-        apiKey: event.target.value,
+        telemetryAPIToken: event.target.value,
       },
     });
   };
 
-  onResetAPIKey = () => {
+  onResetTelemetryAPIToken = () => {
     const { onOptionsChange, options } = this.props;
     onOptionsChange({
       ...options,
       secureJsonFields: {
         ...options.secureJsonFields,
-        apiKey: false,
+        telemetryAPIToken: false,
       },
       secureJsonData: {
         ...options.secureJsonData,
-        apiKey: '',
+        telemetryAPIToken: '',
       },
     });
   };
@@ -66,14 +66,14 @@ export class ConfigEditor extends PureComponent<Props, State> {
         <div className="gf-form-inline">
           <div className="gf-form">
             <SecretFormField
-              isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
-              value={secureJsonData.apiKey || ''}
-              label="API Key"
-              placeholder="secure json field (backend only)"
-              labelWidth={6}
-              inputWidth={20}
-              onReset={this.onResetAPIKey}
-              onChange={this.onAPIKeyChange}
+              isConfigured={(secureJsonFields && secureJsonFields.telemetryAPIToken) as boolean}
+              value={secureJsonData.telemetryAPIToken || ''}
+              label="Telemetry API token"
+              placeholder="Your Enapter Telemetry API token."
+              labelWidth={20}
+              inputWidth={40}
+              onReset={this.onResetTelemetryAPIToken}
+              onChange={this.onTelemetryAPITokenChange}
             />
           </div>
         </div>

@@ -31,7 +31,7 @@ Once the plugin is installed, a new datasource should be created:
 
 1. Use Grafana web UI to create a new datasource of type `telemetry`.
 2. Set `Telemetry API base URL` field value to `https://api.enapter.com/telemetry`.
-3. Set `API Key` field value to the value of your token.
+3. Set `Telemetry API token` field value to the value of your token.
 4. Save the changes.
 
 ## Usage
