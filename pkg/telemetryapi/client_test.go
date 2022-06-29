@@ -124,7 +124,7 @@ func (s *ClientSuite) TestGetInvalidDataTypes() {
 	s.Require().Error(err)
 	s.Require().Nil(timeseries)
 	s.Require().Equal(
-		"process timeseries response: parse data type: "+
+		"process timeseries response: parse data types: 0: "+
 			"unexpected timeseries data type: invalid",
 		err.Error())
 }
@@ -219,7 +219,7 @@ ts,k=v
 `)
 	timeseries, err := s.client.Timeseries(s.ctx, p)
 	s.Require().NoError(err)
-	s.Require().NotEmpty(timeseries.Values)
+	s.Require().Positive(timeseries.Len())
 }
 
 func (s *ClientSuite) TestInvalidCSVHeader() {
@@ -259,12 +259,12 @@ ts,k=v
 `)
 	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
 	s.Require().NoError(err)
-	s.Require().Equal(timeseries.Values[0].Timestamp.Unix(), int64(1))
-	s.Require().Equal(timeseries.Values[1].Timestamp.Unix(), int64(3))
-	s.Require().Equal(timeseries.Values[2].Timestamp.Unix(), int64(5))
-	s.Require().Equal(timeseries.Values[0].Value.(float64), 2.1)
-	s.Require().Equal(timeseries.Values[1].Value.(float64), 4.2)
-	s.Require().Equal(timeseries.Values[2].Value.(float64), 6.3)
+	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
+	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(3))
+	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(5))
+	s.Require().Equal(timeseries.DataFields[0].Values[0].(float64), 2.1)
+	s.Require().Equal(timeseries.DataFields[0].Values[1].(float64), 4.2)
+	s.Require().Equal(timeseries.DataFields[0].Values[2].(float64), 6.3)
 }
 
 func (s *ClientSuite) TestGetIntRecords() {
@@ -276,12 +276,12 @@ ts,k=v
 `)
 	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
 	s.Require().NoError(err)
-	s.Require().Equal(timeseries.Values[0].Timestamp.Unix(), int64(11))
-	s.Require().Equal(timeseries.Values[1].Timestamp.Unix(), int64(33))
-	s.Require().Equal(timeseries.Values[2].Timestamp.Unix(), int64(55))
-	s.Require().Equal(timeseries.Values[0].Value.(int64), int64(22))
-	s.Require().Equal(timeseries.Values[1].Value.(int64), int64(44))
-	s.Require().Equal(timeseries.Values[2].Value.(int64), int64(66))
+	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(11))
+	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(33))
+	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(55))
+	s.Require().Equal(timeseries.DataFields[0].Values[0].(int64), int64(22))
+	s.Require().Equal(timeseries.DataFields[0].Values[1].(int64), int64(44))
+	s.Require().Equal(timeseries.DataFields[0].Values[2].(int64), int64(66))
 }
 
 //nolint: dupl // FIXME
@@ -294,12 +294,12 @@ ts,k=v
 `)
 	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
 	s.Require().NoError(err)
-	s.Require().Equal(timeseries.Values[0].Timestamp.Unix(), int64(1))
-	s.Require().Equal(timeseries.Values[1].Timestamp.Unix(), int64(2))
-	s.Require().Equal(timeseries.Values[2].Timestamp.Unix(), int64(3))
-	s.Require().Equal(timeseries.Values[0].Value.(string), "foo")
-	s.Require().Equal(timeseries.Values[1].Value.(string), "bar")
-	s.Require().Equal(timeseries.Values[2].Value.(string), "baz")
+	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
+	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(2))
+	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(3))
+	s.Require().Equal(timeseries.DataFields[0].Values[0].(string), "foo")
+	s.Require().Equal(timeseries.DataFields[0].Values[1].(string), "bar")
+	s.Require().Equal(timeseries.DataFields[0].Values[2].(string), "baz")
 }
 
 func (s *ClientSuite) TestGetBooleanRecords() {
@@ -311,12 +311,12 @@ ts,k=v
 `)
 	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
 	s.Require().NoError(err)
-	s.Require().Equal(timeseries.Values[0].Timestamp.Unix(), int64(1))
-	s.Require().Equal(timeseries.Values[1].Timestamp.Unix(), int64(2))
-	s.Require().Equal(timeseries.Values[2].Timestamp.Unix(), int64(3))
-	s.Require().Equal(timeseries.Values[0].Value.(bool), true)
-	s.Require().Equal(timeseries.Values[1].Value.(bool), true)
-	s.Require().Equal(timeseries.Values[2].Value.(bool), false)
+	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
+	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(2))
+	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(3))
+	s.Require().Equal(timeseries.DataFields[0].Values[0].(bool), true)
+	s.Require().Equal(timeseries.DataFields[0].Values[1].(bool), true)
+	s.Require().Equal(timeseries.DataFields[0].Values[2].(bool), false)
 }
 
 func (s *ClientSuite) randomGetParams() telemetryapi.TimeseriesParams {

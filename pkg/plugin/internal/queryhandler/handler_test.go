@@ -68,10 +68,10 @@ func (s *QueryHandlerSuite) TestEmptyTextNoError() {
 func (s *QueryHandlerSuite) TestInvalidYAML() {
 	q := s.randomDataQuery()
 	q.text = "that's not yaml"
-	s.expectGetAndReturnTimeseries(q, &telemetryapi.Timeseries{
-		Values:   nil,
-		DataType: telemetryapi.TimeseriesDataTypeInt64,
+	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
+		telemetryapi.TimeseriesDataTypeInt64,
 	})
+	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
 	var terr *yaml.TypeError
 	s.Require().ErrorAs(err, &terr)
@@ -81,11 +81,17 @@ func (s *QueryHandlerSuite) TestInvalidYAML() {
 func (s *QueryHandlerSuite) TestFloat64() {
 	q := s.randomDataQuery()
 	timeseries := &telemetryapi.Timeseries{
-		Values: []*telemetryapi.TimeseriesValue{
-			{Timestamp: time.Unix(1, 0), Value: 42.2},
-			{Timestamp: time.Unix(2, 0), Value: 43.3},
+		TimeField: []time.Time{
+			time.Unix(1, 0),
+			time.Unix(2, 0),
 		},
-		DataType: telemetryapi.TimeseriesDataTypeFloat64,
+		DataFields: []*telemetryapi.TimeseriesDataField{{
+			Type: telemetryapi.TimeseriesDataTypeFloat64,
+			Values: []interface{}{
+				42.2,
+				43.3,
+			},
+		}},
 	}
 	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
@@ -100,11 +106,17 @@ func (s *QueryHandlerSuite) TestFloat64() {
 func (s *QueryHandlerSuite) TestInt64() {
 	q := s.randomDataQuery()
 	timeseries := &telemetryapi.Timeseries{
-		Values: []*telemetryapi.TimeseriesValue{
-			{Timestamp: time.Unix(1, 0), Value: int64(42)},
-			{Timestamp: time.Unix(2, 0), Value: int64(43)},
+		TimeField: []time.Time{
+			time.Unix(1, 0),
+			time.Unix(2, 0),
 		},
-		DataType: telemetryapi.TimeseriesDataTypeInt64,
+		DataFields: []*telemetryapi.TimeseriesDataField{{
+			Type: telemetryapi.TimeseriesDataTypeInt64,
+			Values: []interface{}{
+				int64(42),
+				int64(43),
+			},
+		}},
 	}
 	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
@@ -119,11 +131,17 @@ func (s *QueryHandlerSuite) TestInt64() {
 func (s *QueryHandlerSuite) TestString() {
 	q := s.randomDataQuery()
 	timeseries := &telemetryapi.Timeseries{
-		Values: []*telemetryapi.TimeseriesValue{
-			{Timestamp: time.Unix(1, 0), Value: "foo"},
-			{Timestamp: time.Unix(2, 0), Value: "bar"},
+		TimeField: []time.Time{
+			time.Unix(1, 0),
+			time.Unix(2, 0),
 		},
-		DataType: telemetryapi.TimeseriesDataTypeString,
+		DataFields: []*telemetryapi.TimeseriesDataField{{
+			Type: telemetryapi.TimeseriesDataTypeString,
+			Values: []interface{}{
+				"foo",
+				"bar",
+			},
+		}},
 	}
 	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
@@ -138,11 +156,17 @@ func (s *QueryHandlerSuite) TestString() {
 func (s *QueryHandlerSuite) TestBool() {
 	q := s.randomDataQuery()
 	timeseries := &telemetryapi.Timeseries{
-		Values: []*telemetryapi.TimeseriesValue{
-			{Timestamp: time.Unix(1, 0), Value: true},
-			{Timestamp: time.Unix(2, 0), Value: false},
+		TimeField: []time.Time{
+			time.Unix(1, 0),
+			time.Unix(2, 0),
 		},
-		DataType: telemetryapi.TimeseriesDataTypeBool,
+		DataFields: []*telemetryapi.TimeseriesDataField{{
+			Type: telemetryapi.TimeseriesDataTypeBool,
+			Values: []interface{}{
+				true,
+				false,
+			},
+		}},
 	}
 	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
@@ -158,10 +182,9 @@ func (s *QueryHandlerSuite) TestDoNotRenderIntervals() {
 	q := s.randomDataQuery()
 	q.text = "A fact: $__interval is $__interval_ms milliseconds."
 	q.interval = 42 * time.Second
-	timeseries := &telemetryapi.Timeseries{
-		Values:   nil,
-		DataType: telemetryapi.TimeseriesDataTypeBool,
-	}
+	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
+		telemetryapi.TimeseriesDataTypeBool,
+	})
 	getParams := q.toGetParams()
 	getParams.Query = `{"A fact":"$__interval is $__interval_ms milliseconds."}`
 	s.mockTelemetryAPIClient.ExpectGetAndReturn(getParams, timeseries, nil)
@@ -176,8 +199,8 @@ func (s *QueryHandlerSuite) extractTimeseriesFields(frames data.Frames) (
 	fields := frames[0].Fields
 	s.Require().Len(fields, 2)
 	timestamp, value = fields[0], fields[1]
-	s.Require().Equal("timestamp", timestamp.Name)
-	s.Require().Equal("value", value.Name)
+	s.Require().Equal("time", timestamp.Name)
+	s.Require().Equal("", value.Name)
 	return timestamp, value
 }
 

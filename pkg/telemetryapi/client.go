@@ -171,17 +171,18 @@ func (c *client) processTimeseriesResponse(resp *http.Response) (*Timeseries, er
 	}
 
 	const dataTypesField = "X-Enapter-Timeseries-Data-Types"
-	dataTypeString := resp.Header.Get(dataTypesField)
-	if dataTypeString == "" {
+	if v := resp.Header.Get(dataTypesField); v == "" {
 		return nil, fmt.Errorf("%w: %s", errEmptyHeaderField, dataTypesField)
 	}
 
-	dataType, err := parseTimeseriesDataType(dataTypeString)
+	dataTypeStrings := resp.Header.Values(dataTypesField)
+
+	dataTypes, err := parseTimeseriesDataTypes(dataTypeStrings)
 	if err != nil {
-		return nil, fmt.Errorf("parse data type: %w", err)
+		return nil, fmt.Errorf("parse data types: %w", err)
 	}
 
-	timeseries, err := c.parseTimeseriesCSV(resp.Body, dataType)
+	timeseries, err := c.parseTimeseriesCSV(resp.Body, dataTypes)
 	if err != nil {
 		return nil, fmt.Errorf("parse CSV: %w", err)
 	}
@@ -189,18 +190,16 @@ func (c *client) processTimeseriesResponse(resp *http.Response) (*Timeseries, er
 	return timeseries, nil
 }
 
-func (c *client) parseTimeseriesCSV(reader io.Reader, dataType TimeseriesDataType) (*Timeseries, error) {
+func (c *client) parseTimeseriesCSV(
+	reader io.Reader, dataTypes []TimeseriesDataType,
+) (*Timeseries, error) {
 	csvReader := csv.NewReader(reader)
 
 	const dontCheckNumberOfFields = -1
 	csvReader.FieldsPerRecord = dontCheckNumberOfFields
 	csvReader.ReuseRecord = true
 
-	const preallocValues = 64
-	timeseries := &Timeseries{
-		Values:   make([]*TimeseriesValue, 0, preallocValues),
-		DataType: dataType,
-	}
+	timeseries := NewTimeseries(dataTypes)
 
 	for i := 0; ; i++ {
 		record, err := csvReader.Read()
@@ -211,59 +210,89 @@ func (c *client) parseTimeseriesCSV(reader io.Reader, dataType TimeseriesDataTyp
 			return nil, fmt.Errorf("read record %d: %w", i, err)
 		}
 
-		const skipCSVHeader = true
-		if i == 0 && skipCSVHeader {
-			if len(record) < 2 || record[0] != "ts" {
-				return nil, fmt.Errorf("parse record %d: %w",
-					i, errUnexpectedCSVHeader)
+		const headerIndex = 0
+		if i == headerIndex {
+			tagsList, err := c.parseCSVHeader(record, len(dataTypes))
+			if err != nil {
+				return nil, fmt.Errorf("parse header: %w", err)
+			}
+			for j, tags := range tagsList {
+				timeseries.DataFields[j].Tags = tags
 			}
 			continue
 		}
 
-		value, err := c.parseTimeseriesCSVRecord(record, dataType)
+		timestamp, values, err := c.parseTimeseriesCSVRecord(record, dataTypes)
 		if err != nil {
 			return nil, fmt.Errorf("parse record %d: %w", i, err)
 		}
-		timeseries.Values = append(timeseries.Values, value)
+
+		timeseries.TimeField = append(timeseries.TimeField, timestamp)
+		for j, value := range values {
+			dataField := timeseries.DataFields[j]
+			dataField.Values = append(dataField.Values, value)
+		}
 	}
 
-	if len(timeseries.Values) == 0 {
+	if timeseries.Len() == 0 {
 		return nil, ErrNoValues
 	}
 
 	return timeseries, nil
 }
 
-func (c *client) parseTimeseriesCSVRecord(
-	record []string, dataType TimeseriesDataType,
-) (*TimeseriesValue, error) {
-	const (
-		iTimestamp = iota
-		iValue
-		nFields
-	)
-
-	if len(record) != nFields {
+func (c *client) parseCSVHeader(record []string, numDataFields int) ([]TimeseriesTags, error) {
+	if want := (numDataFields + 1); len(record) != want {
 		return nil, fmt.Errorf("%w: want %d, have %d",
-			errUnexpectedNumberOfFields, nFields, len(record))
+			errUnexpectedNumberOfFields, want, len(record))
+	}
+
+	const ts = "ts"
+	if record[0] != ts {
+		return nil, fmt.Errorf("%w: want %s, have %s",
+			errUnexpectedFieldName, ts, record[0])
+	}
+
+	tagsList := make([]TimeseriesTags, numDataFields)
+
+	for i := 0; i < numDataFields; i++ {
+		tags, err := parseTimeseriesTags(record[i+1])
+		if err != nil {
+			return nil, fmt.Errorf("tags: %w", err)
+		}
+
+		tagsList[i] = tags
+	}
+
+	return tagsList, nil
+}
+
+func (c *client) parseTimeseriesCSVRecord(
+	record []string, dataTypes []TimeseriesDataType,
+) (time.Time, []interface{}, error) {
+	if want := len(dataTypes) + 1; len(record) != want {
+		return time.Time{}, nil, fmt.Errorf("%w: want %d, have %d",
+			errUnexpectedNumberOfFields, want, len(record))
 	}
 
 	const base = 10
 	const bitSize = 64
-	timestamp, err := strconv.ParseInt(record[iTimestamp], base, bitSize)
+	timestamp, err := strconv.ParseInt(record[0], base, bitSize)
 	if err != nil {
-		return nil, fmt.Errorf("timestamp: %w", err)
+		return time.Time{}, nil, fmt.Errorf("timestamp: %w", err)
 	}
 
-	data, err := dataType.Parse(record[iValue])
-	if err != nil {
-		return nil, fmt.Errorf("data: %w", err)
+	values := make([]interface{}, len(dataTypes))
+
+	for i := 0; i < len(dataTypes); i++ {
+		value, err := dataTypes[i].Parse(record[i+1])
+		if err != nil {
+			return time.Time{}, nil, fmt.Errorf("value %d: %w", i, err)
+		}
+		values[i] = value
 	}
 
-	return &TimeseriesValue{
-		Timestamp: time.Unix(timestamp, 0),
-		Value:     data,
-	}, nil
+	return time.Unix(timestamp, 0), values, nil
 }
 
 func (c *client) closeRespBody(body io.ReadCloser) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.0
+
+- Handle multiple metrics.
+
 ## v1.1.0
 
 - Fix token support.

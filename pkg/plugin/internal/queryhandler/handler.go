@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -23,6 +22,51 @@ func New(telemetryAPIClient telemetryapi.Client) *QueryHandler {
 	return &QueryHandler{
 		telemetryAPIClient: telemetryAPIClient,
 	}
+}
+
+func (h *QueryHandler) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {
+	frameFields := make([]*data.Field, len(timeseries.DataFields)+1)
+
+	frameFields[0] = data.NewField("time", nil, timeseries.TimeField)
+
+	for i, dataField := range timeseries.DataFields {
+		var frameField *data.Field
+
+		switch dataField.Type {
+		case telemetryapi.TimeseriesDataTypeFloat64:
+			frameField = data.NewField(
+				"", data.Labels(dataField.Tags),
+				make([]float64, len(dataField.Values)))
+		case telemetryapi.TimeseriesDataTypeInt64:
+			frameField = data.NewField(
+				"", data.Labels(dataField.Tags),
+				make([]int64, len(dataField.Values)))
+		case telemetryapi.TimeseriesDataTypeString:
+			frameField = data.NewField(
+				"", data.Labels(dataField.Tags),
+				make([]string, len(dataField.Values)))
+		case telemetryapi.TimeseriesDataTypeBool:
+			frameField = data.NewField(
+				"", data.Labels(dataField.Tags),
+				make([]bool, len(dataField.Values)))
+		default:
+			return nil, fmt.Errorf("%w: %s",
+				errUnsupportedTimeseriesDataType, dataField.Type)
+		}
+
+		frameFields[i+1] = frameField
+	}
+
+	for row := 0; row < timeseries.Len(); row++ {
+		for col := 0; col < len(timeseries.DataFields); col++ {
+			frameField := frameFields[col+1]
+			dataField := timeseries.DataFields[col]
+			value := dataField.Values[row]
+			frameField.Set(row, value)
+		}
+	}
+
+	return data.NewFrame("response", frameFields...), nil
 }
 
 func (h *QueryHandler) HandleQuery(
@@ -53,36 +97,10 @@ func (h *QueryHandler) HandleQuery(
 		return nil, fmt.Errorf("request timeseries: %w", err)
 	}
 
-	const fieldTimestampName = "timestamp"
-	const fieldValueName = "value"
-
-	fieldTimestamp := data.NewField(fieldTimestampName, nil,
-		make([]time.Time, len(timeseries.Values)))
-
-	var fieldValues *data.Field
-	switch timeseries.DataType {
-	case telemetryapi.TimeseriesDataTypeFloat64:
-		fieldValues = data.NewField(fieldValueName, nil,
-			make([]float64, len(timeseries.Values)))
-	case telemetryapi.TimeseriesDataTypeInt64:
-		fieldValues = data.NewField(fieldValueName, nil,
-			make([]int64, len(timeseries.Values)))
-	case telemetryapi.TimeseriesDataTypeString:
-		fieldValues = data.NewField(fieldValueName, nil,
-			make([]string, len(timeseries.Values)))
-	case telemetryapi.TimeseriesDataTypeBool:
-		fieldValues = data.NewField(fieldValueName, nil,
-			make([]bool, len(timeseries.Values)))
-	default:
-		return nil, fmt.Errorf("%w: %s",
-			errUnsupportedTimeseriesDataType, timeseries.DataType)
+	frame, err := h.timeseriesToDataFrame(timeseries)
+	if err != nil {
+		return nil, fmt.Errorf("convert timeseries to data frame: %w", err)
 	}
-
-	for i, v := range timeseries.Values {
-		fieldTimestamp.Set(i, v.Timestamp)
-		fieldValues.Set(i, v.Value)
-	}
-	frame := data.NewFrame("response", fieldTimestamp, fieldValues)
 
 	return data.Frames{frame}, nil
 }
