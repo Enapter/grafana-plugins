@@ -86,10 +86,12 @@ func (s *MockServer) ExpectTimeseriesRequestCheckItAndReturnData(
 	})
 }
 
-func (s *MockServer) ExpectTimeseriesRequestAndReturnData(types string, data string) {
+func (s *MockServer) ExpectTimeseriesRequestAndReturnData(types []string, data string) {
 	s.replaceTimeseriesHandler(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/csv")
-		w.Header().Set("X-Enapter-Timeseries-Data-Types", types)
+		for _, t := range types {
+			w.Header().Add("X-Enapter-Timeseries-Data-Types", t)
+		}
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(data))
 		require.NoError(s.t, err)

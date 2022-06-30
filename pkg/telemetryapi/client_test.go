@@ -66,7 +66,7 @@ func (s *ClientSuite) TestReadyUnexpectedCode() {
 }
 
 func (s *ClientSuite) TestReadyUnexpectedAbsenseOfError() {
-	s.server.ExpectTimeseriesRequestAndReturnData("float64", `
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"float64"}, `
 ts,k=v
 1,2.1
 3,4.2
@@ -108,7 +108,7 @@ func (s *ClientSuite) TestGetInvalidContentType() {
 }
 
 func (s *ClientSuite) TestGetEmptyDataTypes() {
-	s.server.ExpectTimeseriesRequestAndReturnData("", `hello,anyone?`)
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{}, `hello,anyone?`)
 	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
 	s.Require().Error(err)
 	s.Require().Nil(timeseries)
@@ -119,7 +119,7 @@ func (s *ClientSuite) TestGetEmptyDataTypes() {
 }
 
 func (s *ClientSuite) TestGetInvalidDataTypes() {
-	s.server.ExpectTimeseriesRequestAndReturnData("invalid", `foo,bar`)
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"invalid"}, `foo,bar`)
 	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
 	s.Require().Error(err)
 	s.Require().Nil(timeseries)
@@ -183,7 +183,7 @@ func (s *ClientSuite) TestGetUnexpectedStatusWithNoDescription() {
 }
 
 func (s *ClientSuite) TestGetEmptyRecords() {
-	s.server.ExpectTimeseriesRequestAndReturnData("float64", ``)
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"float64"}, ``)
 	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
 	s.Require().ErrorIs(err, telemetryapi.ErrNoValues)
 	s.Require().Nil(timeseries)
@@ -226,15 +226,35 @@ func (s *ClientSuite) TestInvalidCSVHeader() {
 	headers := []string{"ts", "non_ts,k=v"}
 	for _, h := range headers {
 		s.Run(h, func() {
-			s.server.ExpectTimeseriesRequestAndReturnData("float64", h)
+			s.server.ExpectTimeseriesRequestAndReturnData([]string{"float64"}, h)
 			_, err := s.client.Timeseries(s.ctx, s.randomGetParams())
 			s.Require().Error(err)
 		})
 	}
 }
 
+func (s *ClientSuite) TestGetMultipleFields() {
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"float64", "bool"}, `
+ts,k1=v1,k2=v2
+1,2.1,true
+3,4.2,false
+5,6.3,true
+`)
+	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
+	s.Require().NoError(err)
+	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
+	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(3))
+	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(5))
+	s.Require().Equal(timeseries.DataFields[0].Values[0].(float64), 2.1)
+	s.Require().Equal(timeseries.DataFields[0].Values[1].(float64), 4.2)
+	s.Require().Equal(timeseries.DataFields[0].Values[2].(float64), 6.3)
+	s.Require().Equal(timeseries.DataFields[1].Values[0].(bool), true)
+	s.Require().Equal(timeseries.DataFields[1].Values[1].(bool), false)
+	s.Require().Equal(timeseries.DataFields[1].Values[2].(bool), true)
+}
+
 func (s *ClientSuite) TestGetWrongNumberOfFields() {
-	s.server.ExpectTimeseriesRequestAndReturnData("float64", `
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"float64"}, `
 ts,k=v
 1,2.1
 3
@@ -251,7 +271,7 @@ ts,k=v
 
 //nolint: dupl // FIXME
 func (s *ClientSuite) TestGetFloatRecords() {
-	s.server.ExpectTimeseriesRequestAndReturnData("float64", `
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"float64"}, `
 ts,k=v
 1,2.1
 3,4.2
@@ -268,7 +288,7 @@ ts,k=v
 }
 
 func (s *ClientSuite) TestGetIntRecords() {
-	s.server.ExpectTimeseriesRequestAndReturnData("int64", `
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"int64"}, `
 ts,k=v
 11,22
 33,44
@@ -286,7 +306,7 @@ ts,k=v
 
 //nolint: dupl // FIXME
 func (s *ClientSuite) TestGetStringRecords() {
-	s.server.ExpectTimeseriesRequestAndReturnData("string", `
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"string"}, `
 ts,k=v
 1,foo
 2,bar
@@ -303,7 +323,7 @@ ts,k=v
 }
 
 func (s *ClientSuite) TestGetBooleanRecords() {
-	s.server.ExpectTimeseriesRequestAndReturnData("bool", `
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"bool"}, `
 ts,k=v
 1,true
 2,true

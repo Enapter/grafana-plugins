@@ -96,11 +96,12 @@ func (s *QueryHandlerSuite) TestFloat64() {
 	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
 	s.Require().Nil(err)
-	timestampField, valueField := s.extractTimeseriesFields(frames)
+	timestampField, dataFields := s.extractTimeseriesFields(frames)
+	s.Require().Len(dataFields, 1)
 	s.Require().Equal(int64(1), timestampField.At(0).(time.Time).Unix())
 	s.Require().Equal(int64(2), timestampField.At(1).(time.Time).Unix())
-	s.Require().Equal(float64(42.2), valueField.At(0).(float64))
-	s.Require().Equal(float64(43.3), valueField.At(1).(float64))
+	s.Require().Equal(float64(42.2), dataFields[0].At(0).(float64))
+	s.Require().Equal(float64(43.3), dataFields[0].At(1).(float64))
 }
 
 func (s *QueryHandlerSuite) TestInt64() {
@@ -121,11 +122,12 @@ func (s *QueryHandlerSuite) TestInt64() {
 	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
 	s.Require().Nil(err)
-	timestampField, valueField := s.extractTimeseriesFields(frames)
+	timestampField, dataFields := s.extractTimeseriesFields(frames)
+	s.Require().Len(dataFields, 1)
 	s.Require().Equal(int64(1), timestampField.At(0).(time.Time).Unix())
 	s.Require().Equal(int64(2), timestampField.At(1).(time.Time).Unix())
-	s.Require().Equal(int64(42), valueField.At(0).(int64))
-	s.Require().Equal(int64(43), valueField.At(1).(int64))
+	s.Require().Equal(int64(42), dataFields[0].At(0).(int64))
+	s.Require().Equal(int64(43), dataFields[0].At(1).(int64))
 }
 
 func (s *QueryHandlerSuite) TestString() {
@@ -146,11 +148,12 @@ func (s *QueryHandlerSuite) TestString() {
 	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
 	s.Require().Nil(err)
-	timestampField, valueField := s.extractTimeseriesFields(frames)
+	timestampField, dataFields := s.extractTimeseriesFields(frames)
+	s.Require().Len(dataFields, 1)
 	s.Require().Equal(int64(1), timestampField.At(0).(time.Time).Unix())
 	s.Require().Equal(int64(2), timestampField.At(1).(time.Time).Unix())
-	s.Require().Equal("foo", valueField.At(0).(string))
-	s.Require().Equal("bar", valueField.At(1).(string))
+	s.Require().Equal("foo", dataFields[0].At(0).(string))
+	s.Require().Equal("bar", dataFields[0].At(1).(string))
 }
 
 func (s *QueryHandlerSuite) TestStringArrayIsUnsupported() {
@@ -191,11 +194,49 @@ func (s *QueryHandlerSuite) TestBool() {
 	s.expectGetAndReturnTimeseries(q, timeseries)
 	frames, err := s.handleQuery(q)
 	s.Require().Nil(err)
-	timestampField, valueField := s.extractTimeseriesFields(frames)
+	timestampField, dataFields := s.extractTimeseriesFields(frames)
+	s.Require().Len(dataFields, 1)
 	s.Require().Equal(int64(1), timestampField.At(0).(time.Time).Unix())
 	s.Require().Equal(int64(2), timestampField.At(1).(time.Time).Unix())
-	s.Require().Equal(true, valueField.At(0).(bool))
-	s.Require().Equal(false, valueField.At(1).(bool))
+	s.Require().Equal(true, dataFields[0].At(0).(bool))
+	s.Require().Equal(false, dataFields[0].At(1).(bool))
+}
+
+func (s *QueryHandlerSuite) TestMultipleFields() {
+	q := s.randomDataQuery()
+	timeseries := &telemetryapi.Timeseries{
+		TimeField: []time.Time{
+			time.Unix(1, 0),
+			time.Unix(2, 0),
+		},
+		DataFields: []*telemetryapi.TimeseriesDataField{
+			{
+				Type: telemetryapi.TimeseriesDataTypeFloat64,
+				Values: []interface{}{
+					42.2,
+					43.3,
+				},
+			},
+			{
+				Type: telemetryapi.TimeseriesDataTypeString,
+				Values: []interface{}{
+					"foo",
+					"bar",
+				},
+			},
+		},
+	}
+	s.expectGetAndReturnTimeseries(q, timeseries)
+	frames, err := s.handleQuery(q)
+	s.Require().Nil(err)
+	timestampField, dataFields := s.extractTimeseriesFields(frames)
+	s.Require().Len(dataFields, 2)
+	s.Require().Equal(int64(1), timestampField.At(0).(time.Time).Unix())
+	s.Require().Equal(int64(2), timestampField.At(1).(time.Time).Unix())
+	s.Require().Equal(float64(42.2), dataFields[0].At(0).(float64))
+	s.Require().Equal(float64(43.3), dataFields[0].At(1).(float64))
+	s.Require().Equal("foo", dataFields[1].At(0).(string))
+	s.Require().Equal("bar", dataFields[1].At(1).(string))
 }
 
 func (s *QueryHandlerSuite) TestDoNotRenderIntervals() {
@@ -213,15 +254,16 @@ func (s *QueryHandlerSuite) TestDoNotRenderIntervals() {
 }
 
 func (s *QueryHandlerSuite) extractTimeseriesFields(frames data.Frames) (
-	timestamp *data.Field, value *data.Field,
+	timestamp *data.Field, dataFields []*data.Field,
 ) {
 	s.Require().Len(frames, 1)
 	fields := frames[0].Fields
-	s.Require().Len(fields, 2)
-	timestamp, value = fields[0], fields[1]
-	s.Require().Equal("time", timestamp.Name)
-	s.Require().Equal("", value.Name)
-	return timestamp, value
+	time, values := fields[0], fields[1:]
+	s.Require().Equal("time", time.Name)
+	for _, value := range values {
+		s.Require().Equal("", value.Name)
+	}
+	return time, values
 }
 
 func (s *QueryHandlerSuite) expectGetAndReturnTimeseries(q dataQuery, ts *telemetryapi.Timeseries) {
