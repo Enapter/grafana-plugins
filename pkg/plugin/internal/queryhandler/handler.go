@@ -51,7 +51,7 @@ func (h *QueryHandler) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries
 				make([]bool, len(dataField.Values)))
 		default:
 			return nil, fmt.Errorf("%w: %s",
-				errUnsupportedTimeseriesDataType, dataField.Type)
+				ErrUnsupportedTimeseriesDataType, dataField.Type)
 		}
 
 		frameFields[i+1] = frameField

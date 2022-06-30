@@ -4,6 +4,6 @@ import "errors"
 
 var (
 	errEmptyQueryText                = errors.New("empty query text")
-	errUnsupportedTimeseriesDataType = errors.New("unsupported timeseries data type")
+	ErrUnsupportedTimeseriesDataType = errors.New("unsupported timeseries data type")
 	ErrMissingUserInfo               = errors.New("missing user info")
 )

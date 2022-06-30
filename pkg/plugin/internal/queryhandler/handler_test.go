@@ -153,6 +153,26 @@ func (s *QueryHandlerSuite) TestString() {
 	s.Require().Equal("bar", valueField.At(1).(string))
 }
 
+func (s *QueryHandlerSuite) TestStringArrayIsUnsupported() {
+	q := s.randomDataQuery()
+	timeseries := &telemetryapi.Timeseries{
+		TimeField: []time.Time{
+			time.Unix(1, 0),
+			time.Unix(2, 0),
+		},
+		DataFields: []*telemetryapi.TimeseriesDataField{{
+			Type: telemetryapi.TimeseriesDataTypeStringArray,
+			Values: []interface{}{
+				[]string{"foo", "foo"},
+				[]string{"bar", "bar"},
+			},
+		}},
+	}
+	s.expectGetAndReturnTimeseries(q, timeseries)
+	_, err := s.handleQuery(q)
+	s.Require().ErrorIs(err, queryhandler.ErrUnsupportedTimeseriesDataType)
+}
+
 func (s *QueryHandlerSuite) TestBool() {
 	q := s.randomDataQuery()
 	timeseries := &telemetryapi.Timeseries{

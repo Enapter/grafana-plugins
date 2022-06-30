@@ -93,6 +93,10 @@ func (d *dataSource) QueryData(
 }
 
 func (d *dataSource) userFacingError(err error) error {
+	if errors.Is(err, queryhandler.ErrUnsupportedTimeseriesDataType) {
+		return errMetricDataTypeIsNotSupported
+	}
+
 	var multiErr *telemetryapi.MultiError
 
 	if ok := errors.As(err, &multiErr); !ok {

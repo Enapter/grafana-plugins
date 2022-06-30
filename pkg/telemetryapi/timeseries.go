@@ -1,6 +1,7 @@
 package telemetryapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -50,6 +51,7 @@ const (
 	TimeseriesDataTypeFloat64
 	TimeseriesDataTypeInt64
 	TimeseriesDataTypeString
+	TimeseriesDataTypeStringArray
 	TimeseriesDataTypeBool
 )
 
@@ -75,6 +77,8 @@ func parseTimeseriesDataType(s string) (TimeseriesDataType, error) {
 		return TimeseriesDataTypeInt64, nil
 	case "string":
 		return TimeseriesDataTypeString, nil
+	case "[]string":
+		return TimeseriesDataTypeStringArray, nil
 	case "bool":
 		return TimeseriesDataTypeBool, nil
 	default:
@@ -91,6 +95,8 @@ func (t TimeseriesDataType) String() string {
 		return "int64"
 	case TimeseriesDataTypeString:
 		return "string"
+	case TimeseriesDataTypeStringArray:
+		return "[]string"
 	case TimeseriesDataTypeBool:
 		return "bool"
 	default:
@@ -109,6 +115,12 @@ func (t TimeseriesDataType) Parse(s string) (interface{}, error) {
 		return strconv.ParseInt(s, base, bitSize)
 	case TimeseriesDataTypeString:
 		return s, nil
+	case TimeseriesDataTypeStringArray:
+		var values []string
+		if err := json.Unmarshal([]byte(s), &values); err != nil {
+			return nil, err
+		}
+		return values, nil
 	case TimeseriesDataTypeBool:
 		return strconv.ParseBool(s)
 	default:
