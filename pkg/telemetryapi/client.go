@@ -135,7 +135,7 @@ func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (
 	const userField = "X-Enapter-Auth-User"
 	req.Header[userField] = []string{p.User}
 
-	const tokenField = "X-Enapter-Auth-Token"
+	const tokenField = "X-Enapter-Auth-Token" //nolint: gosec // false positive
 	req.Header[tokenField] = []string{c.token}
 
 	return req, nil

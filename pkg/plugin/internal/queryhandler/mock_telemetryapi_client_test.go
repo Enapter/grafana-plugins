@@ -28,7 +28,8 @@ func (c *MockTelemetryAPIClient) ExpectGetAndReturn(
 	timeseries *telemetryapi.Timeseries, err error,
 ) {
 	c.timeseriesHandler = func(haveP telemetryapi.TimeseriesParams) (
-		*telemetryapi.Timeseries, error) {
+		*telemetryapi.Timeseries, error,
+	) {
 		defer func() { c.timeseriesHandler = c.unexpectedCall }()
 		c.suite.Require().Equal(wantP, haveP)
 		return timeseries, err
@@ -42,7 +43,8 @@ func (c *MockTelemetryAPIClient) Timeseries(
 }
 
 func (c *MockTelemetryAPIClient) unexpectedCall(telemetryapi.TimeseriesParams) (
-	*telemetryapi.Timeseries, error) {
+	*telemetryapi.Timeseries, error,
+) {
 	c.suite.Require().FailNow("unexpected call")
 	//nolint: nilnil // unreachable
 	return nil, nil
