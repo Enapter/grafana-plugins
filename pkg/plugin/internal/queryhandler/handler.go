@@ -36,19 +36,19 @@ func (h *QueryHandler) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries
 		case telemetryapi.TimeseriesDataTypeFloat64:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
-				make([]float64, len(dataField.Values)))
+				make([]*float64, len(dataField.Values)))
 		case telemetryapi.TimeseriesDataTypeInt64:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
-				make([]int64, len(dataField.Values)))
+				make([]*int64, len(dataField.Values)))
 		case telemetryapi.TimeseriesDataTypeString:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
-				make([]string, len(dataField.Values)))
+				make([]*string, len(dataField.Values)))
 		case telemetryapi.TimeseriesDataTypeBool:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
-				make([]bool, len(dataField.Values)))
+				make([]*bool, len(dataField.Values)))
 		default:
 			return nil, fmt.Errorf("%w: %s",
 				ErrUnsupportedTimeseriesDataType, dataField.Type)

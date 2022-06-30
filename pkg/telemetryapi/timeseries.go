@@ -55,6 +55,23 @@ const (
 	TimeseriesDataTypeBool
 )
 
+func (t TimeseriesDataType) ZeroValue() interface{} {
+	switch t {
+	case TimeseriesDataTypeFloat64:
+		return (*float64)(nil)
+	case TimeseriesDataTypeInt64:
+		return (*int64)(nil)
+	case TimeseriesDataTypeString:
+		return (*string)(nil)
+	case TimeseriesDataTypeStringArray:
+		return ([]string)(nil)
+	case TimeseriesDataTypeBool:
+		return (*bool)(nil)
+	default:
+		return nil
+	}
+}
+
 func parseTimeseriesDataTypes(ss []string) ([]TimeseriesDataType, error) {
 	dataTypes := make([]TimeseriesDataType, len(ss))
 
@@ -105,16 +122,28 @@ func (t TimeseriesDataType) String() string {
 }
 
 func (t TimeseriesDataType) Parse(s string) (interface{}, error) {
+	if len(s) == 0 {
+		return t.ZeroValue(), nil
+	}
+
 	switch t {
 	case TimeseriesDataTypeFloat64:
 		const bitSize = 64
-		return strconv.ParseFloat(s, bitSize)
+		v, err := strconv.ParseFloat(s, bitSize)
+		if err != nil {
+			return nil, err
+		}
+		return &v, nil
 	case TimeseriesDataTypeInt64:
 		const base = 10
 		const bitSize = 64
-		return strconv.ParseInt(s, base, bitSize)
+		v, err := strconv.ParseInt(s, base, bitSize)
+		if err != nil {
+			return nil, err
+		}
+		return &v, nil
 	case TimeseriesDataTypeString:
-		return s, nil
+		return &s, nil
 	case TimeseriesDataTypeStringArray:
 		var values []string
 		if err := json.Unmarshal([]byte(s), &values); err != nil {
@@ -122,7 +151,11 @@ func (t TimeseriesDataType) Parse(s string) (interface{}, error) {
 		}
 		return values, nil
 	case TimeseriesDataTypeBool:
-		return strconv.ParseBool(s)
+		v, err := strconv.ParseBool(s)
+		if err != nil {
+			return nil, err
+		}
+		return &v, nil
 	default:
 		return nil, errUnexpectedTimeseriesDataType
 	}

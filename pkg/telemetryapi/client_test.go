@@ -245,12 +245,32 @@ ts,k1=v1,k2=v2
 	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
 	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(3))
 	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(5))
-	s.Require().Equal(timeseries.DataFields[0].Values[0].(float64), 2.1)
-	s.Require().Equal(timeseries.DataFields[0].Values[1].(float64), 4.2)
-	s.Require().Equal(timeseries.DataFields[0].Values[2].(float64), 6.3)
-	s.Require().Equal(timeseries.DataFields[1].Values[0].(bool), true)
-	s.Require().Equal(timeseries.DataFields[1].Values[1].(bool), false)
-	s.Require().Equal(timeseries.DataFields[1].Values[2].(bool), true)
+	s.Require().Equal(*timeseries.DataFields[0].Values[0].(*float64), 2.1)
+	s.Require().Equal(*timeseries.DataFields[0].Values[1].(*float64), 4.2)
+	s.Require().Equal(*timeseries.DataFields[0].Values[2].(*float64), 6.3)
+	s.Require().Equal(*timeseries.DataFields[1].Values[0].(*bool), true)
+	s.Require().Equal(*timeseries.DataFields[1].Values[1].(*bool), false)
+	s.Require().Equal(*timeseries.DataFields[1].Values[2].(*bool), true)
+}
+
+func (s *ClientSuite) TestGetMultipleFieldsWithNil() {
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"float64", "bool"}, `
+ts,k1=v1,k2=v2
+1,2.1,true
+3,,false
+5,6.3,true
+`)
+	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
+	s.Require().NoError(err)
+	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
+	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(3))
+	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(5))
+	s.Require().Equal(*timeseries.DataFields[0].Values[0].(*float64), 2.1)
+	s.Require().Equal(timeseries.DataFields[0].Values[1].(*float64), (*float64)(nil))
+	s.Require().Equal(*timeseries.DataFields[0].Values[2].(*float64), 6.3)
+	s.Require().Equal(*timeseries.DataFields[1].Values[0].(*bool), true)
+	s.Require().Equal(*timeseries.DataFields[1].Values[1].(*bool), false)
+	s.Require().Equal(*timeseries.DataFields[1].Values[2].(*bool), true)
 }
 
 func (s *ClientSuite) TestGetWrongNumberOfFields() {
@@ -282,9 +302,9 @@ ts,k=v
 	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
 	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(3))
 	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(5))
-	s.Require().Equal(timeseries.DataFields[0].Values[0].(float64), 2.1)
-	s.Require().Equal(timeseries.DataFields[0].Values[1].(float64), 4.2)
-	s.Require().Equal(timeseries.DataFields[0].Values[2].(float64), 6.3)
+	s.Require().Equal(*timeseries.DataFields[0].Values[0].(*float64), 2.1)
+	s.Require().Equal(*timeseries.DataFields[0].Values[1].(*float64), 4.2)
+	s.Require().Equal(*timeseries.DataFields[0].Values[2].(*float64), 6.3)
 }
 
 func (s *ClientSuite) TestGetIntRecords() {
@@ -299,9 +319,9 @@ ts,k=v
 	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(11))
 	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(33))
 	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(55))
-	s.Require().Equal(timeseries.DataFields[0].Values[0].(int64), int64(22))
-	s.Require().Equal(timeseries.DataFields[0].Values[1].(int64), int64(44))
-	s.Require().Equal(timeseries.DataFields[0].Values[2].(int64), int64(66))
+	s.Require().Equal(*timeseries.DataFields[0].Values[0].(*int64), int64(22))
+	s.Require().Equal(*timeseries.DataFields[0].Values[1].(*int64), int64(44))
+	s.Require().Equal(*timeseries.DataFields[0].Values[2].(*int64), int64(66))
 }
 
 //nolint: dupl // FIXME
@@ -317,9 +337,9 @@ ts,k=v
 	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
 	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(2))
 	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(3))
-	s.Require().Equal(timeseries.DataFields[0].Values[0].(string), "foo")
-	s.Require().Equal(timeseries.DataFields[0].Values[1].(string), "bar")
-	s.Require().Equal(timeseries.DataFields[0].Values[2].(string), "baz")
+	s.Require().Equal(*timeseries.DataFields[0].Values[0].(*string), "foo")
+	s.Require().Equal(*timeseries.DataFields[0].Values[1].(*string), "bar")
+	s.Require().Equal(*timeseries.DataFields[0].Values[2].(*string), "baz")
 }
 
 func (s *ClientSuite) TestGetBooleanRecords() {
@@ -334,9 +354,9 @@ ts,k=v
 	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
 	s.Require().Equal(timeseries.TimeField[1].Unix(), int64(2))
 	s.Require().Equal(timeseries.TimeField[2].Unix(), int64(3))
-	s.Require().Equal(timeseries.DataFields[0].Values[0].(bool), true)
-	s.Require().Equal(timeseries.DataFields[0].Values[1].(bool), true)
-	s.Require().Equal(timeseries.DataFields[0].Values[2].(bool), false)
+	s.Require().Equal(*timeseries.DataFields[0].Values[0].(*bool), true)
+	s.Require().Equal(*timeseries.DataFields[0].Values[1].(*bool), true)
+	s.Require().Equal(*timeseries.DataFields[0].Values[2].(*bool), false)
 }
 
 func (s *ClientSuite) randomGetParams() telemetryapi.TimeseriesParams {

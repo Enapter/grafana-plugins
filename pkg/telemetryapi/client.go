@@ -285,9 +285,10 @@ func (c *client) parseTimeseriesCSVRecord(
 	values := make([]interface{}, len(dataTypes))
 
 	for i := 0; i < len(dataTypes); i++ {
-		value, err := dataTypes[i].Parse(record[i+1])
+		field := record[i+1]
+		value, err := dataTypes[i].Parse(field)
 		if err != nil {
-			return time.Time{}, nil, fmt.Errorf("value %d: %w", i, err)
+			return time.Time{}, nil, fmt.Errorf("field %d: %w", i, err)
 		}
 		values[i] = value
 	}
