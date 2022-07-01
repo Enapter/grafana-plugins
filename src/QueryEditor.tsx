@@ -44,7 +44,7 @@ export class QueryEditor extends PureComponent<Props> {
             wordWrapColumn: 100,
             wrappingIndent: 'same',
             minimap: { enabled: false },
-            fontSize: 16,
+            fontSize: 15,
           }}
         />
       </>
