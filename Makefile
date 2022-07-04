@@ -1,3 +1,5 @@
+default:
+
 .PHONY: dist.tar.gz
 dist.tar.gz: dist
 	rm --force $@

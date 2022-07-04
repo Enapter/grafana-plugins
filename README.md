@@ -49,4 +49,4 @@ You will need the following tools to develop the plugin:
 - `gzip`
 - `docker`
 
-To build the plugin distribution from source run `make`.
+To build the plugin distribution from source run `make dist`.
