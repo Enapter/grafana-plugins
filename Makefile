@@ -17,13 +17,12 @@ dist:
 		--output $@ \
 		.
 
-GRAFANA_VERSION ?= 8.4.4
-GRAFANA_TAG = grafana/grafana:$(GRAFANA_VERSION)-enapter-telemetry-datasource-plugin
+PLUGIN_VERSION = $(shell jq -r .version package.json)
+GRAFANA_TAG = enapter/grafana-with-telemetry-datasource-plugin:v$(PLUGIN_VERSION)
 
 .PHONY: grafana-build
 grafana-build:
 	$(DOCKER_BUILD) \
-		--build-arg GRAFANA_VERSION=$(GRAFANA_VERSION) \
 		--target grafana \
 		--tag $(GRAFANA_TAG) \
 		.
