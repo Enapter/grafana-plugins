@@ -27,7 +27,7 @@ docker run \
 
 ## Usage
 
-To visualize the device telemetry, you should declare which data you need
+To visualize the device telemetry, you need to declare which data you want
 using YAML. A basic query looks like this:
 
 ```yaml
