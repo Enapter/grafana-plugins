@@ -72,8 +72,9 @@ func (h *QueryHandler) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries
 func (h *QueryHandler) HandleQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
-	if pCtx.User == nil {
-		return nil, ErrMissingUserInfo
+	user := ""
+	if pCtx.User != nil {
+		user = pCtx.User.Email
 	}
 
 	queryText, err := h.parseRawQuery(query)
@@ -85,7 +86,7 @@ func (h *QueryHandler) HandleQuery(
 	}
 
 	timeseries, err := h.telemetryAPIClient.Timeseries(ctx, telemetryapi.TimeseriesParams{
-		User:  pCtx.User.Email,
+		User:  user,
 		Query: queryText,
 		From:  query.TimeRange.From,
 		To:    query.TimeRange.To,

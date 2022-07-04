@@ -115,10 +115,6 @@ func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (*Timeserie
 }
 
 func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (*http.Request, error) {
-	if p.User == "" {
-		return nil, ErrEmptyUser
-	}
-
 	q := make(url.Values)
 
 	q.Set("from", p.From.UTC().Format(time.RFC3339))
@@ -132,8 +128,10 @@ func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (
 		return nil, err
 	}
 
-	const userField = "X-Enapter-Auth-User"
-	req.Header[userField] = []string{p.User}
+	if p.User != "" {
+		const userField = "X-Enapter-Auth-User"
+		req.Header[userField] = []string{p.User}
+	}
 
 	const tokenField = "X-Enapter-Auth-Token" //nolint: gosec // false positive
 	req.Header[tokenField] = []string{c.token}

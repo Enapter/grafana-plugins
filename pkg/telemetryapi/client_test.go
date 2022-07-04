@@ -92,8 +92,14 @@ func (s *ClientSuite) TestGetZeroContentLength() {
 func (s *ClientSuite) TestGetEmptyUser() {
 	p := s.randomGetParams()
 	p.User = ""
-	_, err := s.client.Timeseries(s.ctx, p)
-	s.Require().ErrorIs(err, telemetryapi.ErrEmptyUser)
+	s.server.ExpectTimeseriesRequestAndReturnData([]string{"bool"}, `
+ts,k=v
+1,true
+`)
+	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
+	s.Require().NoError(err)
+	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
+	s.Require().Equal(*timeseries.DataFields[0].Values[0].(*bool), true)
 }
 
 func (s *ClientSuite) TestGetInvalidContentType() {

@@ -31,14 +31,6 @@ func (s *QueryHandlerSuite) SetupSuite() {
 	s.queryHandler = queryhandler.New(s.mockTelemetryAPIClient)
 }
 
-func (s *QueryHandlerSuite) TestNoUserInfo() {
-	pCtx := backend.PluginContext{}
-	dataQuery := backend.DataQuery{}
-	frames, err := s.queryHandler.HandleQuery(s.ctx, pCtx, dataQuery)
-	s.Require().ErrorIs(err, queryhandler.ErrMissingUserInfo)
-	s.Require().Nil(frames)
-}
-
 var errFake = errors.New("fake error")
 
 func (s *QueryHandlerSuite) TestTelemetryAPIError() {
@@ -139,6 +131,33 @@ func (s *QueryHandlerSuite) TestInt64() {
 
 func (s *QueryHandlerSuite) TestString() {
 	q := s.randomDataQuery()
+	timeseries := &telemetryapi.Timeseries{
+		TimeField: []time.Time{
+			time.Unix(1, 0),
+			time.Unix(2, 0),
+		},
+		DataFields: []*telemetryapi.TimeseriesDataField{{
+			Type: telemetryapi.TimeseriesDataTypeString,
+			Values: []interface{}{
+				newString("foo"),
+				newString("bar"),
+			},
+		}},
+	}
+	s.expectGetAndReturnTimeseries(q, timeseries)
+	frames, err := s.handleQuery(q)
+	s.Require().Nil(err)
+	timestampField, dataFields := s.extractTimeseriesFields(frames)
+	s.Require().Len(dataFields, 1)
+	s.Require().Equal(int64(1), timestampField.At(0).(time.Time).Unix())
+	s.Require().Equal(int64(2), timestampField.At(1).(time.Time).Unix())
+	s.Require().Equal("foo", *dataFields[0].At(0).(*string))
+	s.Require().Equal("bar", *dataFields[0].At(1).(*string))
+}
+
+func (s *QueryHandlerSuite) TestNoUserInfo() {
+	q := s.randomDataQuery()
+	q.user = ""
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -333,10 +352,15 @@ func (s *QueryHandlerSuite) randomDataQuery() dataQuery {
 }
 
 func (s *QueryHandlerSuite) handleQuery(q dataQuery) (data.Frames, error) {
-	pCtx := backend.PluginContext{
-		User: &backend.User{
+	var user *backend.User
+	if q.user != "" {
+		user = &backend.User{
 			Email: q.user,
-		},
+		}
+	}
+
+	pCtx := backend.PluginContext{
+		User: user,
 	}
 	dataQuery := backend.DataQuery{
 		TimeRange: backend.TimeRange{From: q.from, To: q.to},
