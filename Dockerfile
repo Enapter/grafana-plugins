@@ -53,6 +53,7 @@ FROM grafana/grafana:${GRAFANA_VERSION} AS grafana
 
 COPY --from=dist / /var/lib/grafana/plugins/telemetry/dist
 
-COPY ./grafana-entrypoint.sh ./opt/grafana-entrypoint.sh
+COPY ./grafana/entrypoint.sh ./opt/grafana-entrypoint.sh
+COPY ./grafana/home-dashboard.json /usr/share/grafana/public/dashboards/home.json
 
 ENTRYPOINT ["./opt/grafana-entrypoint.sh"]
