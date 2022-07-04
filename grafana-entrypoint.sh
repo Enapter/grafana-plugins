@@ -2,14 +2,14 @@
 
 set -e
 
-config_dir=/etc/grafana/provisioning/datasources
-filename=$config_dir/telemetry.yml
+provisioning_dir=/etc/grafana/provisioning
+datasource_config=$provisioning_dir/datasources/telemetry.yml
 plugin_type=enapter-telemetry
 
 export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=$plugin_type
 export GF_LOG_LEVEL=info
-export GF_USERS_ALLOW_SIGN_UP=true
-export GF_USERS_AUTO_ASSIGN_ORG_ROLE=Admin
+export GF_AUTH_ANONYMOUS_ENABLED=true
+export GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
 
 TELEMETRY_API_BASE_URL=${TELEMETRY_API_BASE_URL:-https://api.enapter.com/telemetry}
 
@@ -18,7 +18,7 @@ if [ -z "$TELEMETRY_API_TOKEN" ]; then
 	exit
 fi
 
-cat > $filename <<EOF
+cat > $datasource_config <<EOF
 apiVersion: 1
 datasources:
   - name: Enapter Telemetry
