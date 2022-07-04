@@ -3,14 +3,48 @@
 This repo contains a Grafana datasource plugin that helps to visualize and
 analyze devices telemetry from [Enapter Cloud](https://handbook.enapter.com/software/cloud/cloud.html).
 
-In order to use the plugin one needs to obtain an Enapter Telemetry API
-token. At the moment we provide it on an individual basis. Please, contact
-us at [developers@enapter.com](mailto:developers@enapter.com) to get your token.
+In order to use the plugin one needs to obtain an Enapter Telemetry API token.
+At the moment we provide it on an individual basis. Please, contact us at
+[developers@enapter.com](mailto:developers@enapter.com) to get your token.
+
+## Quick start
+
+1. Use your Telemetry API token to run the Grafana Docker image with the plugin
+   already installed:
+
+```bash
+docker run \
+	--env TELEMETRY_API_TOKEN=<YOUR_TELEMETRY_API_TOKEN> \
+	--rm \
+	--interactive \
+	--tty \
+	--publish 3000:3000 \
+	enapter/grafana-with-telemetry-datasource-plugin
+```
+
+2. Proceed to `http://127.0.0.1:3000`.
+3. Edit the Telemetry panel.
+
+## Usage
+
+To visualize the device telemetry, you need to declare which data you need
+using YAML. A basic query looks like this:
+
+```yaml
+device: YOUR_DEVICE
+telemetry:
+  - YOUR_TELEMETRY
+granularity: $__interval
+aggregation: auto
+```
+
+To get more info about the query language check out the [Enapter Developers
+docs](https://developers.enapter.com).
 
 ## Installation
 
-The only method of installation available at the moment is to extract a
-packaged plugin into the Grafana plugins directory.
+To use the Enapter Telemetry datasource in your existing Grafana installation
+you need to extract the packaged plugin into the Grafana plugins directory.
 
 The path to the plugin directory is defined in [the Grafana configuration
 file](https://grafana.com/docs/grafana/latest/administration/configuration/#plugins).
@@ -29,16 +63,13 @@ to install the plugin:
 
 Once the plugin is installed, a new datasource should be created:
 
-1. Use Grafana web UI to
-   [create a new datasource](https://grafana.com/docs/grafana/latest/datasources/add-a-data-source/)
+1. Use Grafana web UI to [create a new
+   datasource](https://grafana.com/docs/grafana/latest/datasources/add-a-data-source/)
    of type `telemetry`.
-2. Make sure `Telemetry API base URL` field value is set to `https://api.enapter.com/telemetry` (default).
+2. Make sure `Telemetry API base URL` field value is set to
+   `https://api.enapter.com/telemetry` (default).
 3. Set `Telemetry API token` field value to the value of your token.
 4. Save the changes.
-
-## Usage
-
-TODO: Add link to docs.
 
 ## Development
 
@@ -49,4 +80,4 @@ You will need the following tools to develop the plugin:
 - `gzip`
 - `docker`
 
-To build the plugin distribution from source run `make`.
+To build the plugin distribution from source run `make dist`.

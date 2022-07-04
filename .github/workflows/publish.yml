@@ -1,0 +1,61 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v3
+        with:
+          images: enapter/grafana-with-telemetry-datasource-plugin
+          tags: |
+            type=ref,event=tag
+
+      - name: Build and push to DockerHub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+
+      - name: Login to Enapter DockerHub
+        uses: docker/login-action@v1
+        with:
+          registry: docker.enapter.com
+          username: ${{ secrets.ENAPTER_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.ENAPTER_DOCKERHUB_TOKEN }}
+
+      - name: Enapter Docker meta
+        id: enapter_docker_meta
+        uses: docker/metadata-action@v3
+        with:
+          images: docker.enapter.com/grafana/with-telemetry-datasource-plugin
+          tags: |
+            type=ref,event=tag
+
+      - name: Build and push to Enapter DockerHub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.enapter_docker_meta.outputs.tags }}
+          labels: ${{ steps.enapter_docker_meta.outputs.labels }}

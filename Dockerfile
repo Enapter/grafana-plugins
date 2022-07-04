@@ -1,3 +1,5 @@
+ARG GRAFANA_VERSION=8.4.4
+
 FROM node:14-alpine AS frontend
 
 WORKDIR /build
@@ -41,7 +43,17 @@ COPY ./Magefile.go ./Magefile.go
 RUN --mount=type=cache,target=/root/.cache/go-build mage build:backend
 
 
-FROM scratch
+FROM scratch AS dist
 
 COPY --from=frontend /build/dist /
 COPY --from=backend /build/dist/gpx_telemetry_linux_amd64 /
+
+
+FROM grafana/grafana:${GRAFANA_VERSION} AS grafana
+
+COPY --from=dist / /var/lib/grafana/plugins/telemetry/dist
+
+COPY ./grafana/entrypoint.sh ./opt/grafana-entrypoint.sh
+COPY ./grafana/home-dashboard.json /usr/share/grafana/public/dashboards/home.json
+
+ENTRYPOINT ["./opt/grafana-entrypoint.sh"]

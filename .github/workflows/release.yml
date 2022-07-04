@@ -16,7 +16,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Lint, test, build and archive
-        run: make
+        run: make dist.tar.gz
 
       - name: Release
         uses: softprops/action-gh-release@v1
