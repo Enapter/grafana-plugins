@@ -7,10 +7,28 @@ In order to use the plugin one needs to obtain an Enapter Telemetry API
 token. At the moment we provide it on an individual basis. Please, contact
 us at [developers@enapter.com](mailto:developers@enapter.com) to get your token.
 
+## Quick start
+
+1. Use your Telemetry API token to run the Grafana Docker image with the plugin
+   already installed:
+
+```bash
+docker run \
+	--env TELEMETRY_API_TOKEN=<YOUR_TELEMETRY_API_TOKEN> \
+	--rm \
+	--interactive \
+	--tty \
+	--publish 3000:3000 \
+	enapter/grafana-with-telemetry-datasource-plugin
+```
+
+2. Proceed to `http://127.0.0.1:3000`.
+3. Edit the Telemetry panel.
+
 ## Installation
 
-The only method of installation available at the moment is to extract a
-packaged plugin into the Grafana plugins directory.
+To use the Enapter Telemetry datasource in your existing Grafana installation
+you need to extract the packaged plugin into the Grafana plugins directory.
 
 The path to the plugin directory is defined in [the Grafana configuration
 file](https://grafana.com/docs/grafana/latest/administration/configuration/#plugins).
