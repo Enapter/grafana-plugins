@@ -18,7 +18,7 @@ dist:
 		.
 
 PLUGIN_VERSION = $(shell jq -r .version package.json)
-GRAFANA_TAG = enapter/grafana-with-telemetry-datasource-plugin:v$(PLUGIN_VERSION)
+GRAFANA_TAG = enapter/grafana-with-telemetry-datasource-plugin:v$(PLUGIN_VERSION)-dev
 
 .PHONY: grafana-build
 grafana-build:
