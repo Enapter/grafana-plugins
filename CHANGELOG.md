@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.2
+
+- Handle anonymous users correctly.
+
 ## v1.2.1
 
 - Return more user-friendly error message if the metric data type is not

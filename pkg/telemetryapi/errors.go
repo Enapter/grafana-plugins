@@ -3,7 +3,6 @@ package telemetryapi
 import "errors"
 
 var (
-	ErrEmptyUser                    = errors.New("empty user")
 	errEmptyHeaderField             = errors.New("empty header field")
 	errUnexpectedStatus             = errors.New("unexpected status")
 	errUnexpectedAbsenceOfError     = errors.New("unexpected absence of error")
