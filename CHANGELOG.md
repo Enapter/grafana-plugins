@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.3
+
+- Upgrade frontend dependencies.
+
 ## v1.2.2
 
 - Handle anonymous users correctly.
