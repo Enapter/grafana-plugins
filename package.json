@@ -13,10 +13,10 @@
   "author": "Roman Novatorov",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@grafana/data": "8.2.4",
-    "@grafana/runtime": "8.2.4",
-    "@grafana/toolkit": "8.2.4",
-    "@grafana/ui": "8.2.4",
+    "@grafana/data": "9.0.2",
+    "@grafana/runtime": "9.0.2",
+    "@grafana/toolkit": "9.0.2",
+    "@grafana/ui": "9.0.2",
     "@types/lodash": "^4.14.182"
   },
   "resolutions": {
@@ -25,5 +25,7 @@
   "engines": {
     "node": ">=14"
   },
-  "dependencies": {}
+  "dependencies": {
+    "rxjs": "7.5.5"
+  }
 }
