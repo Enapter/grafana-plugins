@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.4
+
+- Nameless data frame.
+
 ## v1.2.3
 
 - Upgrade frontend dependencies.
