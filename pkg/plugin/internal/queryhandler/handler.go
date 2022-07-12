@@ -66,7 +66,7 @@ func (h *QueryHandler) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries
 		}
 	}
 
-	return data.NewFrame("response", frameFields...), nil
+	return data.NewFrame("", frameFields...), nil
 }
 
 func (h *QueryHandler) HandleQuery(
