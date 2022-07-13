@@ -39,7 +39,7 @@ aggregation: auto
 ```
 
 To get more info about the query language check out the [Enapter Developers
-docs](https://developers.enapter.com).
+docs](https://developers.enapter.com/docs/tutorial/custom-dashboards/query-language).
 
 ## Installation
 
