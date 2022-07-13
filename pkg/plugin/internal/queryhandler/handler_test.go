@@ -129,6 +129,14 @@ func (s *QueryHandlerSuite) TestInt64() {
 	s.Require().Equal(int64(43), *dataFields[0].At(1).(*int64))
 }
 
+func (s *QueryHandlerSuite) TestHide() {
+	q := s.randomDataQuery()
+	q.hide = true
+	frames, err := s.handleQuery(q)
+	s.Require().Nil(err)
+	s.Require().Nil(frames)
+}
+
 func (s *QueryHandlerSuite) TestString() {
 	q := s.randomDataQuery()
 	timeseries := &telemetryapi.Timeseries{
@@ -367,6 +375,7 @@ func (s *QueryHandlerSuite) handleQuery(q dataQuery) (data.Frames, error) {
 		Interval:  q.interval,
 		JSON: s.shouldMarshalJSON(map[string]interface{}{
 			"text": q.text,
+			"hide": q.hide,
 		}),
 	}
 	return s.queryHandler.HandleQuery(s.ctx, pCtx, dataQuery)
@@ -384,6 +393,7 @@ type dataQuery struct {
 	to       time.Time
 	interval time.Duration
 	text     string
+	hide     bool
 }
 
 func (q dataQuery) toGetParams() telemetryapi.TimeseriesParams {

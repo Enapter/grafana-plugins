@@ -77,12 +77,21 @@ func (h *QueryHandler) HandleQuery(
 		user = pCtx.User.Email
 	}
 
-	queryText, err := h.parseRawQuery(query)
+	var props queryProperties
+	if err := json.Unmarshal(query.JSON, &props); err != nil {
+		return nil, fmt.Errorf("parse query properties: %w", err)
+	}
+
+	if props.Hide {
+		return nil, nil
+	}
+
+	queryText, err := h.parseQueryText(props.Text)
 	if err != nil {
 		if errors.Is(err, errEmptyQueryText) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("parse raw query: %w", err)
+		return nil, fmt.Errorf("parse query text: %w", err)
 	}
 
 	timeseries, err := h.telemetryAPIClient.Timeseries(ctx, telemetryapi.TimeseriesParams{
@@ -106,23 +115,17 @@ func (h *QueryHandler) HandleQuery(
 	return data.Frames{frame}, nil
 }
 
-func (h *QueryHandler) parseRawQuery(raw backend.DataQuery) (string, error) {
-	var query struct {
-		TextAsYAML string `json:"text"`
-	}
-	if err := json.Unmarshal(raw.JSON, &query); err != nil {
-		return "", err
-	}
-	if len(query.TextAsYAML) == 0 {
+func (h *QueryHandler) parseQueryText(text string) (string, error) {
+	if len(text) == 0 {
 		return "", errEmptyQueryText
 	}
 
-	queryTextAsJSON, err := yamlToJSON(query.TextAsYAML)
+	parsed, err := yamlToJSON(text)
 	if err != nil {
 		return "", fmt.Errorf("convert YAML to JSON: %w", err)
 	}
 
-	return queryTextAsJSON, nil
+	return parsed, nil
 }
 
 func yamlToJSON(in string) (string, error) {
