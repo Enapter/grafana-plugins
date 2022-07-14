@@ -1,4 +1,4 @@
-ARG GRAFANA_VERSION=8.4.4
+ARG GRAFANA_VERSION=9.0.2
 
 FROM node:14-alpine AS frontend
 
