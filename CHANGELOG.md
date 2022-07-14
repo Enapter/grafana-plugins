@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.6
+
+- Smart labels
+
 ## v1.2.5
 
 - Handle hidden queries correctly.
