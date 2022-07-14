@@ -1,4 +1,4 @@
-package queryhandler_test
+package handlers_test
 
 import (
 	"context"

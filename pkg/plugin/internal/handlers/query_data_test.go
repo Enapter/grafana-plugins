@@ -1,4 +1,4 @@
-package queryhandler_test
+package handlers_test
 
 import (
 	"context"
@@ -11,63 +11,63 @@ import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/suite"
-	yaml "gopkg.in/yaml.v3"
 
-	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/plugin/internal/queryhandler"
+	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/plugin/internal/handlers"
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
 )
 
-type QueryHandlerSuite struct {
+type QueryDataSuite struct {
 	suite.Suite
 	ctx                    context.Context
+	logger                 hclog.Logger
 	mockTelemetryAPIClient *MockTelemetryAPIClient
-	queryHandler           *queryhandler.QueryHandler
+	queryDataHandler       *handlers.QueryData
 }
 
-func (s *QueryHandlerSuite) SetupSuite() {
+func (s *QueryDataSuite) SetupSuite() {
 	s.ctx = context.Background()
 	s.mockTelemetryAPIClient = NewMockTelemetryAPIClient(s.Suite)
-	s.queryHandler = queryhandler.New(s.mockTelemetryAPIClient)
+	s.logger = hclog.Default()
+	s.queryDataHandler = handlers.NewQueryData(s.logger, s.mockTelemetryAPIClient)
 }
 
 var errFake = errors.New("fake error")
 
-func (s *QueryHandlerSuite) TestTelemetryAPIError() {
-	q := s.randomDataQuery()
-	s.expectGetAndReturnError(q, errFake)
-	frames, err := s.handleQuery(q)
-	s.Require().ErrorIs(err, errFake)
+func (s *QueryDataSuite) TestTelemetryAPIError() {
+	req := s.randomDataRequestWithSingleQuery()
+	s.expectGetAndReturnError(req, errFake)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().ErrorIs(err, handlers.ErrSomethingWentWrong)
 	s.Require().Nil(frames)
 }
 
-func (s *QueryHandlerSuite) TestHandleNoValuesError() {
-	q := s.randomDataQuery()
-	s.expectGetAndReturnError(q, telemetryapi.ErrNoValues)
-	frames, err := s.handleQuery(q)
+func (s *QueryDataSuite) TestHandleNoValuesError() {
+	req := s.randomDataRequestWithSingleQuery()
+	s.expectGetAndReturnError(req, telemetryapi.ErrNoValues)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().NoError(err)
 	s.Require().Nil(frames)
 }
 
-func (s *QueryHandlerSuite) TestEmptyTextNoError() {
-	q := s.randomDataQuery()
-	q.text = ""
-	frames, err := s.handleQuery(q)
+func (s *QueryDataSuite) TestEmptyTextNoError() {
+	req := s.randomDataRequestWithSingleQuery()
+	req.queries[0].text = ""
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().NoError(err)
 	s.Require().Nil(frames)
 }
 
-func (s *QueryHandlerSuite) TestInvalidYAML() {
-	q := s.randomDataQuery()
-	q.text = "that's not yaml"
+func (s *QueryDataSuite) TestInvalidYAML() {
+	req := s.randomDataRequestWithSingleQuery()
+	req.queries[0].text = "that's not yaml"
 	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
 		telemetryapi.TimeseriesDataTypeInt64,
 	})
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	frames, err := s.handleQuery(q)
-	var terr *yaml.TypeError
-	s.Require().ErrorAs(err, &terr)
-	s.Require().Nil(frames)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	_, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().ErrorIs(err, handlers.ErrInvalidYAML)
 }
 
 func newFloat64(v float64) *float64 { return &v }
@@ -76,8 +76,8 @@ func newBool(v bool) *bool          { return &v }
 func newString(v string) *string    { return &v }
 
 //nolint: dupl // FIXME
-func (s *QueryHandlerSuite) TestFloat64() {
-	q := s.randomDataQuery()
+func (s *QueryDataSuite) TestFloat64() {
+	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -91,8 +91,8 @@ func (s *QueryHandlerSuite) TestFloat64() {
 			},
 		}},
 	}
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	frames, err := s.handleQuery(q)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
 	timestampField, dataFields := s.extractTimeseriesFields(frames)
 	s.Require().Len(dataFields, 1)
@@ -103,8 +103,8 @@ func (s *QueryHandlerSuite) TestFloat64() {
 }
 
 //nolint: dupl // FIXME
-func (s *QueryHandlerSuite) TestInt64() {
-	q := s.randomDataQuery()
+func (s *QueryDataSuite) TestInt64() {
+	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -118,8 +118,8 @@ func (s *QueryHandlerSuite) TestInt64() {
 			},
 		}},
 	}
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	frames, err := s.handleQuery(q)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
 	timestampField, dataFields := s.extractTimeseriesFields(frames)
 	s.Require().Len(dataFields, 1)
@@ -129,16 +129,16 @@ func (s *QueryHandlerSuite) TestInt64() {
 	s.Require().Equal(int64(43), *dataFields[0].At(1).(*int64))
 }
 
-func (s *QueryHandlerSuite) TestHide() {
-	q := s.randomDataQuery()
-	q.hide = true
-	frames, err := s.handleQuery(q)
+func (s *QueryDataSuite) TestHide() {
+	req := s.randomDataRequestWithSingleQuery()
+	req.queries[0].hide = true
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
 	s.Require().Nil(frames)
 }
 
-func (s *QueryHandlerSuite) TestString() {
-	q := s.randomDataQuery()
+func (s *QueryDataSuite) TestString() {
+	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -152,8 +152,8 @@ func (s *QueryHandlerSuite) TestString() {
 			},
 		}},
 	}
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	frames, err := s.handleQuery(q)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
 	timestampField, dataFields := s.extractTimeseriesFields(frames)
 	s.Require().Len(dataFields, 1)
@@ -163,9 +163,9 @@ func (s *QueryHandlerSuite) TestString() {
 	s.Require().Equal("bar", *dataFields[0].At(1).(*string))
 }
 
-func (s *QueryHandlerSuite) TestNoUserInfo() {
-	q := s.randomDataQuery()
-	q.user = ""
+func (s *QueryDataSuite) TestNoUserInfo() {
+	req := s.randomDataRequestWithSingleQuery()
+	req.user = ""
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -179,8 +179,8 @@ func (s *QueryHandlerSuite) TestNoUserInfo() {
 			},
 		}},
 	}
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	frames, err := s.handleQuery(q)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
 	timestampField, dataFields := s.extractTimeseriesFields(frames)
 	s.Require().Len(dataFields, 1)
@@ -190,8 +190,8 @@ func (s *QueryHandlerSuite) TestNoUserInfo() {
 	s.Require().Equal("bar", *dataFields[0].At(1).(*string))
 }
 
-func (s *QueryHandlerSuite) TestStringArrayIsUnsupported() {
-	q := s.randomDataQuery()
+func (s *QueryDataSuite) TestStringArrayIsUnsupported() {
+	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -205,13 +205,13 @@ func (s *QueryHandlerSuite) TestStringArrayIsUnsupported() {
 			},
 		}},
 	}
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	_, err := s.handleQuery(q)
-	s.Require().ErrorIs(err, queryhandler.ErrUnsupportedTimeseriesDataType)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	_, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().Error(err, handlers.ErrMetricDataTypeIsNotSupported)
 }
 
-func (s *QueryHandlerSuite) TestBool() {
-	q := s.randomDataQuery()
+func (s *QueryDataSuite) TestBool() {
+	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -225,8 +225,8 @@ func (s *QueryHandlerSuite) TestBool() {
 			},
 		}},
 	}
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	frames, err := s.handleQuery(q)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
 	timestampField, dataFields := s.extractTimeseriesFields(frames)
 	s.Require().Len(dataFields, 1)
@@ -236,8 +236,8 @@ func (s *QueryHandlerSuite) TestBool() {
 	s.Require().Equal(false, *dataFields[0].At(1).(*bool))
 }
 
-func (s *QueryHandlerSuite) TestMultipleFields() {
-	q := s.randomDataQuery()
+func (s *QueryDataSuite) TestMultipleFields() {
+	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -260,8 +260,8 @@ func (s *QueryHandlerSuite) TestMultipleFields() {
 			},
 		},
 	}
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	frames, err := s.handleQuery(q)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
 	timestampField, dataFields := s.extractTimeseriesFields(frames)
 	s.Require().Len(dataFields, 2)
@@ -273,8 +273,8 @@ func (s *QueryHandlerSuite) TestMultipleFields() {
 	s.Require().Equal("bar", *dataFields[1].At(1).(*string))
 }
 
-func (s *QueryHandlerSuite) TestMultipleFieldsWithNil() {
-	q := s.randomDataQuery()
+func (s *QueryDataSuite) TestMultipleFieldsWithNil() {
+	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -297,8 +297,8 @@ func (s *QueryHandlerSuite) TestMultipleFieldsWithNil() {
 			},
 		},
 	}
-	s.expectGetAndReturnTimeseries(q, timeseries)
-	frames, err := s.handleQuery(q)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
 	timestampField, dataFields := s.extractTimeseriesFields(frames)
 	s.Require().Len(dataFields, 2)
@@ -310,21 +310,19 @@ func (s *QueryHandlerSuite) TestMultipleFieldsWithNil() {
 	s.Require().Equal("bar", *dataFields[1].At(1).(*string))
 }
 
-func (s *QueryHandlerSuite) TestDoNotRenderIntervals() {
-	q := s.randomDataQuery()
-	q.text = "A fact: $__interval is $__interval_ms milliseconds."
-	q.interval = 42 * time.Second
+func (s *QueryDataSuite) TestDoNotRenderIntervals() {
+	req := s.randomDataRequestWithSingleQuery()
+	req.queries[0].text = `{"A fact":"$__interval is $__interval_ms milliseconds."}`
+	req.queries[0].interval = 42 * time.Second
 	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
 		telemetryapi.TimeseriesDataTypeBool,
 	})
-	getParams := q.toGetParams()
-	getParams.Query = `{"A fact":"$__interval is $__interval_ms milliseconds."}`
-	s.mockTelemetryAPIClient.ExpectGetAndReturn(getParams, timeseries, nil)
-	_, err := s.handleQuery(q)
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	_, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().NoError(err)
 }
 
-func (s *QueryHandlerSuite) extractTimeseriesFields(frames data.Frames) (
+func (s *QueryDataSuite) extractTimeseriesFields(frames data.Frames) (
 	timestamp *data.Field, dataFields []*data.Field,
 ) {
 	s.Require().Len(frames, 1)
@@ -337,75 +335,113 @@ func (s *QueryHandlerSuite) extractTimeseriesFields(frames data.Frames) (
 	return time, values
 }
 
-func (s *QueryHandlerSuite) expectGetAndReturnTimeseries(q dataQuery, ts *telemetryapi.Timeseries) {
-	s.mockTelemetryAPIClient.ExpectGetAndReturn(q.toGetParams(), ts, nil)
-}
-
-func (s *QueryHandlerSuite) expectGetAndReturnError(q dataQuery, err error) {
-	s.mockTelemetryAPIClient.ExpectGetAndReturn(q.toGetParams(), nil, err)
-}
-
-func (s *QueryHandlerSuite) randomDataQuery() dataQuery {
-	return dataQuery{
-		user:     faker.Email(),
-		from:     time.Now().Add(-time.Duration(rand.Int()+1) * time.Hour),
-		to:       time.Now().Add(-time.Duration(rand.Int()+1) * time.Minute),
-		interval: time.Duration(rand.Int()) * time.Second,
-		text: string(s.shouldMarshalJSON(map[string]interface{}{
-			faker.Word(): faker.Sentence(),
-			faker.Word(): rand.Int(),
-			faker.Word(): rand.Int()%2 == 0,
-		})),
+func (s *QueryDataSuite) expectGetAndReturnTimeseries(req dataRequest, ts *telemetryapi.Timeseries) {
+	for _, q := range req.queries {
+		p := telemetryapi.TimeseriesParams{
+			User:  req.user,
+			Query: q.text,
+			From:  q.from,
+			To:    q.to,
+		}
+		s.mockTelemetryAPIClient.ExpectGetAndReturn(p, ts, nil)
 	}
 }
 
-func (s *QueryHandlerSuite) handleQuery(q dataQuery) (data.Frames, error) {
+func (s *QueryDataSuite) expectGetAndReturnError(req dataRequest, err error) {
+	for _, q := range req.queries {
+		p := telemetryapi.TimeseriesParams{
+			User:  req.user,
+			Query: q.text,
+			From:  q.from,
+			To:    q.to,
+		}
+		s.mockTelemetryAPIClient.ExpectGetAndReturn(p, nil, err)
+	}
+}
+
+func (s *QueryDataSuite) randomDataRequestWithSingleQuery() dataRequest {
+	const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	return dataRequest{
+		user: faker.Email(),
+		queries: []query{{
+			refID:    string(abc[rand.Int()%len(abc)]),
+			from:     time.Now().Add(-time.Duration(rand.Int()+1) * time.Hour),
+			to:       time.Now().Add(-time.Duration(rand.Int()+1) * time.Minute),
+			interval: time.Duration(rand.Int()) * time.Second,
+			text: string(s.shouldMarshalJSON(map[string]interface{}{
+				faker.Word(): faker.Sentence(),
+				faker.Word(): rand.Int(),
+				faker.Word(): rand.Int()%2 == 0,
+			})),
+		}},
+	}
+}
+
+func (s *QueryDataSuite) handleDataRequestWithSingleQuery(req dataRequest) (data.Frames, error) {
+	s.Require().Len(req.queries, 1)
+
+	responses := s.handleDataRequest(req)
+	s.Require().Len(responses, len(req.queries))
+
+	resp := responses[req.queries[0].refID]
+	return resp.Frames, resp.Error
+}
+
+func (s *QueryDataSuite) handleDataRequest(req dataRequest) backend.Responses {
 	var user *backend.User
-	if q.user != "" {
+	if req.user != "" {
 		user = &backend.User{
-			Email: q.user,
+			Email: req.user,
 		}
 	}
 
-	pCtx := backend.PluginContext{
-		User: user,
+	queries := make([]backend.DataQuery, len(req.queries))
+	for i, q := range req.queries {
+		queries[i] = backend.DataQuery{
+			RefID:     q.refID,
+			TimeRange: backend.TimeRange{From: q.from, To: q.to},
+			Interval:  q.interval,
+			JSON: s.shouldMarshalJSON(map[string]interface{}{
+				"text": q.text,
+				"hide": q.hide,
+			}),
+		}
 	}
-	dataQuery := backend.DataQuery{
-		TimeRange: backend.TimeRange{From: q.from, To: q.to},
-		Interval:  q.interval,
-		JSON: s.shouldMarshalJSON(map[string]interface{}{
-			"text": q.text,
-			"hide": q.hide,
-		}),
-	}
-	return s.queryHandler.HandleQuery(s.ctx, pCtx, dataQuery)
+
+	resp, err := s.queryDataHandler.QueryData(s.ctx, &backend.QueryDataRequest{
+		PluginContext: backend.PluginContext{
+			User: user,
+		},
+		Headers: nil,
+		Queries: queries,
+	})
+	s.Require().NoError(err)
+
+	return resp.Responses
 }
 
-func (s *QueryHandlerSuite) shouldMarshalJSON(o interface{}) []byte {
+func (s *QueryDataSuite) shouldMarshalJSON(o interface{}) []byte {
 	data, err := json.Marshal(o)
 	s.Require().NoError(err)
 	return data
 }
 
-type dataQuery struct {
-	user     string
+type dataRequest struct {
+	user    string
+	queries []query
+}
+
+type query struct {
+	refID    string
 	from     time.Time
 	to       time.Time
 	interval time.Duration
-	text     string
 	hide     bool
+	text     string
 }
 
-func (q dataQuery) toGetParams() telemetryapi.TimeseriesParams {
-	return telemetryapi.TimeseriesParams{
-		User:  q.user,
-		Query: q.text,
-		From:  q.from,
-		To:    q.to,
-	}
-}
-
-func TestQueryHandler(t *testing.T) {
+func TestQueryData(t *testing.T) {
 	t.Parallel()
-	suite.Run(t, new(QueryHandlerSuite))
+	suite.Run(t, new(QueryDataSuite))
 }
