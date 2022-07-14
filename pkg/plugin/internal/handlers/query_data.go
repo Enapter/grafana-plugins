@@ -94,15 +94,12 @@ func (h *QueryData) handleQuery(
 		return nil, fmt.Errorf("parse query properties: %w", err)
 	}
 
-	if props.Hide {
+	if props.Hide || len(props.Text) == 0 {
 		return nil, nil
 	}
 
 	queryText, err := h.parseQueryText(props.Text)
 	if err != nil {
-		if errors.Is(err, errEmptyQueryText) {
-			return nil, nil
-		}
 		return nil, fmt.Errorf("parse query text: %w", err)
 	}
 
@@ -128,10 +125,6 @@ func (h *QueryData) handleQuery(
 }
 
 func (h *QueryData) parseQueryText(text string) (string, error) {
-	if len(text) == 0 {
-		return "", errEmptyQueryText
-	}
-
 	parsed, err := yamlToJSON(text)
 	if err != nil {
 		return "", fmt.Errorf("convert YAML to JSON: %w", err)

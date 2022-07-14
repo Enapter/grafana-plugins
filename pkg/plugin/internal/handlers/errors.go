@@ -3,7 +3,6 @@ package handlers
 import "errors"
 
 var (
-	errEmptyQueryText                = errors.New("empty query text")
 	errUnsupportedTimeseriesDataType = errors.New("unsupported timeseries data type")
 )
 
