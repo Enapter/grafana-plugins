@@ -33,7 +33,7 @@ func (h *QueryData) QueryData(
 	resp := backend.NewQueryDataResponse()
 
 	for _, q := range req.Queries {
-		frames, err := h.HandleQuery(ctx, req.PluginContext, q)
+		frames, err := h.handleQuery(ctx, req.PluginContext, q)
 		if err != nil {
 			h.logger.Warn("failed to handle query",
 				"ref_id", q.RefID,
@@ -52,20 +52,20 @@ func (h *QueryData) QueryData(
 }
 
 func (h *QueryData) userFacingError(err error) error {
-	if errors.Is(err, ErrUnsupportedTimeseriesDataType) {
-		return errMetricDataTypeIsNotSupported
+	if errors.Is(err, errUnsupportedTimeseriesDataType) {
+		return ErrMetricDataTypeIsNotSupported
 	}
 
 	var multiErr *telemetryapi.MultiError
 
 	if ok := errors.As(err, &multiErr); !ok {
-		return errSomethingWentWrong
+		return ErrSomethingWentWrong
 	}
 
 	switch len(multiErr.Errors) {
 	case 0: // should never happen
 		h.logger.Error("multi error does not contains errors")
-		return errSomethingWentWrong
+		return ErrSomethingWentWrong
 	case 1:
 		// noop
 	default:
@@ -78,10 +78,10 @@ func (h *QueryData) userFacingError(err error) error {
 		return errors.New(msg)
 	}
 
-	return errSomethingWentWrong
+	return ErrSomethingWentWrong
 }
 
-func (h *QueryData) HandleQuery(
+func (h *QueryData) handleQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
 	user := ""
@@ -167,7 +167,7 @@ func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (
 				make([]*bool, len(dataField.Values)))
 		default:
 			return nil, fmt.Errorf("%w: %s",
-				ErrUnsupportedTimeseriesDataType, dataField.Type)
+				errUnsupportedTimeseriesDataType, dataField.Type)
 		}
 
 		frameFields[i+1] = frameField
