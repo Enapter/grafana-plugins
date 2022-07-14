@@ -51,7 +51,7 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 		return nil, fmt.Errorf("new telemetry API client: %w", err)
 	}
 
-	queryHandler := queryhandler.New(telemetryAPIClient)
+	queryHandler := queryhandler.New(logger, telemetryAPIClient)
 
 	logger.Info("created new data source")
 

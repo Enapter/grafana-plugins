@@ -9,17 +9,20 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/hashicorp/go-hclog"
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
 )
 
 type QueryHandler struct {
+	logger             hclog.Logger
 	telemetryAPIClient telemetryapi.Client
 }
 
-func New(telemetryAPIClient telemetryapi.Client) *QueryHandler {
+func New(logger hclog.Logger, telemetryAPIClient telemetryapi.Client) *QueryHandler {
 	return &QueryHandler{
+		logger:             logger.Named("query_handler"),
 		telemetryAPIClient: telemetryAPIClient,
 	}
 }

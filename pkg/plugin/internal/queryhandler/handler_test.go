@@ -11,6 +11,7 @@ import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/suite"
 	yaml "gopkg.in/yaml.v3"
 
@@ -21,6 +22,7 @@ import (
 type QueryHandlerSuite struct {
 	suite.Suite
 	ctx                    context.Context
+	logger                 hclog.Logger
 	mockTelemetryAPIClient *MockTelemetryAPIClient
 	queryHandler           *queryhandler.QueryHandler
 }
@@ -28,7 +30,8 @@ type QueryHandlerSuite struct {
 func (s *QueryHandlerSuite) SetupSuite() {
 	s.ctx = context.Background()
 	s.mockTelemetryAPIClient = NewMockTelemetryAPIClient(s.Suite)
-	s.queryHandler = queryhandler.New(s.mockTelemetryAPIClient)
+	s.logger = hclog.Default()
+	s.queryHandler = queryhandler.New(s.logger, s.mockTelemetryAPIClient)
 }
 
 var errFake = errors.New("fake error")
