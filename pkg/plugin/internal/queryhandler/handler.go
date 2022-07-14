@@ -72,6 +72,60 @@ func (h *QueryHandler) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries
 	return data.NewFrame("", frameFields...), nil
 }
 
+func (h *QueryHandler) QueryData(
+	ctx context.Context, req *backend.QueryDataRequest,
+) (*backend.QueryDataResponse, error) {
+	resp := backend.NewQueryDataResponse()
+
+	for _, q := range req.Queries {
+		frames, err := h.HandleQuery(ctx, req.PluginContext, q)
+		if err != nil {
+			h.logger.Warn("failed to handle query",
+				"ref_id", q.RefID,
+				"error", err)
+
+			err = h.userFacingError(err)
+		}
+
+		resp.Responses[q.RefID] = backend.DataResponse{
+			Frames: frames,
+			Error:  err,
+		}
+	}
+
+	return resp, nil
+}
+
+func (h *QueryHandler) userFacingError(err error) error {
+	if errors.Is(err, ErrUnsupportedTimeseriesDataType) {
+		return errMetricDataTypeIsNotSupported
+	}
+
+	var multiErr *telemetryapi.MultiError
+
+	if ok := errors.As(err, &multiErr); !ok {
+		return errSomethingWentWrong
+	}
+
+	switch len(multiErr.Errors) {
+	case 0: // should never happen
+		h.logger.Error("multi error does not contains errors")
+		return errSomethingWentWrong
+	case 1:
+		// noop
+	default:
+		h.logger.Warn("multi error contains multiple errors, " +
+			"but this is not supported yet; will return only the first error")
+	}
+
+	if msg := multiErr.Errors[0].Message; len(msg) > 0 {
+		//nolint: goerr113 // user-facing
+		return errors.New(msg)
+	}
+
+	return errSomethingWentWrong
+}
+
 func (h *QueryHandler) HandleQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
