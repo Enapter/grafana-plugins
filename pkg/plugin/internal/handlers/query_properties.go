@@ -1,4 +1,4 @@
-package queryhandler
+package handlers
 
 type queryProperties struct {
 	Hide bool   `json:"hide"`

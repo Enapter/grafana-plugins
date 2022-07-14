@@ -1,4 +1,4 @@
-package queryhandler
+package handlers
 
 import "errors"
 

@@ -9,12 +9,11 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/plugin/internal/queryhandler"
+	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/plugin/internal/handlers"
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
 )
 
 var (
-	_ backend.QueryDataHandler      = (*dataSource)(nil)
 	_ backend.CheckHealthHandler    = (*dataSource)(nil)
 	_ instancemgmt.InstanceDisposer = (*dataSource)(nil)
 )
@@ -22,7 +21,8 @@ var (
 type dataSource struct {
 	logger             hclog.Logger
 	telemetryAPIClient telemetryapi.Client
-	queryHandler       *queryhandler.QueryHandler
+
+	backend.QueryDataHandler
 }
 
 func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSettings,
@@ -50,14 +50,14 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 		return nil, fmt.Errorf("new telemetry API client: %w", err)
 	}
 
-	queryHandler := queryhandler.New(logger, telemetryAPIClient)
+	queryDataHandler := handlers.NewQueryData(logger, telemetryAPIClient)
 
 	logger.Info("created new data source")
 
 	return &dataSource{
 		logger:             logger,
 		telemetryAPIClient: telemetryAPIClient,
-		queryHandler:       queryHandler,
+		QueryDataHandler:   queryDataHandler,
 	}, nil
 }
 
@@ -65,12 +65,6 @@ func (d *dataSource) Dispose() {
 	d.telemetryAPIClient.Close()
 
 	d.logger.Info("disposed data source")
-}
-
-func (d *dataSource) QueryData(
-	ctx context.Context, req *backend.QueryDataRequest,
-) (*backend.QueryDataResponse, error) {
-	return d.queryHandler.QueryData(ctx, req)
 }
 
 func (d *dataSource) CheckHealth(

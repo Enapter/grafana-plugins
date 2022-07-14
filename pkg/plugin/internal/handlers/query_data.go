@@ -1,4 +1,4 @@
-package queryhandler
+package handlers
 
 import (
 	"context"
@@ -15,19 +15,19 @@ import (
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
 )
 
-type QueryHandler struct {
+type QueryData struct {
 	logger             hclog.Logger
 	telemetryAPIClient telemetryapi.Client
 }
 
-func New(logger hclog.Logger, telemetryAPIClient telemetryapi.Client) *QueryHandler {
-	return &QueryHandler{
+func NewQueryData(logger hclog.Logger, telemetryAPIClient telemetryapi.Client) *QueryData {
+	return &QueryData{
 		logger:             logger.Named("query_handler"),
 		telemetryAPIClient: telemetryAPIClient,
 	}
 }
 
-func (h *QueryHandler) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {
+func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {
 	frameFields := make([]*data.Field, len(timeseries.DataFields)+1)
 
 	frameFields[0] = data.NewField("time", nil, timeseries.TimeField)
@@ -72,7 +72,7 @@ func (h *QueryHandler) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries
 	return data.NewFrame("", frameFields...), nil
 }
 
-func (h *QueryHandler) QueryData(
+func (h *QueryData) QueryData(
 	ctx context.Context, req *backend.QueryDataRequest,
 ) (*backend.QueryDataResponse, error) {
 	resp := backend.NewQueryDataResponse()
@@ -96,7 +96,7 @@ func (h *QueryHandler) QueryData(
 	return resp, nil
 }
 
-func (h *QueryHandler) userFacingError(err error) error {
+func (h *QueryData) userFacingError(err error) error {
 	if errors.Is(err, ErrUnsupportedTimeseriesDataType) {
 		return errMetricDataTypeIsNotSupported
 	}
@@ -126,7 +126,7 @@ func (h *QueryHandler) userFacingError(err error) error {
 	return errSomethingWentWrong
 }
 
-func (h *QueryHandler) HandleQuery(
+func (h *QueryData) HandleQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
 	user := ""
@@ -172,7 +172,7 @@ func (h *QueryHandler) HandleQuery(
 	return data.Frames{frame}, nil
 }
 
-func (h *QueryHandler) parseQueryText(text string) (string, error) {
+func (h *QueryData) parseQueryText(text string) (string, error) {
 	if len(text) == 0 {
 		return "", errEmptyQueryText
 	}
