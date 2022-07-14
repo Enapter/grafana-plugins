@@ -2,9 +2,7 @@ package handlers
 
 import "errors"
 
-var (
-	errUnsupportedTimeseriesDataType = errors.New("unsupported timeseries data type")
-)
+var errUnsupportedTimeseriesDataType = errors.New("unsupported timeseries data type")
 
 //nolint: stylecheck,revive // user-facing
 var (
@@ -12,4 +10,6 @@ var (
 		"Something went wrong. Try again later or contact Enapter support.")
 	ErrMetricDataTypeIsNotSupported = errors.New(
 		"The requested metric data type is currently not supported.")
+	ErrInvalidYAML = errors.New(
+		"The query is not a valid YAML.")
 )

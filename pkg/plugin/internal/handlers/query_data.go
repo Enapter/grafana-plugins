@@ -9,6 +9,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/hashicorp/go-hclog"
+	"gopkg.in/yaml.v3"
 
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
 )
@@ -54,6 +55,10 @@ func (h *QueryData) QueryData(
 func (h *QueryData) userFacingError(err error) error {
 	if errors.Is(err, errUnsupportedTimeseriesDataType) {
 		return ErrMetricDataTypeIsNotSupported
+	}
+
+	if e := (&yaml.TypeError{}); errors.As(err, &e) {
+		return ErrInvalidYAML
 	}
 
 	var multiErr *telemetryapi.MultiError

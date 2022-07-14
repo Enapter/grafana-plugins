@@ -13,7 +13,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/suite"
-	yaml "gopkg.in/yaml.v3"
 
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/plugin/internal/handlers"
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
@@ -61,19 +60,14 @@ func (s *QueryDataSuite) TestEmptyTextNoError() {
 }
 
 func (s *QueryDataSuite) TestInvalidYAML() {
-	// FIXME: Allow to get real error underlying user-facing error.
-	s.T().Skip("Cannot check error type because of user-facing errors.")
-
 	req := s.randomDataRequestWithSingleQuery()
 	req.queries[0].text = "that's not yaml"
 	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
 		telemetryapi.TimeseriesDataTypeInt64,
 	})
 	s.expectGetAndReturnTimeseries(req, timeseries)
-	frames, err := s.handleDataRequestWithSingleQuery(req)
-	var terr *yaml.TypeError
-	s.Require().ErrorAs(err, &terr)
-	s.Require().Nil(frames)
+	_, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().ErrorIs(err, handlers.ErrInvalidYAML)
 }
 
 func newFloat64(v float64) *float64 { return &v }
