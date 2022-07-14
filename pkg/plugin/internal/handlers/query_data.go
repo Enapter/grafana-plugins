@@ -15,6 +15,8 @@ import (
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
 )
 
+var _ backend.QueryDataHandler = (*QueryData)(nil)
+
 type QueryData struct {
 	logger             hclog.Logger
 	telemetryAPIClient telemetryapi.Client

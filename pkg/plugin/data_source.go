@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -13,16 +12,14 @@ import (
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
 )
 
-var (
-	_ backend.CheckHealthHandler    = (*dataSource)(nil)
-	_ instancemgmt.InstanceDisposer = (*dataSource)(nil)
-)
+var _ instancemgmt.InstanceDisposer = (*dataSource)(nil)
 
 type dataSource struct {
 	logger             hclog.Logger
 	telemetryAPIClient telemetryapi.Client
 
 	backend.QueryDataHandler
+	backend.CheckHealthHandler
 }
 
 func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSettings,
@@ -51,6 +48,7 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 	}
 
 	queryDataHandler := handlers.NewQueryData(logger, telemetryAPIClient)
+	checkHealthHandler := handlers.NewCheckHealth(logger, telemetryAPIClient)
 
 	logger.Info("created new data source")
 
@@ -58,6 +56,7 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 		logger:             logger,
 		telemetryAPIClient: telemetryAPIClient,
 		QueryDataHandler:   queryDataHandler,
+		CheckHealthHandler: checkHealthHandler,
 	}, nil
 }
 
@@ -65,23 +64,4 @@ func (d *dataSource) Dispose() {
 	d.telemetryAPIClient.Close()
 
 	d.logger.Info("disposed data source")
-}
-
-func (d *dataSource) CheckHealth(
-	ctx context.Context, req *backend.CheckHealthRequest,
-) (*backend.CheckHealthResult, error) {
-	if err := d.telemetryAPIClient.Ready(ctx); err != nil {
-		d.logger.Error("telemetry API client is not ready",
-			"error", err.Error())
-
-		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: err.Error(),
-		}, nil
-	}
-
-	return &backend.CheckHealthResult{
-		Status:  backend.HealthStatusOk,
-		Message: "ok",
-	}, nil
 }
