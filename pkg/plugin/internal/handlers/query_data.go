@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/hashicorp/go-hclog"
-	yaml "gopkg.in/yaml.v3"
 
 	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
 )
@@ -27,51 +25,6 @@ func NewQueryData(logger hclog.Logger, telemetryAPIClient telemetryapi.Client) *
 		logger:             logger.Named("query_handler"),
 		telemetryAPIClient: telemetryAPIClient,
 	}
-}
-
-func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {
-	frameFields := make([]*data.Field, len(timeseries.DataFields)+1)
-
-	frameFields[0] = data.NewField("time", nil, timeseries.TimeField)
-
-	for i, dataField := range timeseries.DataFields {
-		var frameField *data.Field
-
-		switch dataField.Type {
-		case telemetryapi.TimeseriesDataTypeFloat64:
-			frameField = data.NewField(
-				"", data.Labels(dataField.Tags),
-				make([]*float64, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeInt64:
-			frameField = data.NewField(
-				"", data.Labels(dataField.Tags),
-				make([]*int64, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeString:
-			frameField = data.NewField(
-				"", data.Labels(dataField.Tags),
-				make([]*string, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeBool:
-			frameField = data.NewField(
-				"", data.Labels(dataField.Tags),
-				make([]*bool, len(dataField.Values)))
-		default:
-			return nil, fmt.Errorf("%w: %s",
-				ErrUnsupportedTimeseriesDataType, dataField.Type)
-		}
-
-		frameFields[i+1] = frameField
-	}
-
-	for row := 0; row < timeseries.Len(); row++ {
-		for col := 0; col < len(timeseries.DataFields); col++ {
-			frameField := frameFields[col+1]
-			dataField := timeseries.DataFields[col]
-			value := dataField.Values[row]
-			frameField.Set(row, value)
-		}
-	}
-
-	return data.NewFrame("", frameFields...), nil
 }
 
 func (h *QueryData) QueryData(
@@ -187,18 +140,47 @@ func (h *QueryData) parseQueryText(text string) (string, error) {
 	return parsed, nil
 }
 
-func yamlToJSON(in string) (string, error) {
-	dec := yaml.NewDecoder(strings.NewReader(in))
+func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {
+	frameFields := make([]*data.Field, len(timeseries.DataFields)+1)
 
-	var obj map[string]interface{}
-	if err := dec.Decode(&obj); err != nil {
-		return "", fmt.Errorf("decode: %w", err)
+	frameFields[0] = data.NewField("time", nil, timeseries.TimeField)
+
+	for i, dataField := range timeseries.DataFields {
+		var frameField *data.Field
+
+		switch dataField.Type {
+		case telemetryapi.TimeseriesDataTypeFloat64:
+			frameField = data.NewField(
+				"", data.Labels(dataField.Tags),
+				make([]*float64, len(dataField.Values)))
+		case telemetryapi.TimeseriesDataTypeInt64:
+			frameField = data.NewField(
+				"", data.Labels(dataField.Tags),
+				make([]*int64, len(dataField.Values)))
+		case telemetryapi.TimeseriesDataTypeString:
+			frameField = data.NewField(
+				"", data.Labels(dataField.Tags),
+				make([]*string, len(dataField.Values)))
+		case telemetryapi.TimeseriesDataTypeBool:
+			frameField = data.NewField(
+				"", data.Labels(dataField.Tags),
+				make([]*bool, len(dataField.Values)))
+		default:
+			return nil, fmt.Errorf("%w: %s",
+				ErrUnsupportedTimeseriesDataType, dataField.Type)
+		}
+
+		frameFields[i+1] = frameField
 	}
 
-	out, err := json.Marshal(obj)
-	if err != nil {
-		return "", fmt.Errorf("encode: %w", err)
+	for row := 0; row < timeseries.Len(); row++ {
+		for col := 0; col < len(timeseries.DataFields); col++ {
+			frameField := frameFields[col+1]
+			dataField := timeseries.DataFields[col]
+			value := dataField.Values[row]
+			frameField.Set(row, value)
+		}
 	}
 
-	return string(out), nil
+	return data.NewFrame("", frameFields...), nil
 }
