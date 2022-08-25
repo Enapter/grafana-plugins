@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"gopkg.in/yaml.v3"
 
-	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
+	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
 )
 
 var _ backend.QueryDataHandler = (*QueryData)(nil)
