@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/plugin"
+	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/plugin"
 )
 
 func main() {

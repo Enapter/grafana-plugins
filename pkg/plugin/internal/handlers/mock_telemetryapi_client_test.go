@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Enapter/grafana-plugins/telemetry-datasource/pkg/telemetryapi"
+	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
 )
 
 var _ telemetryapi.Client = (*MockTelemetryAPIClient)(nil)

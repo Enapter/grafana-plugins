@@ -20,11 +20,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/Enapter/grafana-plugins/telemetry-datasource"
+        "url": "https://github.com/Enapter/telemetry-grafana-datasource-plugin"
       },
       {
         "name": "License",
-        "url": "https://github.com/Enapter/grafana-plugins/telemetry-datasource/blob/master/LICENSE"
+        "url": "https://github.com/Enapter/telemetry-grafana-datasource-plugin/blob/master/LICENSE"
       }
     ],
     "screenshots": [],
