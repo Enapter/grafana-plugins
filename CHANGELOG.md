@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.8
+
+- Fix error message when no token is found.
+
 ## v1.2.7
 
 - Allow other plugins to be installed.
