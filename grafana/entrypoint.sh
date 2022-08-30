@@ -17,7 +17,7 @@ TELEMETRY_API_TOKEN=${TELEMETRY_API_TOKEN:-$ENAPTER_API_TOKEN}
 
 if [ -z "$TELEMETRY_API_TOKEN" ]; then
 	echo "both TELEMETRY_API_TOKEN and ENAPTER_API_TOKEN are empty or missing" > /dev/stderr
-	exit
+	exit 1
 fi
 
 cat > $datasource_config <<EOF
