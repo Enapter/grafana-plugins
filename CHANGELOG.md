@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.7
+
+- Allow other plugins to be installed.
+
 ## v1.2.6
 
 - Smart labels
