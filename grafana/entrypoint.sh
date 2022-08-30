@@ -20,6 +20,13 @@ if [ -z "$TELEMETRY_API_TOKEN" ]; then
 	exit 1
 fi
 
+opt_plugins_dir=/opt/plugins
+plugins_dir=/var/lib/grafana/plugins
+
+rm -rf ${plugins_dir:?}/$plugin_type
+mkdir -p $plugins_dir
+cp -r $opt_plugins_dir/$plugin_type $plugins_dir/$plugin_type
+
 cat > $datasource_config <<EOF
 apiVersion: 1
 datasources:

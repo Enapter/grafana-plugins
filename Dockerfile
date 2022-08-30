@@ -51,7 +51,7 @@ COPY --from=backend /build/dist/gpx_telemetry_linux_amd64 /
 
 FROM grafana/grafana:${GRAFANA_VERSION} AS grafana
 
-COPY --from=dist / /var/lib/grafana/plugins/telemetry/dist
+COPY --from=dist / /opt/plugins/enapter-telemetry/dist
 
 COPY ./grafana/entrypoint.sh ./opt/grafana-entrypoint.sh
 COPY ./grafana/home-dashboard.json /usr/share/grafana/public/dashboards/home.json
