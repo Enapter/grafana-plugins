@@ -13,10 +13,10 @@ export GF_AUTH_ANONYMOUS_ENABLED=true
 export GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
 
 TELEMETRY_API_BASE_URL=${TELEMETRY_API_BASE_URL:-https://api.enapter.com/telemetry}
-TELEMETRY_API_TOKEN=${TELEMETRY_API_TOKEN:-$ENAPTER_API_TOKEN}
+TELEMETRY_API_TOKEN=${TELEMETRY_API_TOKEN:-${ENAPTER_API_TOKEN:-}}
 
 if [ -z "$TELEMETRY_API_TOKEN" ]; then
-	echo "both TELEMETRY_API_TOKEN and ENAPTER_API_TOKEN are empty or missing" > /dev/stderr
+	echo "Both TELEMETRY_API_TOKEN and ENAPTER_API_TOKEN are empty or missing." > /dev/stderr
 	exit 1
 fi
 
