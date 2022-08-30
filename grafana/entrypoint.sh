@@ -32,7 +32,7 @@ datasources:
     secureJsonData:
       telemetryAPIToken: "$TELEMETRY_API_TOKEN"
     version: 1
-    editable: true
+    editable: false
 EOF
 
 exec /run.sh
