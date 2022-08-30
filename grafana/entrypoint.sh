@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+IFS=$'\n\t'
 
 provisioning_dir=/etc/grafana/provisioning
 datasource_config=$provisioning_dir/datasources/telemetry.yml
