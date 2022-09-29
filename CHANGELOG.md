@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.9
+
+- Provide Telemetry API HTTP client as library.
+
 ## v1.2.8
 
 - Fix error message when no token is found.
