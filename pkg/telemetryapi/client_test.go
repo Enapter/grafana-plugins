@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/bxcodec/faker/v3"
-	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
@@ -31,7 +30,6 @@ func (s *ClientSuite) SetupTest() {
 	s.token = faker.Word()
 	s.server = StartMockServer(s.T())
 	client, err := telemetryapi.NewClient(telemetryapi.ClientParams{
-		Logger:     hclog.New(hclog.DefaultOptions),
 		HTTPClient: s.server.NewClient(),
 		BaseURL:    s.server.Address(),
 		Token:      s.token,

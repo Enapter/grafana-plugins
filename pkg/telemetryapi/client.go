@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/hashicorp/go-hclog"
 )
 
 type Client interface {
@@ -22,7 +20,6 @@ type Client interface {
 }
 
 type ClientParams struct {
-	Logger     hclog.Logger
 	HTTPClient *http.Client
 	BaseURL    string
 	Token      string
@@ -41,7 +38,6 @@ func NewClient(p ClientParams) (Client, error) {
 	}
 
 	return &client{
-		logger:     p.Logger.Named("telemetry_api_client"),
 		httpClient: p.HTTPClient,
 		baseURL:    p.BaseURL,
 		token:      p.Token,
@@ -49,7 +45,6 @@ func NewClient(p ClientParams) (Client, error) {
 }
 
 type client struct {
-	logger     hclog.Logger
 	httpClient *http.Client
 	baseURL    string
 	token      string
@@ -94,7 +89,7 @@ type TimeseriesParams struct {
 	To    time.Time
 }
 
-func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (*Timeseries, error) {
+func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (_ *Timeseries, retErr error) {
 	req, err := c.newTimeseriesRequest(ctx, p)
 	if err != nil {
 		return nil, fmt.Errorf("new timeseries request: %w", err)
@@ -104,7 +99,13 @@ func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (*Timeserie
 	if err != nil {
 		return nil, fmt.Errorf("do HTTP request: %w", err)
 	}
-	defer c.closeRespBody(resp.Body)
+	defer func() {
+		if err := c.drainAndClose(resp.Body); err != nil {
+			if retErr == nil {
+				retErr = err
+			}
+		}
+	}()
 
 	timeseries, err := c.processTimeseriesResponse(resp)
 	if err != nil {
@@ -294,16 +295,9 @@ func (c *client) parseTimeseriesCSVRecord(
 	return time.Unix(timestamp, 0), values, nil
 }
 
-func (c *client) closeRespBody(body io.ReadCloser) {
-	if _, err := io.Copy(io.Discard, body); err != nil {
-		c.logger.Warn("failed to drain HTTP response body",
-			"error", err.Error())
-	}
-
-	if err := body.Close(); err != nil {
-		c.logger.Warn("failed to close HTTP response body",
-			"error", err.Error())
-	}
+func (c *client) drainAndClose(rc io.ReadCloser) error {
+	_, _ = io.Copy(io.Discard, rc)
+	return rc.Close()
 }
 
 func (c *client) processError(resp *http.Response) error {
