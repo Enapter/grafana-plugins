@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -173,7 +175,7 @@ func (h *QueryData) handleQuery(
 		return nil, nil
 	}
 
-	queryText, err := h.parseQueryText(props.Text)
+	queryText, err := h.parseQueryText(props.Text, query.TimeRange)
 	if err != nil {
 		return nil, fmt.Errorf("parse query text: %w", err)
 	}
@@ -181,8 +183,6 @@ func (h *QueryData) handleQuery(
 	timeseries, err := h.telemetryAPIClient.Timeseries(ctx, telemetryapi.TimeseriesParams{
 		User:  user,
 		Query: queryText,
-		From:  query.TimeRange.From,
-		To:    query.TimeRange.To,
 	})
 	if err != nil {
 		if errors.Is(err, telemetryapi.ErrNoValues) {
@@ -199,13 +199,23 @@ func (h *QueryData) handleQuery(
 	return data.Frames{frame}, nil
 }
 
-func (h *QueryData) parseQueryText(text string) (string, error) {
-	parsed, err := yamlToJSON(text)
-	if err != nil {
-		return "", fmt.Errorf("convert YAML to JSON: %w", err)
+func (h *QueryData) parseQueryText(text string, timeRange backend.TimeRange) (string, error) {
+	dec := yaml.NewDecoder(strings.NewReader(text))
+
+	var obj map[string]interface{}
+	if err := dec.Decode(&obj); err != nil {
+		return "", fmt.Errorf("decode YAML: %w", err)
 	}
 
-	return parsed, nil
+	obj["from"] = timeRange.From.Format(time.RFC3339)
+	obj["to"] = timeRange.To.Format(time.RFC3339)
+
+	out, err := json.Marshal(obj)
+	if err != nil {
+		return "", fmt.Errorf("encode JSON: %w", err)
+	}
+
+	return string(out), nil
 }
 
 func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {

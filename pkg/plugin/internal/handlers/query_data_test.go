@@ -13,6 +13,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/yaml.v3"
 
 	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/plugin/internal/handlers"
 	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
@@ -339,9 +340,7 @@ func (s *QueryDataSuite) expectGetAndReturnTimeseries(req dataRequest, ts *telem
 	for _, q := range req.queries {
 		p := telemetryapi.TimeseriesParams{
 			User:  req.user,
-			Query: q.text,
-			From:  q.from,
-			To:    q.to,
+			Query: s.queryTextWithTimeRange(q),
 		}
 		s.mockTelemetryAPIClient.ExpectGetAndReturn(p, ts, nil)
 	}
@@ -351,12 +350,22 @@ func (s *QueryDataSuite) expectGetAndReturnError(req dataRequest, err error) {
 	for _, q := range req.queries {
 		p := telemetryapi.TimeseriesParams{
 			User:  req.user,
-			Query: q.text,
-			From:  q.from,
-			To:    q.to,
+			Query: s.queryTextWithTimeRange(q),
 		}
 		s.mockTelemetryAPIClient.ExpectGetAndReturn(p, nil, err)
 	}
+}
+
+func (s *QueryDataSuite) queryTextWithTimeRange(q query) string {
+	var obj map[string]interface{}
+	if err := yaml.Unmarshal([]byte(q.text), &obj); err == nil {
+		obj["from"] = q.from.Format(time.RFC3339)
+		obj["to"] = q.to.Format(time.RFC3339)
+	}
+
+	out, err := json.Marshal(obj)
+	s.Require().NoError(err)
+	return string(out)
 }
 
 func (s *QueryDataSuite) randomDataRequestWithSingleQuery() dataRequest {
