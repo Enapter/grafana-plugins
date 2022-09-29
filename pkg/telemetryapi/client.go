@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -60,16 +59,20 @@ func (c *client) Close() {
 }
 
 func (c *client) Ready(ctx context.Context) error {
+	from := time.Now().Add(-time.Hour)
+	to := time.Now()
 	_, err := c.Timeseries(ctx, TimeseriesParams{
 		User: "<not specified>",
-		Query: `{
-			"telemetry":	"<does not exist>",
-			"device":	"<does not exist>",
-			"granularity":	"1m",
+		Query: fmt.Sprintf(`{
+			"from": %q,
+			"to":   %q,
+			"telemetry": [{
+				"device":    "<does not exist>", 
+				"attribute": "<does not exist>"
+			}],
+			"granularity": 	"1m",
 			"aggregation":	"auto"
-		}`,
-		From: time.Now().Add(-time.Hour),
-		To:   time.Now(),
+		}`, from.Format(time.RFC3339), to.Format(time.RFC3339)),
 	})
 	if err == nil {
 		return errUnexpectedAbsenceOfError
@@ -90,8 +93,6 @@ func (c *client) Ready(ctx context.Context) error {
 type TimeseriesParams struct {
 	User  string
 	Query string
-	From  time.Time
-	To    time.Time
 }
 
 func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (*Timeseries, error) {
@@ -115,15 +116,10 @@ func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (*Timeserie
 }
 
 func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (*http.Request, error) {
-	q := make(url.Values)
-
-	q.Set("from", p.From.UTC().Format(time.RFC3339))
-	q.Set("to", p.To.UTC().Format(time.RFC3339))
-
-	urlString := c.baseURL + "/v1/timeseries?" + q.Encode()
+	urlString := c.baseURL + "/v1/timeseries"
 
 	req, err := http.NewRequestWithContext(
-		ctx, http.MethodGet, urlString, strings.NewReader(p.Query))
+		ctx, http.MethodPost, urlString, strings.NewReader(p.Query))
 	if err != nil {
 		return nil, err
 	}
