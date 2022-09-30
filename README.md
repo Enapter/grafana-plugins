@@ -33,9 +33,9 @@ To visualize the device telemetry, you need to declare which data you want
 using YAML. A basic query looks like this:
 
 ```yaml
-device: YOUR_DEVICE
 telemetry:
-  - YOUR_TELEMETRY
+  - device: YOUR_DEVICE
+    attribute: YOUR_TELEMETRY
 granularity: $__interval
 aggregation: auto
 ```
