@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
-	"net/url"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/suite"
@@ -199,16 +196,10 @@ func (s *ClientSuite) TestGetRequestParams() {
 	p := telemetryapi.TimeseriesParams{
 		User:  user,
 		Query: query,
-		From:  time.Date(2020, time.November, 6, 5, 4, 3, 0, time.UTC),
-		To:    time.Date(2021, time.December, 11, 22, 33, 44, 0, time.UTC),
 	}
 	checkFn := func(r *http.Request) {
 		s.Require().Equal([]string{user}, r.Header["X-Enapter-Auth-User"])
 		s.Require().Equal([]string{s.token}, r.Header["X-Enapter-Auth-Token"])
-		q, err := url.ParseQuery(r.URL.RawQuery)
-		s.Require().NoError(err)
-		s.Require().Equal([]string{"2020-11-06T05:04:03Z"}, q["from"])
-		s.Require().Equal([]string{"2021-12-11T22:33:44Z"}, q["to"])
 		data, err := ioutil.ReadAll(r.Body)
 		s.Require().NoError(err)
 		s.Require().NoError(r.Body.Close())
@@ -364,13 +355,9 @@ ts,k=v
 }
 
 func (s *ClientSuite) randomGetParams() telemetryapi.TimeseriesParams {
-	to := time.Now().Add(-time.Duration(rand.Int()) * time.Second)
-	from := to.Add(-time.Duration(rand.Int()) * time.Second)
 	return telemetryapi.TimeseriesParams{
 		User:  faker.Email(),
 		Query: faker.Sentence(),
-		From:  from,
-		To:    to,
 	}
 }
 
