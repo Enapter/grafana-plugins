@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.0
+
+- Migrate to the new Telemetry API.
+
 ## v1.2.9
 
 - Provide Telemetry API HTTP client as library.
