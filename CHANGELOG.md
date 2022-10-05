@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.1
+
+- Upgrade frontend dependencies.
+
 ## v2.0.0
 
 - Migrate to the new Telemetry API.
