@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.2
+
+- Fix: update default query.
+
 ## v2.0.1
 
 - Upgrade frontend dependencies.
