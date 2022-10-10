@@ -5,9 +5,9 @@ export interface MyQuery extends DataQuery {
 }
 
 export const defaultQuery: Partial<MyQuery> = {
-  text: `device: YOUR_DEVICE
-telemetry:
-  - YOUR_TELEMETRY
+  text: `telemetry:
+  - device: YOUR_DEVICE
+    attribute: YOUR_TELEMETRY
 granularity: $__interval
 aggregation: auto`,
 };
