@@ -64,7 +64,7 @@ func (s *QueryDataSuite) TestInvalidYAML() {
 	req := s.randomDataRequestWithSingleQuery()
 	req.queries[0].text = "that's not yaml"
 	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
-		telemetryapi.TimeseriesDataTypeInt64,
+		telemetryapi.TimeseriesDataTypeInteger,
 	})
 	s.expectGetAndReturnTimeseries(req, timeseries)
 	_, err := s.handleDataRequestWithSingleQuery(req)
@@ -85,7 +85,7 @@ func (s *QueryDataSuite) TestFloat64() {
 			time.Unix(2, 0),
 		},
 		DataFields: []*telemetryapi.TimeseriesDataField{{
-			Type: telemetryapi.TimeseriesDataTypeFloat64,
+			Type: telemetryapi.TimeseriesDataTypeFloat,
 			Values: []interface{}{
 				newFloat64(42.2),
 				newFloat64(43.3),
@@ -112,7 +112,7 @@ func (s *QueryDataSuite) TestInt64() {
 			time.Unix(2, 0),
 		},
 		DataFields: []*telemetryapi.TimeseriesDataField{{
-			Type: telemetryapi.TimeseriesDataTypeInt64,
+			Type: telemetryapi.TimeseriesDataTypeInteger,
 			Values: []interface{}{
 				newInt64(42),
 				newInt64(43),
@@ -219,7 +219,7 @@ func (s *QueryDataSuite) TestBool() {
 			time.Unix(2, 0),
 		},
 		DataFields: []*telemetryapi.TimeseriesDataField{{
-			Type: telemetryapi.TimeseriesDataTypeBool,
+			Type: telemetryapi.TimeseriesDataTypeBoolean,
 			Values: []interface{}{
 				newBool(true),
 				newBool(false),
@@ -246,7 +246,7 @@ func (s *QueryDataSuite) TestMultipleFields() {
 		},
 		DataFields: []*telemetryapi.TimeseriesDataField{
 			{
-				Type: telemetryapi.TimeseriesDataTypeFloat64,
+				Type: telemetryapi.TimeseriesDataTypeFloat,
 				Values: []interface{}{
 					newFloat64(42.2),
 					newFloat64(43.3),
@@ -283,7 +283,7 @@ func (s *QueryDataSuite) TestMultipleFieldsWithNil() {
 		},
 		DataFields: []*telemetryapi.TimeseriesDataField{
 			{
-				Type: telemetryapi.TimeseriesDataTypeFloat64,
+				Type: telemetryapi.TimeseriesDataTypeFloat,
 				Values: []interface{}{
 					newFloat64(42.2),
 					(*float64)(nil),
@@ -316,7 +316,7 @@ func (s *QueryDataSuite) TestDoNotRenderIntervals() {
 	req.queries[0].text = `{"A fact":"$__interval is $__interval_ms milliseconds."}`
 	req.queries[0].interval = 42 * time.Second
 	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
-		telemetryapi.TimeseriesDataTypeBool,
+		telemetryapi.TimeseriesDataTypeBoolean,
 	})
 	s.expectGetAndReturnTimeseries(req, timeseries)
 	_, err := s.handleDataRequestWithSingleQuery(req)

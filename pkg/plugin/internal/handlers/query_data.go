@@ -227,11 +227,11 @@ func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (
 		var frameField *data.Field
 
 		switch dataField.Type {
-		case telemetryapi.TimeseriesDataTypeFloat64:
+		case telemetryapi.TimeseriesDataTypeFloat:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*float64, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeInt64:
+		case telemetryapi.TimeseriesDataTypeInteger:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*int64, len(dataField.Values)))
@@ -239,7 +239,7 @@ func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*string, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeBool:
+		case telemetryapi.TimeseriesDataTypeBoolean:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*bool, len(dataField.Values)))
