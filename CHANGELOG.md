@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.0
+
+- Migrate to the new Telemetry API: use manifest data types names.
+
 ## v2.0.2
 
 - Fix: update default query.
