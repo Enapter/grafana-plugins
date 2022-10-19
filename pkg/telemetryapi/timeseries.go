@@ -48,24 +48,24 @@ type TimeseriesDataType uint8
 
 const (
 	TimeseriesDataTypeUnknown = iota
-	TimeseriesDataTypeFloat64
-	TimeseriesDataTypeInt64
+	TimeseriesDataTypeFloat
+	TimeseriesDataTypeInteger
 	TimeseriesDataTypeString
 	TimeseriesDataTypeStringArray
-	TimeseriesDataTypeBool
+	TimeseriesDataTypeBoolean
 )
 
 func (t TimeseriesDataType) ZeroValue() interface{} {
 	switch t {
-	case TimeseriesDataTypeFloat64:
+	case TimeseriesDataTypeFloat:
 		return (*float64)(nil)
-	case TimeseriesDataTypeInt64:
+	case TimeseriesDataTypeInteger:
 		return (*int64)(nil)
 	case TimeseriesDataTypeString:
 		return (*string)(nil)
 	case TimeseriesDataTypeStringArray:
 		return ([]string)(nil)
-	case TimeseriesDataTypeBool:
+	case TimeseriesDataTypeBoolean:
 		return (*bool)(nil)
 	default:
 		return nil
@@ -88,16 +88,16 @@ func parseTimeseriesDataTypes(ss []string) ([]TimeseriesDataType, error) {
 
 func parseTimeseriesDataType(s string) (TimeseriesDataType, error) {
 	switch s {
-	case "float64":
-		return TimeseriesDataTypeFloat64, nil
-	case "int64":
-		return TimeseriesDataTypeInt64, nil
+	case "float":
+		return TimeseriesDataTypeFloat, nil
+	case "integer":
+		return TimeseriesDataTypeInteger, nil
 	case "string":
 		return TimeseriesDataTypeString, nil
-	case "[]string":
+	case "string_array":
 		return TimeseriesDataTypeStringArray, nil
-	case "bool":
-		return TimeseriesDataTypeBool, nil
+	case "boolean":
+		return TimeseriesDataTypeBoolean, nil
 	default:
 		return TimeseriesDataTypeUnknown, fmt.Errorf("%w: %s",
 			errUnexpectedTimeseriesDataType, s)
@@ -106,16 +106,16 @@ func parseTimeseriesDataType(s string) (TimeseriesDataType, error) {
 
 func (t TimeseriesDataType) String() string {
 	switch t {
-	case TimeseriesDataTypeFloat64:
-		return "float64"
-	case TimeseriesDataTypeInt64:
-		return "int64"
+	case TimeseriesDataTypeFloat:
+		return "float"
+	case TimeseriesDataTypeInteger:
+		return "integer"
 	case TimeseriesDataTypeString:
 		return "string"
 	case TimeseriesDataTypeStringArray:
-		return "[]string"
-	case TimeseriesDataTypeBool:
-		return "bool"
+		return "string_array"
+	case TimeseriesDataTypeBoolean:
+		return "boolean"
 	default:
 		return "unknown"
 	}
@@ -127,14 +127,14 @@ func (t TimeseriesDataType) Parse(s string) (interface{}, error) {
 	}
 
 	switch t {
-	case TimeseriesDataTypeFloat64:
+	case TimeseriesDataTypeFloat:
 		const bitSize = 64
 		v, err := strconv.ParseFloat(s, bitSize)
 		if err != nil {
 			return nil, err
 		}
 		return &v, nil
-	case TimeseriesDataTypeInt64:
+	case TimeseriesDataTypeInteger:
 		const base = 10
 		const bitSize = 64
 		v, err := strconv.ParseInt(s, base, bitSize)
@@ -150,7 +150,7 @@ func (t TimeseriesDataType) Parse(s string) (interface{}, error) {
 			return nil, err
 		}
 		return values, nil
-	case TimeseriesDataTypeBool:
+	case TimeseriesDataTypeBoolean:
 		v, err := strconv.ParseBool(s)
 		if err != nil {
 			return nil, err
