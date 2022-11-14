@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.0.0
+
+- Migrate to the new Telemetry API: set the required `Accept` header.
+
 ## v3.0.0
 
 - Migrate to the new Telemetry API: use manifest data types names.
