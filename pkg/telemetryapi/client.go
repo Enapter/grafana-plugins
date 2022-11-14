@@ -125,6 +125,8 @@ func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (
 		return nil, err
 	}
 
+	req.Header["Accept"] = []string{"text/csv"}
+
 	if p.User != "" {
 		const userField = "X-Enapter-Auth-User"
 		req.Header[userField] = []string{p.User}
