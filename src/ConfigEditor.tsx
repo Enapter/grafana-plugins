@@ -68,8 +68,8 @@ export class ConfigEditor extends PureComponent<Props, State> {
             <SecretFormField
               isConfigured={(secureJsonFields && secureJsonFields.telemetryAPIToken) as boolean}
               value={secureJsonData.telemetryAPIToken || ''}
-              label="Telemetry API token"
-              placeholder="Your Enapter Telemetry API token."
+              label="API token"
+              placeholder="Your Enapter API token."
               labelWidth={10}
               inputWidth={30}
               onReset={this.onResetTelemetryAPIToken}

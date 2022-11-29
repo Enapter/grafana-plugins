@@ -29,13 +29,17 @@ grafana-build:
 
 GRAFANA_PORT ?= 3000
 
+ifndef ENAPTER_API_TOKEN
+ENAPTER_API_TOKEN = $(TELEMETRY_API_TOKEN)
+endif
+
 .PHONY: grafana-run
 grafana-run:
 	docker run \
 		--rm \
 		--tty \
 		--env TELEMETRY_API_BASE_URL=$(TELEMETRY_API_BASE_URL) \
-		--env TELEMETRY_API_TOKEN=$(TELEMETRY_API_TOKEN) \
+		--env ENAPTER_API_TOKEN=$(ENAPTER_API_TOKEN) \
 		--interactive \
 		--publish $(GRAFANA_PORT):3000 \
 		$(GRAFANA_TAG)
