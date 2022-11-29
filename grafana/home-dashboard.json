@@ -100,7 +100,7 @@
             "uid": "P692EEDCB9F36AB8E"
           },
           "refId": "A",
-          "text": "device: YOUR_DEVICE\ntelemetry:\n  - YOUR_TELEMETRY\ngranularity: $__interval\naggregation: auto"
+          "text": "telemetry:\n  - device: YOUR_DEVICE\n    attribute: YOUR_TELEMETRY\ngranularity: $__interval\naggregation: auto"
         }
       ],
       "title": "Telemetry",
