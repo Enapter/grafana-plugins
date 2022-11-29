@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.0.1
+
+- Rename Telemetry API token to Enapter API token
+
 ## v4.0.0
 
 - Migrate to the new Telemetry API: set the required `Accept` header.
