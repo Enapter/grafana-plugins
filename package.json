@@ -10,7 +10,7 @@
     "sign": "grafana-toolkit plugin:sign",
     "start": "yarn watch"
   },
-  "author": "Roman Novatorov",
+  "author": "Roman Novatorov, Alexey Bakin, Daniil Poroshin",
   "license": "Apache-2.0",
   "devDependencies": {
     "@grafana/data": "9.0.2",
