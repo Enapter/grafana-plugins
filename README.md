@@ -5,9 +5,9 @@ analyze devices telemetry from [Enapter Cloud](https://handbook.enapter.com/soft
 
 ![Example dashboard.](./example-dashboard.png)
 
-In order to use the plugin one needs to obtain an Enapter API token. At the
-moment we provide it on an individual basis. Please, contact us at
-[developers@enapter.com](mailto:developers@enapter.com) to get your token.
+In order to use the plugin one needs to obtain an Enapter Telemetry API token.
+Proceed to [the token settings page](https://cloud.enapter.com/settings/tokens)
+in Enapter Cloud to issue a new token if you do not have one.
 
 ## Quick start
 
