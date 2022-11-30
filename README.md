@@ -5,13 +5,11 @@ analyze devices telemetry from [Enapter Cloud](https://handbook.enapter.com/soft
 
 ![Example dashboard.](./example-dashboard.png)
 
-In order to use the plugin one needs to obtain an Enapter Telemetry API token.
-Proceed to [the token settings page](https://cloud.enapter.com/settings/tokens)
-in Enapter Cloud to issue a new token if you do not have one.
-
 ## Quick start
 
-1. Use your Enapter API token to run the Grafana Docker image with the plugin
+1. Proceed to [the token settings page](https://cloud.enapter.com/settings/tokens)
+   in Enapter Cloud to issue a new API token if you do not have one.
+2. Use your Enapter API token to run the Grafana Docker image with the plugin
    already installed:
 
 ```bash
@@ -24,8 +22,8 @@ docker run \
 	enapter/grafana-with-telemetry-datasource-plugin
 ```
 
-2. Proceed to `http://127.0.0.1:3000`.
-3. Edit the Telemetry panel.
+3. Proceed to `http://127.0.0.1:3000`.
+4. Edit the Telemetry panel.
 
 ## Usage
 
