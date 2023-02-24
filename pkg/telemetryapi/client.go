@@ -310,6 +310,7 @@ func (c *client) processError(resp *http.Response) error {
 func (c *client) processUnexpectedStatus(resp *http.Response) error {
 	dump, err := dumpBody(resp.Body)
 	if err != nil {
+		//nolint:errorlint // two errors
 		return fmt.Errorf("%w: %s: body dump: <not available>: %v",
 			errUnexpectedStatus, resp.Status, err)
 	}

@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 )
 
 func parseMultiError(body io.Reader) (*MultiError, error) {
-	data, err := ioutil.ReadAll(body)
+	data, err := io.ReadAll(body)
 	if err != nil {
 		return nil, fmt.Errorf("read body: %w", err)
 	}

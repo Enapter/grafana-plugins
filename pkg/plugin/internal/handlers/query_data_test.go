@@ -76,7 +76,7 @@ func newInt64(v int64) *int64       { return &v }
 func newBool(v bool) *bool          { return &v }
 func newString(v string) *string    { return &v }
 
-//nolint: dupl // FIXME
+//nolint:dupl // FIXME
 func (s *QueryDataSuite) TestFloat64() {
 	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{
@@ -103,7 +103,7 @@ func (s *QueryDataSuite) TestFloat64() {
 	s.Require().Equal(float64(43.3), *dataFields[0].At(1).(*float64))
 }
 
-//nolint: dupl // FIXME
+//nolint:dupl // FIXME
 func (s *QueryDataSuite) TestInt64() {
 	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{

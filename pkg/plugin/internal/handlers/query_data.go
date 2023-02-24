@@ -56,6 +56,7 @@ func (h *QueryData) QueryData(
 	return resp, nil
 }
 
+//nolint:gocognit // FIXME
 func (h *QueryData) makeLabelsUnique(responses backend.Responses) {
 	defaultNames := make(map[string]string, len(responses))
 	frames := make(map[string]*data.Frame)

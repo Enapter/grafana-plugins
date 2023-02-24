@@ -3,11 +3,10 @@ package telemetryapi
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 )
 
 func dumpBody(body io.Reader) (string, error) {
-	data, err := ioutil.ReadAll(body)
+	data, err := io.ReadAll(body)
 	if err != nil {
 		return "", fmt.Errorf("read: %w", err)
 	}

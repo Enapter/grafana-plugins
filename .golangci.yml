@@ -13,7 +13,7 @@ linters:
       # a reliable metric for this purpose. Some problems are complex by nature
       # and therefore more cyclomatically complex code might actually be
       # simpler.
-    - deadcode
+    # - deadcode # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter. Replaced by unused.
     - depguard
     - dogsled
     - dupl
@@ -59,7 +59,7 @@ linters:
     - gosec
     - gosimple
     - govet
-    - ifshort
+    # - ifshort # deprecated (since v1.48.0) due to: The repository of the linter has been deprecated by the owner.
     - importas
     # - ireturn # See: https://github.com/go-proverbs/go-proverbs.github.io/issues/37.
     - ineffassign
@@ -84,7 +84,7 @@ linters:
     # - scopelint # Replaced by `exportloopref`.
     - sqlclosecheck
     - staticcheck
-    - structcheck
+    # - structcheck # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
     - stylecheck
     - tagliatelle
     - tenv
@@ -98,7 +98,7 @@ linters:
       # Though the idea is idiomatic, the length is not the only thing that
       # determines whether a variable is "easy to use".
     - unused
-    - varcheck
+    # - varcheck # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
     - wastedassign
     - whitespace
     # - wrapcheck # Is prone to bad suggestions (especially see issue #1).
@@ -109,10 +109,12 @@ linters-settings:
     forbid:
       - os.Exit # it's not safe to exit in random places, because defer will not work.
       - log.Fatal.* # it calls os.Exit (see above)
+  funlen:
+    lines: -1
   lll:
     line-length: 110
   gci:
-    local-prefixes: github.com/Enapter/grafana-plugins
+    local-prefixes: github.com/Enapter/telemetry-grafana-datasource-plugin
   nilnil:
     checked-types:
       - ptr

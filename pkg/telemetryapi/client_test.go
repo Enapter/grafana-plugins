@@ -3,7 +3,7 @@ package telemetryapi_test
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"testing"
@@ -200,10 +200,10 @@ func (s *ClientSuite) TestGetRequestParams() {
 	checkFn := func(r *http.Request) {
 		s.Require().Equal([]string{user}, r.Header["X-Enapter-Auth-User"])
 		s.Require().Equal([]string{s.token}, r.Header["X-Enapter-Auth-Token"])
-		data, err := ioutil.ReadAll(r.Body)
+		data, err := io.ReadAll(r.Body)
 		s.Require().NoError(err)
 		s.Require().NoError(r.Body.Close())
-		r.Body = ioutil.NopCloser(bytes.NewReader(data))
+		r.Body = io.NopCloser(bytes.NewReader(data))
 		s.Require().Equal(query, string(data))
 	}
 	s.server.ExpectTimeseriesRequestCheckItAndReturnData(checkFn, "float", `
@@ -284,7 +284,7 @@ ts,k=v
 	s.Require().Nil(timeseries)
 }
 
-//nolint: dupl // FIXME
+//nolint:dupl // FIXME
 func (s *ClientSuite) TestGetFloatRecords() {
 	s.server.ExpectTimeseriesRequestAndReturnData([]string{"float"}, `
 ts,k=v
@@ -319,7 +319,7 @@ ts,k=v
 	s.Require().Equal(*timeseries.DataFields[0].Values[2].(*int64), int64(66))
 }
 
-//nolint: dupl // FIXME
+//nolint:dupl // FIXME
 func (s *ClientSuite) TestGetStringRecords() {
 	s.server.ExpectTimeseriesRequestAndReturnData([]string{"string"}, `
 ts,k=v

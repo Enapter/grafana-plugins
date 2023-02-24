@@ -18,13 +18,13 @@ COPY ./LICENSE ./LICENSE
 RUN --mount=type=cache,target=node_modules yarn build
 
 
-FROM golang:1.17-alpine AS backend
+FROM golang:1.20-alpine AS backend
 
 RUN apk add --no-cache --virtual .build-deps \
     git \
     build-base \
     && go install github.com/magefile/mage@v1.12.1 \
-    && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
+    && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
 
 WORKDIR /build
 
