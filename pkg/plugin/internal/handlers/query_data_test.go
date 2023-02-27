@@ -36,6 +36,60 @@ func (s *QueryDataSuite) SetupSuite() {
 
 var errFake = errors.New("fake error")
 
+func (s *QueryDataSuite) TestDefaultGranularity() {
+	for in, out := range map[time.Duration]time.Duration{
+		999 * time.Millisecond:  time.Second,
+		1000 * time.Millisecond: time.Second,
+		1001 * time.Millisecond: 2 * time.Second,
+		1999 * time.Millisecond: 2 * time.Second,
+		2000 * time.Millisecond: 2 * time.Second,
+		2001 * time.Millisecond: 5 * time.Second,
+		4 * time.Second:         5 * time.Second,
+		5 * time.Second:         5 * time.Second,
+		6 * time.Second:         time.Minute,
+		59 * time.Second:        time.Minute,
+		60 * time.Second:        time.Minute,
+		61 * time.Second:        2 * time.Minute,
+		119 * time.Second:       2 * time.Minute,
+		120 * time.Second:       2 * time.Minute,
+		121 * time.Second:       5 * time.Minute,
+		4 * time.Minute:         5 * time.Minute,
+		5 * time.Minute:         5 * time.Minute,
+		6 * time.Minute:         10 * time.Minute,
+		9 * time.Minute:         10 * time.Minute,
+		10 * time.Minute:        10 * time.Minute,
+		11 * time.Minute:        20 * time.Minute,
+		19 * time.Minute:        20 * time.Minute,
+		20 * time.Minute:        20 * time.Minute,
+		21 * time.Minute:        30 * time.Minute,
+		29 * time.Minute:        30 * time.Minute,
+		30 * time.Minute:        30 * time.Minute,
+		31 * time.Minute:        time.Hour,
+		59 * time.Minute:        time.Hour,
+		60 * time.Minute:        time.Hour,
+		61 * time.Minute:        2 * time.Hour,
+		119 * time.Minute:       2 * time.Hour,
+		120 * time.Minute:       2 * time.Hour,
+		121 * time.Minute:       6 * time.Hour,
+		5 * time.Hour:           6 * time.Hour,
+		6 * time.Hour:           6 * time.Hour,
+		7 * time.Hour:           12 * time.Hour,
+		11 * time.Hour:          12 * time.Hour,
+		12 * time.Hour:          12 * time.Hour,
+		13 * time.Hour:          24 * time.Hour,
+		23 * time.Hour:          24 * time.Hour,
+		24 * time.Hour:          24 * time.Hour,
+		25 * time.Hour:          24 * time.Hour,
+	} {
+		in := in
+		out := out
+		s.Run(in.String(), func() {
+			gran := s.queryDataHandler.DefaultGranularity(in)
+			s.Require().Equal(out, gran)
+		})
+	}
+}
+
 func (s *QueryDataSuite) TestTelemetryAPIError() {
 	req := s.randomDataRequestWithSingleQuery()
 	s.expectGetAndReturnError(req, errFake)
@@ -313,8 +367,9 @@ func (s *QueryDataSuite) TestMultipleFieldsWithNil() {
 
 func (s *QueryDataSuite) TestDoNotRenderIntervals() {
 	req := s.randomDataRequestWithSingleQuery()
-	req.queries[0].text = `{"A fact":"$__interval is $__interval_ms milliseconds."}`
-	req.queries[0].interval = 42 * time.Second
+	req.queries[0].text = `{"A fact":"$__interval is $__interval_ms milliseconds.",` +
+		`"granularity":"42s"}`
+	req.queries[0].interval = time.Duration(rand.Int()+1) * time.Second
 	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
 		telemetryapi.TimeseriesDataTypeBoolean,
 	})
@@ -379,9 +434,10 @@ func (s *QueryDataSuite) randomDataRequestWithSingleQuery() dataRequest {
 			to:       time.Now().Add(-time.Duration(rand.Int()+1) * time.Minute),
 			interval: time.Duration(rand.Int()) * time.Second,
 			text: string(s.shouldMarshalJSON(map[string]interface{}{
-				faker.Word(): faker.Sentence(),
-				faker.Word(): rand.Int(),
-				faker.Word(): rand.Int()%2 == 0,
+				faker.Word():  faker.Sentence(),
+				faker.Word():  rand.Int(),
+				faker.Word():  rand.Int()%2 == 0,
+				"granularity": "42s",
 			})),
 		}},
 	}
