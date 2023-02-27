@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.1.0
+
+- Add default granularity
+
 ## v4.0.1
 
 - Rename Telemetry API token to Enapter API token
