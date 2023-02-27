@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -176,9 +177,9 @@ func (h *QueryData) handleQuery(
 		return nil, nil
 	}
 
-	queryText, err := h.parseQueryText(props.Text, query.TimeRange)
+	queryText, err := h.prepareQueryText(props.Text, query.Interval, query.TimeRange)
 	if err != nil {
-		return nil, fmt.Errorf("parse query text: %w", err)
+		return nil, fmt.Errorf("prepare query text: %w", err)
 	}
 
 	timeseries, err := h.telemetryAPIClient.Timeseries(ctx, telemetryapi.TimeseriesParams{
@@ -200,7 +201,9 @@ func (h *QueryData) handleQuery(
 	return data.Frames{frame}, nil
 }
 
-func (h *QueryData) parseQueryText(text string, timeRange backend.TimeRange) (string, error) {
+func (h *QueryData) prepareQueryText(
+	text string, interval time.Duration, timeRange backend.TimeRange,
+) (string, error) {
 	dec := yaml.NewDecoder(strings.NewReader(text))
 
 	var obj map[string]interface{}
@@ -211,12 +214,47 @@ func (h *QueryData) parseQueryText(text string, timeRange backend.TimeRange) (st
 	obj["from"] = timeRange.From.Format(time.RFC3339)
 	obj["to"] = timeRange.To.Format(time.RFC3339)
 
+	if _, ok := obj["granularity"]; !ok {
+		obj["granularity"] = h.DefaultGranularity(interval).String()
+	}
+
 	out, err := json.Marshal(obj)
 	if err != nil {
 		return "", fmt.Errorf("encode JSON: %w", err)
 	}
 
 	return string(out), nil
+}
+
+func (h *QueryData) DefaultGranularity(interval time.Duration) time.Duration {
+	const minInterval = time.Second
+	if interval <= minInterval {
+		return minInterval
+	}
+
+	granularities := [...]time.Duration{
+		time.Second,
+		2 * time.Second,
+		5 * time.Second,
+		time.Minute,
+		2 * time.Minute,
+		5 * time.Minute,
+		10 * time.Minute,
+		20 * time.Minute,
+		30 * time.Minute,
+		time.Hour,
+		2 * time.Hour,
+		6 * time.Hour,
+		12 * time.Hour,
+		24 * time.Hour,
+	}
+	if i := sort.Search(len(granularities), func(i int) bool {
+		return interval <= granularities[i]
+	}); i < len(granularities) {
+		return granularities[i]
+	}
+
+	return granularities[len(granularities)-1]
 }
 
 func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {
