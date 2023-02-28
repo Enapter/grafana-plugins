@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.2.0
+
+- Default aggregation to `auto`
+
 ## v4.1.0
 
 - Add default granularity
