@@ -4,26 +4,34 @@ run:
 linters:
   disable-all: true
   enable:
+    # - cyclop # Measuring code complexity is hard. Cyclomatic complexity is doubtfully a reliable metric for this purpose. Some problems are complex by nature and therefore more cyclomatically complex code might actually be simpler.
+    # - deadcode # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter. Replaced by unused.
+    # - exhaustivestruct We frequently make use of zero-values and partial initialization.
+    # - godox # TODOs and FIXMEs function as a big warning sign: "Beware! This code has bugs and other problems. Be careful not to make things worse when editing. Or better fix the issues before implementing a new feature on top.". The idea of [`godox` comment extractor](https://github.com/766b/godox) seems to be different from the idea of [`godox` linter](https://github.com/matoous/godox). The first one lets you quickly browse through the code problems, while the second one asks you to remove that big warning sign in favor of tasks. Though tasks are great, they will not help you while editing.
+    # - golint # Replaced by `revive`.
+    # - ifshort # deprecated (since v1.48.0) due to: The repository of the linter has been deprecated by the owner.
+    # - interfacer # Is prone to bad suggestions (officialy deprecated).
+    # - ireturn # See: https://github.com/go-proverbs/go-proverbs.github.io/issues/37.
+    # - maligned # Replaced by `govet`'s `fieldalignment`
+    # - nlreturn # Too subjective.
+    # - scopelint # Replaced by `exportloopref`.
+    # - structcheck # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
+    # - varcheck # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
+    # - varnamelen # Though the idea is idiomatic, the length is not the only thing that determines whether a variable is "easy to use".
+    # - wrapcheck # Is prone to bad suggestions (especially see issue #1).
+    # - wsl # Too aggressive. Might be useful if it could do auto fix.
     - asciicheck
     - bidichk
     - bodyclose
     - contextcheck
-    # - cyclop
-      # Measuring code complexity is hard. Cyclomatic complexity is doubtfully
-      # a reliable metric for this purpose. Some problems are complex by nature
-      # and therefore more cyclomatically complex code might actually be
-      # simpler.
-    # - deadcode # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter. Replaced by unused.
     - depguard
     - dogsled
     - dupl
     - durationcheck
-    - errname
     - errcheck
+    - errname
     - errorlint
     - exhaustive
-    # - exhaustivestruct
-      # We frequently make use of zero-values and partial initialization.
     - exportloopref
     - forbidigo
     - forcetypeassert
@@ -36,22 +44,11 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    # - godox
-      # TODOs and FIXMEs function as a big warning sign: "Beware! This code has
-      # bugs and other problems. Be careful not to make things worse when
-      # editing. Or better fix the issues before implementing a new feature on
-      # top.". The idea of [`godox` comment
-      # extractor](https://github.com/766b/godox) seems to be different from
-      # the idea of [`godox` linter](https://github.com/matoous/godox). The
-      # first one lets you quickly browse through the code problems, while the
-      # second one asks you to remove that big warning sign in favor of tasks.
-      # Though tasks are great, they will not help you while editing.
     - goerr113
     - gofmt
     - gofumpt
     - goheader
     - goimports
-    # - golint # Replaced by `revive`.
     - gomnd
     - gomoddirectives
     - gomodguard
@@ -59,20 +56,15 @@ linters:
     - gosec
     - gosimple
     - govet
-    # - ifshort # deprecated (since v1.48.0) due to: The repository of the linter has been deprecated by the owner.
     - importas
-    # - ireturn # See: https://github.com/go-proverbs/go-proverbs.github.io/issues/37.
     - ineffassign
-    # - interfacer # Is prone to bad suggestions (officialy deprecated).
     - lll
-    # - maligned # Replaced by `govet`'s `fieldalignment`
     - makezero
     - misspell
     - nakedret
     - nestif
-    - nilnil # Zero-value of maps, slices and channels is `nil` but useful.
     - nilerr
-    # - nlreturn # Too subjective.
+    - nilnil # Zero-value of maps, slices and channels is `nil` but useful.
     - noctx
     - nolintlint
     - paralleltest
@@ -81,10 +73,8 @@ linters:
     - promlinter
     - revive
     - rowserrcheck
-    # - scopelint # Replaced by `exportloopref`.
     - sqlclosecheck
     - staticcheck
-    # - structcheck # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
     - stylecheck
     - tagliatelle
     - tenv
@@ -94,15 +84,9 @@ linters:
     - typecheck
     - unconvert
     - unparam
-    # - varnamelen
-      # Though the idea is idiomatic, the length is not the only thing that
-      # determines whether a variable is "easy to use".
     - unused
-    # - varcheck # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
     - wastedassign
     - whitespace
-    # - wrapcheck # Is prone to bad suggestions (especially see issue #1).
-    # - wsl # Too aggressive. Might be useful if it could do auto fix.
 
 linters-settings:
   forbidigo:
