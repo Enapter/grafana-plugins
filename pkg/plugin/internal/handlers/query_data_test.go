@@ -368,7 +368,7 @@ func (s *QueryDataSuite) TestMultipleFieldsWithNil() {
 func (s *QueryDataSuite) TestDoNotRenderIntervals() {
 	req := s.randomDataRequestWithSingleQuery()
 	req.queries[0].text = `{"A fact":"$__interval is $__interval_ms milliseconds.",` +
-		`"granularity":"42s"}`
+		`"granularity":"42s","aggregation":"avg"}`
 	req.queries[0].interval = time.Duration(rand.Int()+1) * time.Second
 	timeseries := telemetryapi.NewTimeseries([]telemetryapi.TimeseriesDataType{
 		telemetryapi.TimeseriesDataTypeBoolean,
@@ -438,6 +438,7 @@ func (s *QueryDataSuite) randomDataRequestWithSingleQuery() dataRequest {
 				faker.Word():  rand.Int(),
 				faker.Word():  rand.Int()%2 == 0,
 				"granularity": "42s",
+				"aggregation": "avg",
 			})),
 		}},
 	}

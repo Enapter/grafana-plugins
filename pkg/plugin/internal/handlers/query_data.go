@@ -218,6 +218,10 @@ func (h *QueryData) prepareQueryText(
 		obj["granularity"] = h.DefaultGranularity(interval).String()
 	}
 
+	if _, ok := obj["aggregation"]; !ok {
+		obj["aggregation"] = "auto"
+	}
+
 	out, err := json.Marshal(obj)
 	if err != nil {
 		return "", fmt.Errorf("encode JSON: %w", err)
