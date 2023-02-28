@@ -7,6 +7,7 @@ linters:
     # - cyclop # Measuring code complexity is hard. Cyclomatic complexity is doubtfully a reliable metric for this purpose. Some problems are complex by nature and therefore more cyclomatically complex code might actually be simpler.
     # - deadcode # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter. Replaced by unused.
     # - exhaustivestruct We frequently make use of zero-values and partial initialization.
+    # - ginkgolinter # We do not use Ginkgo.
     # - godox # TODOs and FIXMEs function as a big warning sign: "Beware! This code has bugs and other problems. Be careful not to make things worse when editing. Or better fix the issues before implementing a new feature on top.". The idea of [`godox` comment extractor](https://github.com/766b/godox) seems to be different from the idea of [`godox` linter](https://github.com/matoous/godox). The first one lets you quickly browse through the code problems, while the second one asks you to remove that big warning sign in favor of tasks. Though tasks are great, they will not help you while editing.
     # - golint # Replaced by `revive`.
     # - ifshort # deprecated (since v1.48.0) due to: The repository of the linter has been deprecated by the owner.
@@ -37,6 +38,7 @@ linters:
     - forcetypeassert
     - funlen
     - gci
+    - gocheckcompilerdirectives
     - gochecknoglobals
     - gochecknoinits
     - gocognit
@@ -61,6 +63,7 @@ linters:
     - lll
     - makezero
     - misspell
+    - musttag
     - nakedret
     - nestif
     - nilerr
