@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.3.0
+
+- Handle alerts by splitting string array data frame into multiple boolean data
+  frames.
+
 ## v4.2.0
 
 - Default aggregation to `auto`
