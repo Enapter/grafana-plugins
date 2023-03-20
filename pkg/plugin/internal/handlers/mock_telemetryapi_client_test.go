@@ -37,7 +37,7 @@ func (c *MockTelemetryAPIClient) ExpectGetAndReturn(
 }
 
 func (c *MockTelemetryAPIClient) Timeseries(
-	ctx context.Context, p telemetryapi.TimeseriesParams,
+	_ context.Context, p telemetryapi.TimeseriesParams,
 ) (*telemetryapi.Timeseries, error) {
 	return c.timeseriesHandler(p)
 }

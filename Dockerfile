@@ -24,7 +24,7 @@ RUN apk add --no-cache --virtual .build-deps \
     git \
     build-base \
     && go install github.com/magefile/mage@v1.12.1 \
-    && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
+    && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.0
 
 WORKDIR /build
 
