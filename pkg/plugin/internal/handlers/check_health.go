@@ -24,7 +24,7 @@ func NewCheckHealth(logger hclog.Logger, client telemetryapi.Client) *CheckHealt
 }
 
 func (h *CheckHealth) CheckHealth(
-	ctx context.Context, req *backend.CheckHealthRequest,
+	ctx context.Context, _ *backend.CheckHealthRequest,
 ) (*backend.CheckHealthResult, error) {
 	if err := h.client.Ready(ctx); err != nil {
 		h.logger.Error("telemetry API client is not ready",

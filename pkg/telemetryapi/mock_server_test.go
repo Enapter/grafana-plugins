@@ -110,6 +110,6 @@ func (s *MockServer) replaceHandler(p *http.HandlerFunc, h http.HandlerFunc) {
 	}
 }
 
-func (s *MockServer) unexpectedRequestHandler(w http.ResponseWriter, r *http.Request) {
+func (s *MockServer) unexpectedRequestHandler(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "unexpected request", http.StatusExpectationFailed)
 }
