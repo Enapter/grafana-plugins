@@ -438,7 +438,7 @@ func (s *QueryDataSuite) randomDataRequestWithSingleQuery() dataRequest {
 				faker.Word():  rand.Int(),
 				faker.Word():  rand.Int()%2 == 0,
 				"granularity": "42s",
-				"aggregation": "avg",
+				"aggregation": "auto",
 			})),
 		}},
 	}
