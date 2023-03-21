@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.3.1
+
+- Fix plugin type in UI.
+
 ## v4.3.0
 
 - Handle alerts by splitting string array data frame into multiple boolean data
