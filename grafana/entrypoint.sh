@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 provisioning_dir=/etc/grafana/provisioning
-datasource_config=$provisioning_dir/datasources/telemetry.yml
+datasource_config=$provisioning_dir/datasources/enapter-telemetry.yml
 plugin_type=enapter-telemetry
 
 export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=$plugin_type
