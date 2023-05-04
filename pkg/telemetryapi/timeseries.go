@@ -19,14 +19,6 @@ func (ts *Timeseries) Len() int {
 
 type TimeseriesTags map[string]string
 
-func (tags TimeseriesTags) Copy() TimeseriesTags {
-	newTags := make(TimeseriesTags, len(tags))
-	for k, v := range tags {
-		newTags[k] = v
-	}
-	return newTags
-}
-
 func parseTimeseriesTags(s string) (TimeseriesTags, error) {
 	tags := make(TimeseriesTags)
 

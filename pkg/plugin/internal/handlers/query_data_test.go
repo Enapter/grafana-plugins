@@ -265,44 +265,6 @@ func (s *QueryDataSuite) TestStringArrayIsUnsupported() {
 	s.Require().Error(err, handlers.ErrMetricDataTypeIsNotSupported)
 }
 
-func (s *QueryDataSuite) TestAlerts() {
-	req := s.randomDataRequestWithSingleQuery()
-	timeseries := &telemetryapi.Timeseries{
-		TimeField: []time.Time{
-			time.Unix(1, 0),
-			time.Unix(2, 0),
-			time.Unix(3, 0),
-		},
-		DataFields: []*telemetryapi.TimeseriesDataField{{
-			Tags: telemetryapi.TimeseriesTags{
-				"telemetry": "alerts",
-			},
-			Type: telemetryapi.TimeseriesDataTypeStringArray,
-			Values: []interface{}{
-				[]string{"1"},
-				[]string{"1", "2"},
-				[]string{"2"},
-			},
-		}},
-	}
-	s.expectGetAndReturnTimeseries(req, timeseries)
-	frames, err := s.handleDataRequestWithSingleQuery(req)
-	s.Require().Nil(err)
-	timestampField, dataFields := s.extractTimeseriesFields(frames)
-	s.Require().Len(dataFields, 2)
-	s.Require().Equal(int64(1), timestampField.At(0).(time.Time).Unix())
-	s.Require().Equal(int64(2), timestampField.At(1).(time.Time).Unix())
-	s.Require().Equal(int64(3), timestampField.At(2).(time.Time).Unix())
-	s.Require().Equal("alerts.1", dataFields[0].Labels["telemetry"])
-	s.Require().Equal(true, *dataFields[0].At(0).(*bool))
-	s.Require().Equal(true, *dataFields[0].At(1).(*bool))
-	s.Require().Equal(false, *dataFields[0].At(2).(*bool))
-	s.Require().Equal("alerts.2", dataFields[1].Labels["telemetry"])
-	s.Require().Equal(false, *dataFields[1].At(0).(*bool))
-	s.Require().Equal(true, *dataFields[1].At(1).(*bool))
-	s.Require().Equal(true, *dataFields[1].At(2).(*bool))
-}
-
 func (s *QueryDataSuite) TestBool() {
 	req := s.randomDataRequestWithSingleQuery()
 	timeseries := &telemetryapi.Timeseries{

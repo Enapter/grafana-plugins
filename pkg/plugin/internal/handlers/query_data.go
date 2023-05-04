@@ -57,8 +57,6 @@ func (h *QueryData) QueryData(
 	return resp, nil
 }
 
-const labelTelemetry = "telemetry"
-
 //nolint:gocognit // FIXME
 func (h *QueryData) makeLabelsUnique(responses backend.Responses) {
 	defaultNames := make(map[string]string, len(responses))
@@ -100,7 +98,7 @@ func (h *QueryData) makeLabelsUnique(responses backend.Responses) {
 
 		for _, field := range frame.Fields[oneForTimeField:] {
 			for k, v := range field.Labels {
-				if k == labelTelemetry {
+				if k == "telemetry" {
 					defaultNames[refID] = v
 				}
 				counter[kvpair{k, v}]++
@@ -195,107 +193,12 @@ func (h *QueryData) handleQuery(
 		return nil, fmt.Errorf("request timeseries: %w", err)
 	}
 
-	timeseries = h.alertsToFields(timeseries)
-
 	frame, err := h.timeseriesToDataFrame(timeseries)
 	if err != nil {
 		return nil, fmt.Errorf("convert timeseries to data frame: %w", err)
 	}
 
 	return data.Frames{frame}, nil
-}
-
-func (h *QueryData) alertsToFields(
-	base *telemetryapi.Timeseries,
-) *telemetryapi.Timeseries {
-	var haveAlerts bool
-	for _, dataField := range base.DataFields {
-		if isAlertsDataField(dataField) {
-			haveAlerts = true
-			break
-		}
-	}
-	if !haveAlerts {
-		return base
-	}
-
-	resultDataFields := make([]*telemetryapi.TimeseriesDataField, 0,
-		len(base.DataFields))
-
-	for _, dataField := range base.DataFields {
-		if isAlertsDataField(dataField) {
-			dataFields := h.splitAlertsDataField(dataField)
-			resultDataFields = append(resultDataFields, dataFields...)
-		} else {
-			resultDataFields = append(resultDataFields, dataField)
-		}
-	}
-
-	return &telemetryapi.Timeseries{
-		TimeField:  base.TimeField,
-		DataFields: resultDataFields,
-	}
-}
-
-const alertsMetricName = "alerts"
-
-func isAlertsDataField(dataField *telemetryapi.TimeseriesDataField) bool {
-	return dataField.Tags[labelTelemetry] == alertsMetricName &&
-		dataField.Type == telemetryapi.TimeseriesDataTypeStringArray
-}
-
-func (h *QueryData) splitAlertsDataField(
-	base *telemetryapi.TimeseriesDataField,
-) (dataFields []*telemetryapi.TimeseriesDataField) {
-	var dataFieldsByAlert map[string]*telemetryapi.TimeseriesDataField
-
-	for i, v := range base.Values {
-		//nolint:forcetypeassert // panic is fine
-		for _, alert := range v.([]string) {
-			dataField, ok := dataFieldsByAlert[alert]
-			if !ok {
-				if dataFieldsByAlert == nil {
-					dataFieldsByAlert = make(map[string]*telemetryapi.TimeseriesDataField)
-				}
-				dataField = newAlertDataField(base, alert)
-				dataFieldsByAlert[alert] = dataField
-			}
-			*dataField.Values[i].(*bool) = true
-		}
-	}
-
-	if n := len(dataFieldsByAlert); n > 0 {
-		alerts := make([]string, 0, n)
-		for alert := range dataFieldsByAlert {
-			alerts = append(alerts, alert)
-		}
-		sort.Strings(alerts)
-
-		dataFields = make([]*telemetryapi.TimeseriesDataField, n)
-		for i, alert := range alerts {
-			dataFields[i] = dataFieldsByAlert[alert]
-		}
-	}
-
-	return dataFields
-}
-
-func newAlertDataField(
-	base *telemetryapi.TimeseriesDataField, name string,
-) *telemetryapi.TimeseriesDataField {
-	tags := base.Tags.Copy()
-	tags[labelTelemetry] = alertsMetricName + "." + name
-
-	values := make([]interface{}, len(base.Values))
-	for i := 0; i < len(base.Values); i++ {
-		values[i] = new(bool)
-	}
-
-	return &telemetryapi.TimeseriesDataField{
-		Tags:   tags,
-		Type:   telemetryapi.TimeseriesDataTypeBoolean,
-		Values: values,
-	}
 }
 
 func (h *QueryData) prepareQueryText(
