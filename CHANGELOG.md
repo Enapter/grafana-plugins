@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.0.0
+
+- Revert handling alerts by splitting array data frame into multiple boolean
+  data frames. Similar functionality will be implemented by Enapter Telemetry
+  API.
+
 ## v4.3.1
 
 - Fix plugin type in UI.
