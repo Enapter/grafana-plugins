@@ -1,5 +1,9 @@
 # Changelog
 
+## v5.0.1
+
+- Upgrade `grafana-plugin-sdk-go`
+
 ## v5.0.0
 
 - Revert handling alerts by splitting array data frame into multiple boolean
