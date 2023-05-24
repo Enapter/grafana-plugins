@@ -29,7 +29,7 @@ type QueryDataSuite struct {
 
 func (s *QueryDataSuite) SetupSuite() {
 	s.ctx = context.Background()
-	s.mockTelemetryAPIClient = NewMockTelemetryAPIClient(s.Suite)
+	s.mockTelemetryAPIClient = NewMockTelemetryAPIClient(&s.Suite)
 	s.logger = hclog.Default()
 	s.queryDataHandler = handlers.NewQueryData(s.logger, s.mockTelemetryAPIClient)
 }

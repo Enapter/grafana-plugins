@@ -11,12 +11,12 @@ import (
 var _ telemetryapi.Client = (*MockTelemetryAPIClient)(nil)
 
 type MockTelemetryAPIClient struct {
-	suite             suite.Suite
+	suite             *suite.Suite
 	timeseriesHandler func(telemetryapi.TimeseriesParams) (
 		*telemetryapi.Timeseries, error)
 }
 
-func NewMockTelemetryAPIClient(s suite.Suite) *MockTelemetryAPIClient {
+func NewMockTelemetryAPIClient(s *suite.Suite) *MockTelemetryAPIClient {
 	c := new(MockTelemetryAPIClient)
 	c.suite = s
 	c.timeseriesHandler = c.unexpectedCall
