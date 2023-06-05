@@ -14,6 +14,7 @@ linters:
     # - interfacer # Is prone to bad suggestions (officialy deprecated).
     # - ireturn # See: https://github.com/go-proverbs/go-proverbs.github.io/issues/37.
     # - maligned # Replaced by `govet`'s `fieldalignment`
+    # - nilnil # Zero-value of maps, slices and channels is `nil` but useful.
     # - nlreturn # Too subjective.
     # - scopelint # Replaced by `exportloopref`.
     # - structcheck # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
@@ -67,7 +68,6 @@ linters:
     - nakedret
     - nestif
     - nilerr
-    - nilnil # Zero-value of maps, slices and channels is `nil` but useful.
     - noctx
     - nolintlint
     - paralleltest
