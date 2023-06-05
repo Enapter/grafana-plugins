@@ -22,6 +22,7 @@ linters:
     # - varnamelen # Though the idea is idiomatic, the length is not the only thing that determines whether a variable is "easy to use".
     # - wrapcheck # Is prone to bad suggestions (especially see issue #1).
     # - wsl # Too aggressive. Might be useful if it could do auto fix.
+    # - zerologlint # We do not use zerolint.
     - asciicheck
     - bidichk
     - bodyclose
@@ -58,11 +59,13 @@ linters:
     - goprintffuncname
     - gosec
     - gosimple
+    - gosmopolitan
     - govet
     - importas
     - ineffassign
     - lll
     - makezero
+    - mirror
     - misspell
     - musttag
     - nakedret
@@ -79,6 +82,7 @@ linters:
     - sqlclosecheck
     - staticcheck
     - stylecheck
+    - tagalign
     - tagliatelle
     - tenv
     - testpackage
