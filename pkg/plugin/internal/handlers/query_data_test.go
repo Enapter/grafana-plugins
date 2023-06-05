@@ -414,8 +414,8 @@ func (s *QueryDataSuite) expectGetAndReturnError(req dataRequest, err error) {
 func (s *QueryDataSuite) queryTextWithTimeRange(q query) string {
 	var obj map[string]interface{}
 	if err := yaml.Unmarshal([]byte(q.text), &obj); err == nil {
-		obj["from"] = q.from.Format(time.RFC3339)
-		obj["to"] = q.to.Format(time.RFC3339)
+		obj["from"] = q.from.Format(time.RFC3339Nano)
+		obj["to"] = q.to.Format(time.RFC3339Nano)
 	}
 
 	out, err := json.Marshal(obj)

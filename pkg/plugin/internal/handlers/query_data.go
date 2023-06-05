@@ -211,8 +211,8 @@ func (h *QueryData) prepareQueryText(
 		return "", fmt.Errorf("decode YAML: %w", err)
 	}
 
-	obj["from"] = timeRange.From.Format(time.RFC3339)
-	obj["to"] = timeRange.To.Format(time.RFC3339)
+	obj["from"] = timeRange.From.Format(time.RFC3339Nano)
+	obj["to"] = timeRange.To.Format(time.RFC3339Nano)
 
 	if _, ok := obj["granularity"]; !ok {
 		obj["granularity"] = h.DefaultGranularity(interval).String()
