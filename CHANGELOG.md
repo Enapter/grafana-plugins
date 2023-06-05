@@ -1,5 +1,9 @@
 # Changelog
 
+## v5.0.2
+
+- Fix timestamp formatting to avoid losing milliseconds.
+
 ## v5.0.1
 
 - Upgrade `grafana-plugin-sdk-go`
