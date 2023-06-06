@@ -57,7 +57,7 @@ to install the plugin:
    web page.
 2. Download the plugin distribution (`dist.tar.gz`).
 3. Unarchive and extract the `dist` dir from the downloaded file.
-4. Move the extracted `dist` dir to `/var/lib/grafana/plugins/telemetry/dist`.
+4. Move the extracted `dist` dir to `/var/lib/grafana/plugins/enapter-telemetry/dist`.
 
 ## Configuration
 
@@ -65,7 +65,7 @@ Once the plugin is installed, a new datasource should be created:
 
 1. Use Grafana web UI to [create a new
    datasource](https://grafana.com/docs/grafana/latest/datasources/add-a-data-source/)
-   of type `telemetry`.
+   of type `enapter-telemetry`.
 2. Make sure `Enapter Telemetry API base URL` field value is set to
    `https://api.enapter.com/telemetry` (default).
 3. Set `Enapter API token` field value to the value of your token.
