@@ -5,7 +5,7 @@
   "id": "enapter-telemetry",
   "metrics": true,
   "backend": true,
-  "executable": "gpx_telemetry",
+  "executable": "gpx_enapter_telemetry",
   "info": {
     "description": "",
     "author": {
