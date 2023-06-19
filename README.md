@@ -75,10 +75,11 @@ Once the plugin is installed, a new datasource should be created:
 
 You will need the following tools to develop the plugin:
 
+- `docker`
+- `gzip`
+- `jq'
 - `make`
 - `tar`
-- `gzip`
-- `docker`
 
 To build the plugin distribution from source run:
 
