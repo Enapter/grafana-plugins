@@ -1,5 +1,10 @@
 # Changelog
 
+## v5.1.0
+
+- Extend supported platforms
+- Fix the name of executable
+
 ## v5.0.2
 
 - Fix timestamp formatting to avoid losing milliseconds.
