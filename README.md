@@ -77,7 +77,7 @@ You will need the following tools to develop the plugin:
 
 - `docker`
 - `gzip`
-- `jq'
+- `jq`
 - `make`
 - `tar`
 
