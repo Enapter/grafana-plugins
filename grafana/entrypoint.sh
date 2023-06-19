@@ -9,8 +9,6 @@ plugin_type=enapter-telemetry
 
 export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=$plugin_type
 export GF_LOG_LEVEL=info
-export GF_AUTH_ANONYMOUS_ENABLED=true
-export GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
 
 TELEMETRY_API_BASE_URL=${TELEMETRY_API_BASE_URL:-https://api.enapter.com/telemetry}
 TELEMETRY_API_TOKEN=${TELEMETRY_API_TOKEN:-${ENAPTER_API_TOKEN:-}}
