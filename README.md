@@ -61,9 +61,12 @@ to install the plugin:
 
 ## Configuration
 
-The plugin is at the moment unsigned. To allow Grafana to load unsigned plugins, 
+:warning: The plugin is at the moment [unsigned](https://grafana.com/docs/grafana/latest/administration/plugin-management/#plugin-signatures). To be able to run the plugin you need to allow your Grafana installation to load it despite the lack of signature. This can be accomplished in two ways:
 
-Once the plugin is installed, a new datasource should be created:
+1. [Using the config option](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#allow_loading_unsigned_plugins): `allow_loading_unsigned_plugins = enapter-telemetry`
+2. Using the env var: `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=enapter-telemetry`
+
+Once the plugin is installed and allowed to be loaded, a new datasource should be created:
 
 1. Use Grafana web UI to [create a new
    datasource](https://grafana.com/docs/grafana/latest/datasources/add-a-data-source/)
