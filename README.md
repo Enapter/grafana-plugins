@@ -19,7 +19,7 @@ docker run \
 	--interactive \
 	--tty \
 	--publish 3000:3000 \
-	enapter/grafana-with-telemetry-datasource-plugin:v4.0.1
+	enapter/grafana-with-telemetry-datasource-plugin:v5.1.0
 ```
 
 3. Proceed to `http://127.0.0.1:3000`.
@@ -49,7 +49,7 @@ you need to extract the packaged plugin into the Grafana plugins directory.
 The path to the plugin directory is defined in [the Grafana configuration
 file](https://grafana.com/docs/grafana/latest/administration/configuration/#plugins).
 
-Let us assume that the path is `/var/lib/grafana/plugins` (the default). Then
+Let us assume that the path is `/var/lib/grafana/plugins` (the default on Linux). Then
 to install the plugin:
 
 1. Go to the
@@ -60,6 +60,8 @@ to install the plugin:
 4. Move the extracted `dist` dir to `/var/lib/grafana/plugins/enapter-telemetry/dist`.
 
 ## Configuration
+
+The plugin is at the moment unsigned. To allow Grafana to load unsigned plugins, 
 
 Once the plugin is installed, a new datasource should be created:
 
