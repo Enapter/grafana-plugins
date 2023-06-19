@@ -40,13 +40,25 @@ RUN --mount=type=cache,target=/root/.cache/go-build go test -v ./pkg/...
 
 COPY ./src/plugin.json ./src/plugin.json
 COPY ./Magefile.go ./Magefile.go
-RUN --mount=type=cache,target=/root/.cache/go-build mage build:backend
+RUN --mount=type=cache,target=/root/.cache/go-build mage \
+	build:darwin \
+	build:darwinARM64 \
+	build:linux \
+	build:linuxARM \
+	build:linuxARM64 \
+	build:windows
 
 
 FROM scratch AS dist
 
 COPY --from=frontend /build/dist /
+
+COPY --from=backend /build/dist/gpx_enapter_telemetry_darwin_amd64 /
+COPY --from=backend /build/dist/gpx_enapter_telemetry_darwin_arm64 /
 COPY --from=backend /build/dist/gpx_enapter_telemetry_linux_amd64 /
+COPY --from=backend /build/dist/gpx_enapter_telemetry_linux_arm /
+COPY --from=backend /build/dist/gpx_enapter_telemetry_linux_arm64 /
+COPY --from=backend /build/dist/gpx_enapter_telemetry_windows_amd64.exe /
 
 
 FROM grafana/grafana:${GRAFANA_VERSION} AS grafana
