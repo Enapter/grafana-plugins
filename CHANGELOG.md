@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.1.1
+
+- Fix the link to example dashboard in README
+- Fix plugin name and author
+- Add plugin description
+
 ## v5.1.0
 
 - Extend supported platforms
