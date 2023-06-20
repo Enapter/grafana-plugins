@@ -103,7 +103,7 @@
           "text": "telemetry:\n  - device: YOUR_DEVICE\n    attribute: YOUR_TELEMETRY\ngranularity: $__interval\naggregation: auto"
         }
       ],
-      "title": "Telemetry",
+      "title": "Enapter Telemetry",
       "type": "timeseries"
     }
   ],
