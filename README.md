@@ -3,7 +3,7 @@
 This repo contains a Grafana datasource plugin that helps to visualize and
 analyze devices telemetry from [Enapter Cloud](https://handbook.enapter.com/software/cloud/cloud.html).
 
-![Example dashboard.](./example-dashboard.png)
+![Example dashboard.](https://raw.githubusercontent.com/Enapter/telemetry-grafana-datasource-plugin/3d2a692c5dd41784628e63cd45e1418b74ff5be4/example-dashboard.png)
 
 ## Quick start
 
