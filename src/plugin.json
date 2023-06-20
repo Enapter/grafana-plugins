@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "enapter-telemetry",
+  "name": "Enapter Telemetry",
   "id": "enapter-telemetry",
   "metrics": true,
   "backend": true,
@@ -9,8 +9,8 @@
   "info": {
     "description": "",
     "author": {
-      "name": "Roman Novatorov",
-      "url": ""
+      "name": "Enapter",
+      "url": "https://www.enapter.com/"
     },
     "keywords": [],
     "logos": {
