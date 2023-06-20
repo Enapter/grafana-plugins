@@ -1,7 +1,7 @@
 {
   "name": "enapter-telemetry",
   "version": "5.0.3",
-  "description": "",
+  "description": "Enapter Telemetry Grafana Datasource Plugin",
   "scripts": {
     "build": "grafana-toolkit plugin:build",
     "test": "grafana-toolkit plugin:test",
