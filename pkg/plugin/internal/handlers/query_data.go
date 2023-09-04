@@ -89,6 +89,7 @@ func (h *QueryData) handleCommandQuery(
 			CommandName string                 `json:"commandName"`
 			CommandArgs map[string]interface{} `json:"commandArgs"`
 			DeviceID    string                 `json:"deviceId"`
+			HardwareID  string                 `json:"hardwareId"`
 		} `json:"payload"`
 	}
 	if err := json.Unmarshal(query.JSON, &props); err != nil {
@@ -101,6 +102,7 @@ func (h *QueryData) handleCommandQuery(
 			CommandName: props.Payload.CommandName,
 			CommandArgs: props.Payload.CommandArgs,
 			DeviceID:    props.Payload.DeviceID,
+			HardwareID:  props.Payload.HardwareID,
 		},
 	})
 	if err != nil {

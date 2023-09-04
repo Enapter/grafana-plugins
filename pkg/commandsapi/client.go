@@ -44,6 +44,7 @@ type CommandRequest struct {
 	CommandName string
 	CommandArgs map[string]interface{}
 	DeviceID    string
+	HardwareID  string
 }
 
 type CommandResponse struct {
@@ -54,7 +55,7 @@ type CommandResponse struct {
 func (c *client) Execute(ctx context.Context, p ExecuteParams) (CommandResponse, error) {
 	resp, err := c.enapterHTTP(p.User).Commands.Execute(ctx, enapterhttp.CommandQuery{
 		DeviceID:    p.Request.DeviceID,
-		HardwareID:  "",
+		HardwareID:  p.Request.HardwareID,
 		CommandName: p.Request.CommandName,
 		Arguments:   p.Request.CommandArgs,
 	})
