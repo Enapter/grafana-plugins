@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/commandsapi"
 	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
 )
 
@@ -22,12 +23,17 @@ var _ backend.QueryDataHandler = (*QueryData)(nil)
 type QueryData struct {
 	logger             hclog.Logger
 	telemetryAPIClient telemetryapi.Client
+	commandsAPIClient  commandsapi.Client
 }
 
-func NewQueryData(logger hclog.Logger, telemetryAPIClient telemetryapi.Client) *QueryData {
+func NewQueryData(
+	logger hclog.Logger, telemetryAPIClient telemetryapi.Client,
+	commandsAPIClient commandsapi.Client,
+) *QueryData {
 	return &QueryData{
 		logger:             logger.Named("query_handler"),
 		telemetryAPIClient: telemetryAPIClient,
+		commandsAPIClient:  commandsAPIClient,
 	}
 }
 
@@ -56,6 +62,60 @@ func (h *QueryData) QueryData(
 }
 
 func (h *QueryData) handleQuery(
+	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
+) (data.Frames, error) {
+	if query.QueryType == "command" {
+		frames, err := h.handleCommandQuery(ctx, pCtx, query)
+		if err != nil {
+			return nil, fmt.Errorf("command: %w", err)
+		}
+		return frames, nil
+	}
+
+	return h.handleTelemetryQuery(ctx, pCtx, query)
+}
+
+func (h *QueryData) handleCommandQuery(
+	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
+) (data.Frames, error) {
+	user := ""
+	if pCtx.User != nil {
+		user = pCtx.User.Email
+	}
+
+	//nolint:tagliatelle // js
+	var props struct {
+		Payload struct {
+			CommandName string                 `json:"commandName"`
+			CommandArgs map[string]interface{} `json:"commandArgs"`
+			DeviceID    string                 `json:"deviceId"`
+		} `json:"payload"`
+	}
+	if err := json.Unmarshal(query.JSON, &props); err != nil {
+		return nil, fmt.Errorf("parse query properties: %w", err)
+	}
+
+	cmdResp, err := h.commandsAPIClient.Execute(ctx, commandsapi.ExecuteParams{
+		User: user,
+		Request: commandsapi.CommandRequest{
+			CommandName: props.Payload.CommandName,
+			CommandArgs: props.Payload.CommandArgs,
+			DeviceID:    props.Payload.DeviceID,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("commands api: %w", err)
+	}
+
+	frame, err := h.commandResponseToDataFrame(cmdResp)
+	if err != nil {
+		return nil, fmt.Errorf("convert cmd resp to data frame: %w", err)
+	}
+
+	return data.Frames{frame}, nil
+}
+
+func (h *QueryData) handleTelemetryQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
 	user := ""
@@ -193,6 +253,20 @@ func (h *QueryData) DefaultGranularity(interval time.Duration) time.Duration {
 	}
 
 	return granularities[len(granularities)-1]
+}
+
+func (h *QueryData) commandResponseToDataFrame(
+	resp commandsapi.CommandResponse,
+) (*data.Frame, error) {
+	payloadBytes, err := json.Marshal(resp.Payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Frame{Fields: data.Fields{
+		data.NewField("state", nil, []string{resp.State}),
+		data.NewField("payload", nil, []json.RawMessage{payloadBytes}),
+	}}, nil
 }
 
 func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {

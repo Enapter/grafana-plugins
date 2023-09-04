@@ -8,6 +8,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/hashicorp/go-hclog"
 
+	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/commandsapi"
 	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/plugin/internal/handlers"
 	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
 )
@@ -38,15 +39,22 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 		return nil, fmt.Errorf("JSON data: %w", err)
 	}
 
+	apiToken := settings.DecryptedSecureJSONData["telemetryAPIToken"]
+
 	telemetryAPIClient, err := telemetryapi.NewClient(telemetryapi.ClientParams{
 		BaseURL: jsonData["telemetryAPIBaseURL"],
-		Token:   settings.DecryptedSecureJSONData["telemetryAPIToken"],
+		Token:   apiToken,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("new telemetry API client: %w", err)
 	}
 
-	queryDataHandler := handlers.NewQueryData(logger, telemetryAPIClient)
+	commandsAPIClient := commandsapi.NewClient(commandsapi.ClientParams{
+		Token: apiToken,
+	})
+
+	queryDataHandler := handlers.NewQueryData(
+		logger, telemetryAPIClient, commandsAPIClient)
 	checkHealthHandler := handlers.NewCheckHealth(logger, telemetryAPIClient)
 
 	logger.Info("created new data source")
