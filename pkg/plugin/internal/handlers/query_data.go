@@ -63,7 +63,10 @@ func (h *QueryData) handleQuery(
 		user = pCtx.User.Email
 	}
 
-	var props queryProperties
+	var props struct {
+		Hide bool   `json:"hide"`
+		Text string `json:"text"`
+	}
 	if err := json.Unmarshal(query.JSON, &props); err != nil {
 		return nil, fmt.Errorf("parse query properties: %w", err)
 	}
