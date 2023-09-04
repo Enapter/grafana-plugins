@@ -378,6 +378,66 @@ func (s *QueryDataSuite) TestDoNotRenderIntervals() {
 	s.Require().NoError(err)
 }
 
+func (s *QueryDataSuite) TestUniqueLabelsEmpty() {
+	s.testUniqueLabels([]telemetryapi.TimeseriesTags{
+		{"foo": "bar"},
+	}, []data.Labels{
+		{},
+	})
+}
+
+func (s *QueryDataSuite) TestUniqueLabelsNoop() {
+	s.testUniqueLabels([]telemetryapi.TimeseriesTags{
+		{"foo": "bar"},
+		{"goo": "jar"},
+	}, []data.Labels{
+		{"foo": "bar"},
+		{"goo": "jar"},
+	})
+}
+
+func (s *QueryDataSuite) TestUniqueLabelsRemoveDuplicate() {
+	s.testUniqueLabels([]telemetryapi.TimeseriesTags{
+		{"foo": "bar", "goo": "jar"},
+		{"foo": "bar", "goo": "JAR"},
+	}, []data.Labels{
+		{"goo": "jar"},
+		{"goo": "JAR"},
+	})
+}
+
+func (s *QueryDataSuite) TestUniqueLabelsDefaultName() {
+	s.testUniqueLabels([]telemetryapi.TimeseriesTags{
+		{"foo": "bar", "telemetry": "h2_flow"},
+	}, []data.Labels{
+		{"telemetry": "h2_flow"},
+	})
+}
+
+func (s *QueryDataSuite) testUniqueLabels(
+	tagsIn []telemetryapi.TimeseriesTags, labelsOut []data.Labels,
+) {
+	req := s.randomDataRequestWithSingleQuery()
+	dataFieldsIn := make([]*telemetryapi.TimeseriesDataField, len(tagsIn))
+	for i, tags := range tagsIn {
+		dataFieldsIn[i] = &telemetryapi.TimeseriesDataField{
+			Tags: tags,
+			Type: telemetryapi.TimeseriesDataTypeFloat,
+		}
+	}
+	timeseries := &telemetryapi.Timeseries{
+		TimeField:  []time.Time{},
+		DataFields: dataFieldsIn,
+	}
+	s.expectGetAndReturnTimeseries(req, timeseries)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().Nil(err)
+	_, dataFieldsOut := s.extractTimeseriesFields(frames)
+	for i, field := range dataFieldsOut {
+		s.Require().Equal(labelsOut[i], field.Labels)
+	}
+}
+
 func (s *QueryDataSuite) extractTimeseriesFields(frames data.Frames) (
 	timestamp *data.Field, dataFields []*data.Field,
 ) {
@@ -391,7 +451,9 @@ func (s *QueryDataSuite) extractTimeseriesFields(frames data.Frames) (
 	return time, values
 }
 
-func (s *QueryDataSuite) expectGetAndReturnTimeseries(req dataRequest, ts *telemetryapi.Timeseries) {
+func (s *QueryDataSuite) expectGetAndReturnTimeseries(
+	req dataRequest, ts *telemetryapi.Timeseries,
+) {
 	for _, q := range req.queries {
 		p := telemetryapi.TimeseriesParams{
 			User:  req.user,

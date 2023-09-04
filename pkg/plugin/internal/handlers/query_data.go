@@ -52,112 +52,7 @@ func (h *QueryData) QueryData(
 		}
 	}
 
-	h.makeLabelsUnique(resp.Responses)
-
 	return resp, nil
-}
-
-//nolint:gocognit // FIXME
-func (h *QueryData) makeLabelsUnique(responses backend.Responses) {
-	defaultNames := make(map[string]string, len(responses))
-	frames := make(map[string]*data.Frame)
-	numFields := 0
-	const oneForTimeField = 1
-
-	type kvpair struct {
-		k string
-		v string
-	}
-
-	counter := make(map[kvpair]int)
-
-	for refID, resp := range responses {
-		if resp.Error != nil {
-			continue
-		}
-
-		switch {
-		case len(resp.Frames) == 0:
-			continue
-		case len(resp.Frames) == 1:
-			// ok
-		case len(resp.Frames) > 1:
-			h.logger.Warn("multiple data frames are not supported: " +
-				"skip making labels unique")
-			return
-		default:
-			panic("unreachable")
-		}
-
-		frame := resp.Frames[0]
-		if len(frame.Fields) < oneForTimeField+1 {
-			continue
-		}
-
-		frames[refID] = frame
-
-		for _, field := range frame.Fields[oneForTimeField:] {
-			for k, v := range field.Labels {
-				if k == "telemetry" {
-					defaultNames[refID] = v
-				}
-				counter[kvpair{k, v}]++
-			}
-			numFields++
-		}
-	}
-
-	for kv, n := range counter {
-		if n == numFields {
-			for _, frame := range frames {
-				for _, field := range frame.Fields[oneForTimeField:] {
-					delete(field.Labels, kv.k)
-				}
-			}
-		}
-	}
-
-	for refID, frame := range frames {
-		for _, field := range frame.Fields[oneForTimeField:] {
-			if len(field.Labels) == 0 {
-				field.Name = defaultNames[refID]
-			}
-		}
-	}
-}
-
-func (h *QueryData) userFacingError(err error) error {
-	if errors.Is(err, errUnsupportedTimeseriesDataType) {
-		return ErrMetricDataTypeIsNotSupported
-	}
-
-	if e := (&yaml.TypeError{}); errors.As(err, &e) {
-		return ErrInvalidYAML
-	}
-
-	var multiErr *telemetryapi.MultiError
-
-	if ok := errors.As(err, &multiErr); !ok {
-		return ErrSomethingWentWrong
-	}
-
-	switch len(multiErr.Errors) {
-	case 0: // should never happen
-		h.logger.Error("multi error does not contains errors")
-		return ErrSomethingWentWrong
-	case 1:
-		// noop
-	default:
-		h.logger.Warn("multi error contains multiple errors, " +
-			"but this is not supported yet; will return only the first error")
-	}
-
-	if msg := multiErr.Errors[0].Message; len(msg) > 0 {
-		//nolint: goerr113 // user-facing
-		return errors.New(msg)
-	}
-
-	return ErrSomethingWentWrong
 }
 
 func (h *QueryData) handleQuery(
@@ -198,7 +93,43 @@ func (h *QueryData) handleQuery(
 		return nil, fmt.Errorf("convert timeseries to data frame: %w", err)
 	}
 
+	h.makeLabelsUnique(frame)
+
 	return data.Frames{frame}, nil
+}
+
+func (h *QueryData) userFacingError(err error) error {
+	if errors.Is(err, errUnsupportedTimeseriesDataType) {
+		return ErrMetricDataTypeIsNotSupported
+	}
+
+	if e := (&yaml.TypeError{}); errors.As(err, &e) {
+		return ErrInvalidYAML
+	}
+
+	var multiErr *telemetryapi.MultiError
+
+	if ok := errors.As(err, &multiErr); !ok {
+		return ErrSomethingWentWrong
+	}
+
+	switch len(multiErr.Errors) {
+	case 0: // should never happen
+		h.logger.Error("multi error does not contains errors")
+		return ErrSomethingWentWrong
+	case 1:
+		// noop
+	default:
+		h.logger.Warn("multi error contains multiple errors, " +
+			"but this is not supported yet; will return only the first error")
+	}
+
+	if msg := multiErr.Errors[0].Message; len(msg) > 0 {
+		//nolint: goerr113 // user-facing
+		return errors.New(msg)
+	}
+
+	return ErrSomethingWentWrong
 }
 
 func (h *QueryData) prepareQueryText(
@@ -304,4 +235,47 @@ func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (
 	}
 
 	return data.NewFrame("", frameFields...), nil
+}
+
+func (h *QueryData) makeLabelsUnique(frame *data.Frame) {
+	if len(frame.Fields) == 0 {
+		return
+	}
+
+	const oneForTimeField = 1
+	dataFields := frame.Fields[oneForTimeField:]
+
+	const metricLabelName = "telemetry"
+	var defaultName string
+
+	type kvpair struct {
+		k string
+		v string
+	}
+	counter := make(map[kvpair]int)
+
+	for _, field := range dataFields {
+		for k, v := range field.Labels {
+			if k == metricLabelName {
+				defaultName = v
+			}
+			counter[kvpair{k, v}]++
+		}
+	}
+
+	for kv, n := range counter {
+		if n == len(dataFields) {
+			for _, field := range dataFields {
+				delete(field.Labels, kv.k)
+			}
+		}
+	}
+
+	for _, field := range dataFields {
+		if len(field.Labels) == 0 && defaultName != "" {
+			field.Labels = data.Labels{
+				metricLabelName: defaultName,
+			}
+		}
+	}
 }
