@@ -1,5 +1,10 @@
 # Changelog
 
+## v7.0.0
+
+- Rename project
+- Fix commands-api client URL usage
+
 ## v6.0.0
 
 - Add support for executing commands
