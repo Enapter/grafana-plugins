@@ -8,8 +8,7 @@ export const defaultQuery: Partial<MyQuery> = {
   text: `telemetry:
   - device: YOUR_DEVICE
     attribute: YOUR_TELEMETRY
-granularity: $__interval
-aggregation: auto`,
+`,
 };
 
 /**

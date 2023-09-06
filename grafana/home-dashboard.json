@@ -97,10 +97,10 @@
         {
           "datasource": {
             "type": "enapter-api",
-            "uid": "P692EEDCB9F36AB8E"
+            "uid": "PB0170B199208DA35"
           },
           "refId": "A",
-          "text": "telemetry:\n  - device: YOUR_DEVICE\n    attribute: YOUR_TELEMETRY\ngranularity: $__interval\naggregation: auto"
+          "text": "telemetry:\n  - device: YOUR_DEVICE\n    attribute: YOUR_TELEMETRY"
         }
       ],
       "title": "Enapter Telemetry",

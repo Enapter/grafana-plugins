@@ -36,8 +36,6 @@ using YAML. A basic query looks like this:
 telemetry:
   - device: YOUR_DEVICE
     attribute: YOUR_TELEMETRY
-granularity: $__interval
-aggregation: auto
 ```
 
 To get more info about the query language check out the [Enapter Developers
