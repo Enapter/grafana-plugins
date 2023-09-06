@@ -3,6 +3,7 @@ package commandsapi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -16,11 +17,13 @@ type Client interface {
 }
 
 type client struct {
+	apiURL  string
 	token   string
 	timeout time.Duration
 }
 
 type ClientParams struct {
+	APIURL  string
 	Token   string
 	Timeout time.Duration
 }
@@ -33,6 +36,7 @@ func NewClient(p ClientParams) Client {
 	}
 
 	return &client{
+		apiURL:  p.APIURL,
 		token:   p.Token,
 		timeout: p.Timeout,
 	}
@@ -56,7 +60,12 @@ type CommandResponse struct {
 }
 
 func (c *client) Execute(ctx context.Context, p ExecuteParams) (CommandResponse, error) {
-	resp, err := c.enapterHTTP(p.User).Commands.Execute(ctx, enapterhttp.CommandQuery{
+	enapterHTTPClient, err := c.newEnapterHTTPClient(p.User)
+	if err != nil {
+		return CommandResponse{}, fmt.Errorf("new Enapter HTTP client: %w", err)
+	}
+
+	resp, err := enapterHTTPClient.Commands.Execute(ctx, enapterhttp.CommandQuery{
 		DeviceID:    p.Request.DeviceID,
 		HardwareID:  p.Request.HardwareID,
 		CommandName: p.Request.CommandName,
@@ -66,7 +75,7 @@ func (c *client) Execute(ctx context.Context, p ExecuteParams) (CommandResponse,
 		if respErr := (enapterhttp.ResponseError{}); errors.As(err, &respErr) {
 			return CommandResponse{}, c.respErrorToMultiError(respErr)
 		}
-		return CommandResponse{}, err
+		return CommandResponse{}, fmt.Errorf("do: %w", err)
 	}
 
 	return CommandResponse{
@@ -96,7 +105,7 @@ func (c *client) respErrorToMultiError(respErr enapterhttp.ResponseError) error 
 	return multiErr
 }
 
-func (c *client) enapterHTTP(user string) *enapterhttp.Client {
+func (c *client) newEnapterHTTPClient(user string) (*enapterhttp.Client, error) {
 	transport := http.DefaultTransport
 
 	if c.token != "" {
@@ -107,8 +116,8 @@ func (c *client) enapterHTTP(user string) *enapterhttp.Client {
 		transport = enapterhttp.NewAuthUserTransport(transport, user)
 	}
 
-	return enapterhttp.NewClient(&http.Client{
+	return enapterhttp.NewClientWithURL(&http.Client{
 		Timeout:   c.timeout,
 		Transport: transport,
-	})
+	}, c.apiURL)
 }

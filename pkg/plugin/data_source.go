@@ -51,7 +51,8 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 	}
 
 	commandsAPIClient := commandsapi.NewClient(commandsapi.ClientParams{
-		Token: apiToken,
+		APIURL: apiURL,
+		Token:  apiToken,
 	})
 
 	queryDataHandler := handlers.NewQueryData(
