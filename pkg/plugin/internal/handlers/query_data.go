@@ -15,6 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/commandsapi"
+	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/httperr"
 	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
 )
 
@@ -172,7 +173,7 @@ func (h *QueryData) userFacingError(err error) error {
 		return ErrInvalidYAML
 	}
 
-	var multiErr *telemetryapi.MultiError
+	var multiErr *httperr.MultiError
 
 	if ok := errors.As(err, &multiErr); !ok {
 		return ErrSomethingWentWrong
