@@ -2,10 +2,13 @@ package commandsapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
 	enapterhttp "github.com/Enapter/http-api-go-client/pkg/client"
+
+	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/httperr"
 )
 
 type Client interface {
@@ -60,6 +63,9 @@ func (c *client) Execute(ctx context.Context, p ExecuteParams) (CommandResponse,
 		Arguments:   p.Request.CommandArgs,
 	})
 	if err != nil {
+		if respErr := (enapterhttp.ResponseError{}); errors.As(err, &respErr) {
+			return CommandResponse{}, c.respErrorToMultiError(respErr)
+		}
 		return CommandResponse{}, err
 	}
 
@@ -67,6 +73,27 @@ func (c *client) Execute(ctx context.Context, p ExecuteParams) (CommandResponse,
 		State:   string(resp.State),
 		Payload: resp.Payload,
 	}, nil
+}
+
+func (c *client) respErrorToMultiError(respErr enapterhttp.ResponseError) error {
+	if len(respErr.Errors) == 0 {
+		return respErr
+	}
+
+	multiErr := new(httperr.MultiError)
+
+	for _, e := range respErr.Errors {
+		if len(e.Code) == 0 {
+			e.Code = "<empty>"
+		}
+		multiErr.Errors = append(multiErr.Errors, httperr.Error{
+			Code:    e.Code,
+			Message: e.Message,
+			Details: e.Details,
+		})
+	}
+
+	return multiErr
 }
 
 func (c *client) enapterHTTP(user string) *enapterhttp.Client {
