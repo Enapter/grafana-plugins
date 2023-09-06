@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/httperr"
 )
 
 type Client interface {
@@ -62,7 +64,7 @@ func (c *client) Ready(ctx context.Context) error {
 			"from": %q,
 			"to":   %q,
 			"telemetry": [{
-				"device":    "<does not exist>", 
+				"device":    "<does not exist>",
 				"attribute": "<does not exist>"
 			}],
 			"granularity": 	"1m",
@@ -73,7 +75,7 @@ func (c *client) Ready(ctx context.Context) error {
 		return errUnexpectedAbsenceOfError
 	}
 
-	var multiErr *MultiError
+	var multiErr *httperr.MultiError
 	if ok := errors.As(err, &multiErr); !ok || len(multiErr.Errors) != 1 {
 		return err
 	}
@@ -299,7 +301,7 @@ func (c *client) drainAndClose(rc io.ReadCloser) error {
 }
 
 func (c *client) processError(resp *http.Response) error {
-	multiErr, err := parseMultiError(resp.Body)
+	multiErr, err := httperr.ParseMultiError(resp.Body)
 	if err != nil {
 		return fmt.Errorf("multi-error: <not available>: %w", err)
 	}

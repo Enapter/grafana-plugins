@@ -11,7 +11,6 @@ var (
 	errUnexpectedTimeseriesDataType = errors.New("unexpected timeseries data type")
 	errUnexpectedFieldName          = errors.New("unexpected field name")
 	errEmptyData                    = errors.New("empty data")
-	errEmptyErrorList               = errors.New("empty error list")
 	ErrNoValues                     = errors.New("no values")
 	errBadKeyValuePair              = errors.New("bad key value pair")
 )

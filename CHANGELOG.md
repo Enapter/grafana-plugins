@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.0.0
+
+- Add support for executing commands
+- Make labels unique only for a single query
+
 ## v5.1.1
 
 - Fix the link to example dashboard in README
