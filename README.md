@@ -5,7 +5,7 @@ analyze devices data from [Enapter
 Cloud](https://handbook.enapter.com/software/cloud/cloud.html) with the help of
 [Enapter HTTP API](https://developers.enapter.com/docs/reference/http/intro).
 
-![Example dashboard.](https://raw.githubusercontent.com/Enapter/telemetry-grafana-datasource-plugin/3d2a692c5dd41784628e63cd45e1418b74ff5be4/example-dashboard.png)
+![Example dashboard.](https://raw.githubusercontent.com/Enapter/api-grafana-datasource-plugin/9e43b0860b51bf8d9842f2e14396096cc8624627/example-dashboard.png)
 
 ## Quick start
 
