@@ -4,17 +4,17 @@ set -euo pipefail
 IFS=$'\n\t'
 
 provisioning_dir=/etc/grafana/provisioning
-datasource_config=$provisioning_dir/datasources/enapter-telemetry.yml
-plugin_type=enapter-telemetry
+datasource_config=$provisioning_dir/datasources/enapter-api.yml
+plugin_type=enapter-api
 
 export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=$plugin_type
 export GF_LOG_LEVEL=info
 
-TELEMETRY_API_BASE_URL=${TELEMETRY_API_BASE_URL:-https://api.enapter.com/telemetry}
-TELEMETRY_API_TOKEN=${TELEMETRY_API_TOKEN:-${ENAPTER_API_TOKEN:-}}
+ENAPTER_API_URL=${ENAPTER_API_URL:-https://api.enapter.com}
+ENAPTER_API_TOKEN=${ENAPTER_API_TOKEN:-${TELEMETRY_API_TOKEN:-}}
 
-if [ -z "$TELEMETRY_API_TOKEN" ]; then
-	echo "Both TELEMETRY_API_TOKEN and ENAPTER_API_TOKEN are empty or missing." > /dev/stderr
+if [ -z "$ENAPTER_API_TOKEN" ]; then
+	echo "ENAPTER_API_TOKEN is either empty or missing." > /dev/stderr
 	exit 1
 fi
 
@@ -28,15 +28,15 @@ cp -r $opt_plugins_dir/$plugin_type $plugins_dir/$plugin_type
 cat > $datasource_config <<EOF
 apiVersion: 1
 datasources:
-  - name: Enapter Telemetry
+  - name: Enapter API
     type: $plugin_type
     access: proxy
     orgId: 1
     isDefault: true
     jsonData:
-      telemetryAPIBaseURL: "$TELEMETRY_API_BASE_URL"
+      enapterAPIURL: "$ENAPTER_API_URL"
     secureJsonData:
-      telemetryAPIToken: "$TELEMETRY_API_TOKEN"
+      enapterAPIToken: "$ENAPTER_API_TOKEN"
     version: 1
     editable: false
 EOF

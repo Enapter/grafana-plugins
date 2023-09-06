@@ -96,7 +96,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "enapter-telemetry",
+            "type": "enapter-api",
             "uid": "P692EEDCB9F36AB8E"
           },
           "refId": "A",

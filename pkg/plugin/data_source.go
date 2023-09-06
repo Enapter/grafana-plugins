@@ -39,10 +39,11 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 		return nil, fmt.Errorf("JSON data: %w", err)
 	}
 
-	apiToken := settings.DecryptedSecureJSONData["telemetryAPIToken"]
+	apiURL := jsonData["enapterAPIURL"]
+	apiToken := settings.DecryptedSecureJSONData["enapterAPIToken"]
 
 	telemetryAPIClient, err := telemetryapi.NewClient(telemetryapi.ClientParams{
-		BaseURL: jsonData["telemetryAPIBaseURL"],
+		BaseURL: apiURL + "/telemetry",
 		Token:   apiToken,
 	})
 	if err != nil {

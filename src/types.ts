@@ -16,12 +16,12 @@ aggregation: auto`,
  * These are options configured for each DataSource instance.
  */
 export interface MyDataSourceOptions extends DataSourceJsonData {
-  telemetryAPIBaseURL?: string;
+  enapterAPIURL?: string;
 }
 
 /**
  * Value that is used in the backend, but never sent over HTTP to the frontend
  */
 export interface MySecureJsonData {
-  telemetryAPIToken?: string;
+  enapterAPIToken?: string;
 }

@@ -11,7 +11,7 @@ import (
 
 func Serve() error {
 	p := &plugin{
-		name: "enapter-telemetry",
+		name: "enapter-api",
 		logger: hclog.New(&hclog.LoggerOptions{
 			Level:      hclog.Debug,
 			Output:     os.Stderr,

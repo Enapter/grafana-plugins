@@ -1,11 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "Enapter Telemetry",
-  "id": "enapter-telemetry",
+  "name": "Enapter API",
+  "id": "enapter-api",
   "metrics": true,
   "backend": true,
-  "executable": "gpx_enapter_telemetry",
+  "executable": "gpx_enapter_api",
   "info": {
     "description": "",
     "author": {
@@ -20,11 +20,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/Enapter/telemetry-grafana-datasource-plugin"
+        "url": "https://github.com/Enapter/api-grafana-datasource-plugin"
       },
       {
         "name": "License",
-        "url": "https://github.com/Enapter/telemetry-grafana-datasource-plugin/blob/master/LICENSE"
+        "url": "https://github.com/Enapter/api-grafana-datasource-plugin/blob/master/LICENSE"
       }
     ],
     "screenshots": [],

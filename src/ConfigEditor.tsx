@@ -10,37 +10,37 @@ interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> 
 interface State {}
 
 export class ConfigEditor extends PureComponent<Props, State> {
-  onTelemetryAPIBaseURLChange = (event: ChangeEvent<HTMLInputElement>) => {
+  onEnapterAPIURLChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
       ...options.jsonData,
-      telemetryAPIBaseURL: event.target.value,
+      enapterAPIURL: event.target.value,
     };
     onOptionsChange({ ...options, jsonData });
   };
 
   // Secure field (only sent to the backend)
-  onTelemetryAPITokenChange = (event: ChangeEvent<HTMLInputElement>) => {
+  onEnapterAPITokenChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     onOptionsChange({
       ...options,
       secureJsonData: {
-        telemetryAPIToken: event.target.value,
+        enapterAPIToken: event.target.value,
       },
     });
   };
 
-  onResetTelemetryAPIToken = () => {
+  onResetEnapterAPIToken = () => {
     const { onOptionsChange, options } = this.props;
     onOptionsChange({
       ...options,
       secureJsonFields: {
         ...options.secureJsonFields,
-        telemetryAPIToken: false,
+        enapterAPIToken: false,
       },
       secureJsonData: {
         ...options.secureJsonData,
-        telemetryAPIToken: '',
+        enapterAPIToken: '',
       },
     });
   };
@@ -54,26 +54,26 @@ export class ConfigEditor extends PureComponent<Props, State> {
       <div className="gf-form-group">
         <div className="gf-form">
           <FormField
-            label="Telemetry API base URL"
+            label="Enapter API URL"
             labelWidth={10}
             inputWidth={30}
-            onChange={this.onTelemetryAPIBaseURLChange}
-            value={jsonData.telemetryAPIBaseURL || 'https://api.enapter.com/telemetry'}
-            placeholder="Enapter Telemetry API base URL."
+            onChange={this.onEnapterAPIURLChange}
+            value={jsonData.enapterAPIURL || 'https://api.enapter.com'}
+            placeholder="Enapter API URL."
           />
         </div>
 
         <div className="gf-form-inline">
           <div className="gf-form">
             <SecretFormField
-              isConfigured={(secureJsonFields && secureJsonFields.telemetryAPIToken) as boolean}
-              value={secureJsonData.telemetryAPIToken || ''}
-              label="API token"
+              isConfigured={(secureJsonFields && secureJsonFields.enapterAPIToken) as boolean}
+              value={secureJsonData.enapterAPIToken || ''}
+              label="Enapter API token"
               placeholder="Your Enapter API token."
               labelWidth={10}
               inputWidth={30}
-              onReset={this.onResetTelemetryAPIToken}
-              onChange={this.onTelemetryAPITokenChange}
+              onReset={this.onResetEnapterAPIToken}
+              onChange={this.onEnapterAPITokenChange}
             />
           </div>
         </div>

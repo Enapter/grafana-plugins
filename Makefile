@@ -18,7 +18,7 @@ dist:
 		.
 
 PLUGIN_VERSION = $(shell jq -r .version package.json)
-GRAFANA_TAG = enapter/grafana-with-telemetry-datasource-plugin:v$(PLUGIN_VERSION)-dev
+GRAFANA_TAG = enapter/grafana-with-enapter-api-datasource-plugin:v$(PLUGIN_VERSION)-dev
 
 .PHONY: grafana-build
 grafana-build:
@@ -38,7 +38,7 @@ grafana-run:
 	docker run \
 		--rm \
 		--tty \
-		--env TELEMETRY_API_BASE_URL=$(TELEMETRY_API_BASE_URL) \
+		--env ENAPTER_API_URL=$(ENAPTER_API_URL) \
 		--env ENAPTER_API_TOKEN=$(ENAPTER_API_TOKEN) \
 		--interactive \
 		--publish $(GRAFANA_PORT):3000 \

@@ -53,17 +53,17 @@ FROM scratch AS dist
 
 COPY --from=frontend /build/dist /
 
-COPY --from=backend /build/dist/gpx_enapter_telemetry_darwin_amd64 /
-COPY --from=backend /build/dist/gpx_enapter_telemetry_darwin_arm64 /
-COPY --from=backend /build/dist/gpx_enapter_telemetry_linux_amd64 /
-COPY --from=backend /build/dist/gpx_enapter_telemetry_linux_arm /
-COPY --from=backend /build/dist/gpx_enapter_telemetry_linux_arm64 /
-COPY --from=backend /build/dist/gpx_enapter_telemetry_windows_amd64.exe /
+COPY --from=backend /build/dist/gpx_enapter_api_darwin_amd64 /
+COPY --from=backend /build/dist/gpx_enapter_api_darwin_arm64 /
+COPY --from=backend /build/dist/gpx_enapter_api_linux_amd64 /
+COPY --from=backend /build/dist/gpx_enapter_api_linux_arm /
+COPY --from=backend /build/dist/gpx_enapter_api_linux_arm64 /
+COPY --from=backend /build/dist/gpx_enapter_api_windows_amd64.exe /
 
 
 FROM grafana/grafana:${GRAFANA_VERSION} AS grafana
 
-COPY --from=dist / /opt/plugins/enapter-telemetry/dist
+COPY --from=dist / /opt/plugins/enapter-api/dist
 
 COPY ./grafana/entrypoint.sh ./opt/grafana-entrypoint.sh
 COPY ./grafana/home-dashboard.json /usr/share/grafana/public/dashboards/home.json
