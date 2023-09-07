@@ -21,7 +21,7 @@ docker run \
 	--interactive \
 	--tty \
 	--publish 3000:3000 \
-	enapter/grafana-with-enapter-api-datasource-plugin:v6.0.0
+	enapter/grafana-with-enapter-api-datasource-plugin:v7.0.0
 ```
 
 3. Proceed to `http://127.0.0.1:3000`.
