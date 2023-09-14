@@ -25,7 +25,7 @@ jobs:
         id: docker_meta
         uses: docker/metadata-action@v3
         with:
-          images: enapter/grafana-with-telemetry-datasource-plugin
+          images: enapter/grafana-with-enapter-api-datasource-plugin
           tags: |
             type=ref,event=tag
 
@@ -48,7 +48,7 @@ jobs:
         id: enapter_docker_meta
         uses: docker/metadata-action@v3
         with:
-          images: docker.enapter.com/grafana/with-telemetry-datasource-plugin
+          images: docker.enapter.com/grafana/with-enapter-api-datasource-plugin
           tags: |
             type=ref,event=tag
 
