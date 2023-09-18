@@ -1,30 +1,30 @@
 ARG GRAFANA_VERSION=9.5.2
 
-FROM node:14-alpine AS frontend
+FROM node:18-alpine AS frontend
 
 WORKDIR /build
 
 COPY ./package.json ./package.json
-COPY ./yarn.lock ./yarn.lock
+COPY ./package-lock.json ./package-lock.json
 
-RUN --mount=type=cache,target=node_modules yarn install --pure-lockfile
+RUN --mount=type=cache,target=node_modules npm ci
 
 COPY ./src ./src
-RUN --mount=type=cache,target=node_modules yarn test
+RUN --mount=type=cache,target=node_modules npm run test
 
 COPY ./README.md ./README.md
 COPY ./CHANGELOG.md ./CHANGELOG.md
 COPY ./LICENSE ./LICENSE
-RUN --mount=type=cache,target=node_modules yarn build
+RUN --mount=type=cache,target=node_modules npm run build
 
 
 FROM golang:1.20-alpine AS backend
 
 RUN apk add --no-cache --virtual .build-deps \
-    git \
-    build-base \
-    && go install github.com/magefile/mage@v1.12.1 \
-    && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.2
+	git \
+	build-base \
+	&& go install github.com/magefile/mage@v1.12.1 \
+	&& go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.2
 
 WORKDIR /build
 
