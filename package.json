@@ -1,6 +1,6 @@
 {
   "name": "enapter-api",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "Enapter API Grafana Datasource Plugin",
   "scripts": {
     "build": "grafana-toolkit plugin:build",
@@ -19,9 +19,9 @@
     "@grafana/ui": "^9.5.2",
     "@types/lodash": "^4"
   },
-  "engines" : { 
-    "npm" : ">=9.6.7",
-    "node" : ">=18.17.1"
+  "engines": {
+    "npm": ">=9.6.7",
+    "node": ">=18.17.1"
   },
   "dependencies": {
     "rxjs": "7.5.5"

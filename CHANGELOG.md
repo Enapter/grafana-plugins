@@ -1,5 +1,9 @@
 # Changelog
 
+## v7.0.1
+
+- Fix resetting Enapter API URL in datasource config editor
+
 ## v7.0.0
 
 - Rename project
