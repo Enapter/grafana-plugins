@@ -14,7 +14,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
       ...options.jsonData,
-      enapterAPIURL: event.target.value,
+      enapterAPIURL: event.target.value || 'https://api.enapter.com',
     };
     onOptionsChange({ ...options, jsonData });
   };
@@ -58,7 +58,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
             labelWidth={10}
             inputWidth={30}
             onChange={this.onEnapterAPIURLChange}
-            value={jsonData.enapterAPIURL || 'https://api.enapter.com'}
+            value={jsonData.enapterAPIURL}
             placeholder="Enapter API URL."
           />
         </div>
