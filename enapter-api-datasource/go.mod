@@ -1,4 +1,4 @@
-module github.com/Enapter/telemetry-grafana-datasource-plugin
+module github.com/Enapter/grafana-plugins
 
 go 1.19
 

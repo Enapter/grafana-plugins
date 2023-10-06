@@ -9,7 +9,7 @@ import (
 
 	enapterhttp "github.com/Enapter/http-api-go-client/pkg/client"
 
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/httperr"
+	"github.com/Enapter/grafana-plugins/pkg/httperr"
 )
 
 type Client interface {

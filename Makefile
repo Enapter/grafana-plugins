@@ -1,29 +1,28 @@
 default:
 
-.PHONY: dist.tar.gz
-dist.tar.gz: dist
-	rm --force $@
-	tar --create --gzip --file $@ $<
-
 export DOCKER_BUILDKIT=1
 DOCKER_BUILD = docker build \
 	--build-arg BUILDKIT_INLINE_CACHE=1
 
-.PHONY: dist
-dist:
-	rm --recursive --force $@
-	$(DOCKER_BUILD) \
-		--target $@ \
-		--output $@ \
-		.
+PLUGINS ?= $(shell find . -path './*/src/plugin.json' \
+	| sed -E 's|\./(.+)/src/plugin.json|\1|')
 
-PLUGIN_VERSION = $(shell jq -r .version package.json)
-GRAFANA_TAG = enapter/grafana-with-enapter-api-datasource-plugin:v$(PLUGIN_VERSION)-dev
+.PHONY: $(PLUGINS)
+$(PLUGINS):
+	rm --recursive --force ./$@/dist
+	$(DOCKER_BUILD) \
+		--output ./$@/dist \
+		./$@
+
+enapter-grafana-plugins.tar.gz: $(PLUGINS)
+	rm --force $@
+	tar --create --gzip --file $@ $(addsuffix /dist,$^)
+
+GRAFANA_TAG ?= enapter/grafana-plugins:dev
 
 .PHONY: grafana-build
-grafana-build:
+grafana-build: $(PLUGINS)
 	$(DOCKER_BUILD) \
-		--target grafana \
 		--tag $(GRAFANA_TAG) \
 		.
 

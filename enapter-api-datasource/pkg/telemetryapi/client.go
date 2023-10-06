@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/httperr"
+	"github.com/Enapter/grafana-plugins/pkg/httperr"
 )
 
 type Client interface {

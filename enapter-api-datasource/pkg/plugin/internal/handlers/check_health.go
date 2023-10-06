@@ -6,7 +6,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
+	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
 )
 
 var _ backend.CheckHealthHandler = (*CheckHealth)(nil)

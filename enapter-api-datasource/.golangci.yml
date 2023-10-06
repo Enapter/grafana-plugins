@@ -105,7 +105,7 @@ linters-settings:
   lll:
     line-length: 110
   gci:
-    local-prefixes: github.com/Enapter/telemetry-grafana-datasource-plugin
+    local-prefixes: github.com/Enapter/grafana-plugins
   nilnil:
     checked-types:
       - ptr

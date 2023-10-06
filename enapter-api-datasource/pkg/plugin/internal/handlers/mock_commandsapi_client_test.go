@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/commandsapi"
+	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
 )
 
 var _ commandsapi.Client = (*MockCommandsAPIClient)(nil)

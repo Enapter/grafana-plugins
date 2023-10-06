@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/commandsapi"
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/plugin/internal/handlers"
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
+	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
+	"github.com/Enapter/grafana-plugins/pkg/plugin/internal/handlers"
+	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
 )
 
 type QueryDataSuite struct {

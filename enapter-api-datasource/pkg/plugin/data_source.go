@@ -8,9 +8,9 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/commandsapi"
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/plugin/internal/handlers"
-	"github.com/Enapter/telemetry-grafana-datasource-plugin/pkg/telemetryapi"
+	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
+	"github.com/Enapter/grafana-plugins/pkg/plugin/internal/handlers"
+	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
 )
 
 var _ instancemgmt.InstanceDisposer = (*dataSource)(nil)
