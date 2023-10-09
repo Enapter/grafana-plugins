@@ -15,10 +15,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Lint, test, build and archive
-        run: make dist.tar.gz
+      - name: Package
+        run: make enapter-grafana-plugins.tar.gz
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist.tar.gz
+          files: enapter-grafana-plugins.tar.gz
