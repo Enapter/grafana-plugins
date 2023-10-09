@@ -17,7 +17,23 @@ const getArgumentsAsObject = (
 ) => {
   const result: { [key: string]: any } = {};
   args.forEach((arg) => {
-    result[arg.name] = arg.value;
+    let value = arg.value;
+
+    try {
+      const isContainCommaOrDot = arg.value.includes(',') || arg.value.includes('.');
+      const isInt = Number.isInteger(Number.parseInt(arg.value, 10));
+      const isFloat = Number.isFinite(Number.parseFloat(arg.value));
+
+      if (!isContainCommaOrDot && isInt) {
+        value = Number.parseInt(arg.value, 10);
+      } else if (isFloat) {
+        value = Number.parseFloat(arg.value);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    result[arg.name] = value;
   });
   return result;
 };
