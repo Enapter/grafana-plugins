@@ -31,7 +31,7 @@ datasources:
     editable: false
 EOF
 
-export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=enapter-api
+export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=enapter-api,enapter-commands
 export GF_LOG_LEVEL=${GF_LOG_LEVEL:-info}
 
 exec /run.sh
