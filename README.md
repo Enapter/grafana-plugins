@@ -4,6 +4,8 @@ This repo contains the following Enapter Grafana plugins:
 
 - [Enapter API Datasource](enapter-api-datasource) — Visualize and analyze
   devices data from Enapter Cloud and Enapter Gateway.
+- [Enapter Commands Panel](enapter-commands-panel) — Send commands to devices
+  integrated into Enapter EMS.
 
 ## Quick start
 
