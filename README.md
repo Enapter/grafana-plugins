@@ -20,7 +20,7 @@ docker run \
 	--interactive \
 	--tty \
 	--publish 3000:3000 \
-	enapter/grafana-plugins:v7.0.1
+	enapter/grafana-plugins:v2023.10.09-1
 ```
 
 3. Proceed to `http://127.0.0.1:3000`.
@@ -38,7 +38,7 @@ Linux). Then to install plugins:
 
 1. Go to the [Releases](https://github.com/Enapter/grafana-plugins/releases)
    web page.
-2. Download the packaged plugins (`enapter-grafana-plugins-v7.0.1.tar.gz`).
+2. Download the packaged plugins (`enapter-grafana-plugins-v2023.10.09-1.tar.gz`).
 3. Unarchive and extract all the directories from the downloaded file.
 4. Move all the extracted directories into `/var/lib/grafana/plugins`.
 
