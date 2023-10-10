@@ -10,13 +10,23 @@
     ],
     "description": "",
     "author": {
-      "name": "Yuri Mandrikov"
+      "name": "Enapter",
+      "url": "https://www.enapter.com/"
     },
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
     },
-    "links": [],
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/Enapter/grafana-plugins/tree/main/enapter-commands-panel"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/Enapter/grafana-plugins/blob/main/enapter-commands-panel/LICENSE"
+      }
+    ],
     "screenshots": [],
     "version": "%VERSION%",
     "updated": "%TODAY%"

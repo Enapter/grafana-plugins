@@ -20,11 +20,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/Enapter/api-grafana-datasource-plugin"
+        "url": "https://github.com/Enapter/grafana-plugins/tree/main/enapter-api-datasource"
       },
       {
         "name": "License",
-        "url": "https://github.com/Enapter/api-grafana-datasource-plugin/blob/master/LICENSE"
+        "url": "https://github.com/Enapter/grafana-plugins/blob/main/enapter-api-datasource/LICENSE"
       }
     ],
     "screenshots": [],
