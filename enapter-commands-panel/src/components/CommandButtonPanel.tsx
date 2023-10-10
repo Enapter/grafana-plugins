@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { AppEvents, PanelProps } from '@grafana/data';
 import { Button, ConfirmModal } from '@grafana/ui';
 import { CommandButtonPanelProps } from '../types';
-import { getAppEvents, getBackendSrv } from '@grafana/runtime';
+import { getAppEvents, getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 
 // if (process.env.NODE_ENV === 'development') {
 //   console.log('Setting up mirage server');
@@ -17,17 +17,17 @@ const getArgumentsAsObject = (
 ) => {
   const result: { [key: string]: any } = {};
   args.forEach((arg) => {
-    let value = arg.value;
+    let value: string | number = getTemplateSrv().replace(arg.value)
 
     try {
-      const isContainCommaOrDot = arg.value.includes(',') || arg.value.includes('.');
-      const isInt = Number.isInteger(Number.parseInt(arg.value, 10));
-      const isFloat = Number.isFinite(Number.parseFloat(arg.value));
+      const isContainCommaOrDot = value.includes(',') || value.includes('.');
+      const isInt = Number.isInteger(Number.parseInt(value, 10));
+      const isFloat = Number.isFinite(Number.parseFloat(value));
 
       if (!isContainCommaOrDot && isInt) {
-        value = Number.parseInt(arg.value, 10);
+        value = Number.parseInt(value, 10);
       } else if (isFloat) {
-        value = Number.parseFloat(arg.value);
+        value = Number.parseFloat(value);
       }
     } catch (e) {
       console.error(e);
@@ -38,9 +38,20 @@ const getArgumentsAsObject = (
   return result;
 };
 
+const replaceVariables = (v: string) => getTemplateSrv().replace(v)
+
 export const CommandButtonPanel: React.FC<PanelProps<CommandButtonPanelProps>> = (props) => {
-  const { commandName, commandArgs, buttonText, size, variant, icon, fullWidth, fullHeight, deviceId, datasourceName } =
-    props.options.commands[0];
+  const { commandName, commandArgs, buttonText, size, variant, icon, fullWidth, fullHeight, deviceId, datasourceName } = (() => {
+    const command = props.options.commands[0]
+
+    return {
+      ...command,
+      commandName: replaceVariables(command.commandName),
+      commandArgs: getArgumentsAsObject(command.commandArgs),
+      buttonText: replaceVariables(command.buttonText),
+      deviceId: replaceVariables(command.deviceId)
+    }
+  })()
 
   const [commandState, setCommandState] = useState<'idle' | 'running'>('idle');
 
@@ -106,7 +117,7 @@ export const CommandButtonPanel: React.FC<PanelProps<CommandButtonPanelProps>> =
           },
           payload: {
             commandName,
-            commandArgs: getArgumentsAsObject(commandArgs),
+            commandArgs,
             deviceId,
           },
         },
