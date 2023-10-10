@@ -1,5 +1,11 @@
 default:
 
+.PHONY: tag-release
+tag-release:
+	for i in $$(seq 5); do \
+		git tag v$$(date +%Y.%m.%d)-$$i && exit; \
+	done
+
 export DOCKER_BUILDKIT=1
 DOCKER_BUILD = docker build \
 	--build-arg BUILDKIT_INLINE_CACHE=1
