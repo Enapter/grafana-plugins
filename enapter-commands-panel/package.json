@@ -1,6 +1,6 @@
 {
   "name": "enapter-commands",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "scripts": {
     "build": "webpack -c ./webpack.config.ts --env production",
