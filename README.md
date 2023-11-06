@@ -43,6 +43,7 @@ Linux). Then to install plugins:
 2. Download the packaged plugins (`enapter-grafana-plugins.tar.gz`).
 3. Unarchive and extract all the directories from the downloaded file.
 4. Move all the extracted directories into `/var/lib/grafana/plugins`.
+5. Make sure the files are owned by `grafana` user.
 
 ## Development
 
