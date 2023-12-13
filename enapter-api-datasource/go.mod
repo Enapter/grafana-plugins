@@ -3,7 +3,7 @@ module github.com/Enapter/grafana-plugins
 go 1.19
 
 require (
-	github.com/Enapter/http-api-go-client v0.0.3
+	github.com/Enapter/http-api-go-client v0.0.9
 	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/grafana/grafana-plugin-sdk-go v0.162.0
 	github.com/hashicorp/go-hclog v1.5.0
