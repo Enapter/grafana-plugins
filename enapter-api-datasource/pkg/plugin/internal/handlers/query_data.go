@@ -65,15 +65,29 @@ func (h *QueryData) QueryData(
 func (h *QueryData) handleQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
-	if query.QueryType == "command" {
-		frames, err := h.handleCommandQuery(ctx, pCtx, query)
-		if err != nil {
-			return nil, fmt.Errorf("command: %w", err)
-		}
-		return frames, nil
+	if query.QueryType == "" {
+		query.QueryType = "telemetry"
 	}
 
-	return h.handleTelemetryQuery(ctx, pCtx, query)
+	var handler func(
+		context.Context, backend.PluginContext, backend.DataQuery,
+	) (data.Frames, error)
+
+	switch query.QueryType {
+	case "command":
+		handler = h.handleCommandQuery
+	case "telemetry":
+		handler = h.handleTelemetryQuery
+	default:
+		return nil, errUnexpectedQueryType
+	}
+
+	frames, err := handler(ctx, pCtx, query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", query.QueryType, err)
+	}
+
+	return frames, nil
 }
 
 func (h *QueryData) handleCommandQuery(
