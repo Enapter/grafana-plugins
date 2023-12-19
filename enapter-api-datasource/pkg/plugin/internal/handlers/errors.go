@@ -2,7 +2,10 @@ package handlers
 
 import "errors"
 
-var errUnsupportedTimeseriesDataType = errors.New("unsupported timeseries data type")
+var (
+	errUnsupportedTimeseriesDataType = errors.New("unsupported timeseries data type")
+	errUnexpectedQueryType           = errors.New("unexpected query type")
+)
 
 //nolint:stylecheck,revive // user-facing
 var (

@@ -26,6 +26,7 @@ type QueryDataSuite struct {
 	logger                 hclog.Logger
 	mockTelemetryAPIClient *MockTelemetryAPIClient
 	mockCommandsAPIClient  *MockCommandsAPIClient
+	mockAssetsAPIClient    *MockAssetsAPIClient
 	queryDataHandler       *handlers.QueryData
 }
 
@@ -33,9 +34,10 @@ func (s *QueryDataSuite) SetupSuite() {
 	s.ctx = context.Background()
 	s.mockTelemetryAPIClient = NewMockTelemetryAPIClient(&s.Suite)
 	s.mockCommandsAPIClient = NewMockCommandsAPIClient(&s.Suite)
+	s.mockAssetsAPIClient = NewMockAssetsAPIClient(&s.Suite)
 	s.logger = hclog.Default()
-	s.queryDataHandler = handlers.NewQueryData(
-		s.logger, s.mockTelemetryAPIClient, s.mockCommandsAPIClient)
+	s.queryDataHandler = handlers.NewQueryData(s.logger, s.mockTelemetryAPIClient,
+		s.mockCommandsAPIClient, s.mockAssetsAPIClient)
 }
 
 var errFake = errors.New("fake error")

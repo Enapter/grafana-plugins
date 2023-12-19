@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Enapter/grafana-plugins/pkg/assetsapi"
 	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
 	"github.com/Enapter/grafana-plugins/pkg/httperr"
 	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
@@ -25,16 +26,18 @@ type QueryData struct {
 	logger             hclog.Logger
 	telemetryAPIClient telemetryapi.Client
 	commandsAPIClient  commandsapi.Client
+	assetsAPIClient    assetsapi.Client
 }
 
 func NewQueryData(
 	logger hclog.Logger, telemetryAPIClient telemetryapi.Client,
-	commandsAPIClient commandsapi.Client,
+	commandsAPIClient commandsapi.Client, assetsAPIClient assetsapi.Client,
 ) *QueryData {
 	return &QueryData{
 		logger:             logger.Named("query_handler"),
 		telemetryAPIClient: telemetryAPIClient,
 		commandsAPIClient:  commandsAPIClient,
+		assetsAPIClient:    assetsAPIClient,
 	}
 }
 
@@ -65,10 +68,6 @@ func (h *QueryData) QueryData(
 func (h *QueryData) handleQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
-	if query.QueryType == "" {
-		query.QueryType = "telemetry"
-	}
-
 	var handler func(
 		context.Context, backend.PluginContext, backend.DataQuery,
 	) (data.Frames, error)
@@ -76,7 +75,9 @@ func (h *QueryData) handleQuery(
 	switch query.QueryType {
 	case "command":
 		handler = h.handleCommandQuery
-	case "telemetry":
+	case "manifest":
+		handler = h.handleManifestQuery
+	case "", "telemetry":
 		handler = h.handleTelemetryQuery
 	default:
 		return nil, errUnexpectedQueryType
@@ -130,6 +131,43 @@ func (h *QueryData) handleCommandQuery(
 	}
 
 	return data.Frames{frame}, nil
+}
+
+func (h *QueryData) handleManifestQuery(
+	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
+) (data.Frames, error) {
+	user := ""
+	if pCtx.User != nil {
+		user = pCtx.User.Email
+	}
+
+	//nolint:tagliatelle // js
+	var props struct {
+		Payload struct {
+			DeviceID string `json:"deviceId"`
+		} `json:"payload"`
+	}
+	if err := json.Unmarshal(query.JSON, &props); err != nil {
+		return nil, fmt.Errorf("parse query properties: %w", err)
+	}
+
+	device, err := h.assetsAPIClient.DeviceByID(
+		ctx, assetsapi.DeviceByIDParams{
+			User:     user,
+			DeviceID: props.Payload.DeviceID,
+			Expand: assetsapi.ExpandDeviceParams{
+				Manifest: true,
+			},
+		})
+	if err != nil {
+		return nil, fmt.Errorf("assets api: %w", err)
+	}
+
+	return data.Frames{
+		&data.Frame{Fields: data.Fields{
+			data.NewField("manifest", nil, []json.RawMessage{device.Manifest}),
+		}},
+	}, nil
 }
 
 func (h *QueryData) handleTelemetryQuery(
