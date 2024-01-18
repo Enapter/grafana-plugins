@@ -15,13 +15,13 @@ PLUGINS ?= $(shell find . -path './*/src/plugin.json' \
 
 .PHONY: $(PLUGINS)
 $(PLUGINS):
-	rm --recursive --force ./$@/dist
+	rm -r -f dist
 	$(DOCKER_BUILD) \
 		--output ./$@/dist \
 		./$@
 
 enapter-grafana-plugins.tar.gz: $(PLUGINS)
-	rm --force $@
+	rm -f $@
 	tar --create --gzip --file $@ $(addsuffix /dist,$^)
 
 GRAFANA_TAG ?= enapter/grafana-plugins:dev

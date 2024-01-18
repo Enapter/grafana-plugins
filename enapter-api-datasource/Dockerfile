@@ -19,6 +19,7 @@ RUN --mount=type=cache,target=node_modules npm run build
 FROM golang:1.20-alpine AS backend
 
 RUN apk add --no-cache --virtual .build-deps \
+    binutils-gold \
 	git \
 	build-base \
 	&& go install github.com/magefile/mage@v1.12.1 \
