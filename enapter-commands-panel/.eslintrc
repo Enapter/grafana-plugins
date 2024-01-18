@@ -1,3 +1,20 @@
 {
-  "extends": "./.config/.eslintrc"
+  "extends": "./.config/.eslintrc",
+  "rules": {
+    "padding-line-between-statements": [
+      "error",
+      { "blankLine": "always", "prev": "*", "next": "return" },
+      { "blankLine": "always", "prev": "*", "next": "throw" },
+      { "blankLine": "always", "prev": "multiline-block-like", "next": "*" },
+      { "blankLine": "always", "prev": "multiline-expression", "next": "*" },
+      { "blankLine": "always", "prev": "multiline-const", "next": "*" },
+      { "blankLine": "always", "prev": "multiline-let", "next": "*" },
+      { "blankLine": "always", "prev": "multiline-var", "next": "*" },
+      { "blankLine": "always", "prev": "*", "next": "multiline-block-like" },
+      { "blankLine": "always", "prev": "*", "next": "multiline-expression" },
+      { "blankLine": "always", "prev": "*", "next": "multiline-const" },
+      { "blankLine": "always", "prev": "*", "next": "multiline-let" },
+      { "blankLine": "always", "prev": "*", "next": "multiline-var" }
+    ]
+  }
 }
