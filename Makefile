@@ -15,7 +15,7 @@ PLUGINS ?= $(shell find . -path './*/src/plugin.json' \
 
 .PHONY: $(PLUGINS)
 $(PLUGINS):
-	rm -r -f dist
+	rm -rf ./$@/dist
 	$(DOCKER_BUILD) \
 		--output ./$@/dist \
 		./$@
