@@ -6,28 +6,28 @@
 
 ## v7.0.1
 
-- Fix resetting Enapter API URL in datasource config editor
+- Fix resetting Enapter API URL in datasource config editor.
 
 ## v7.0.0
 
-- Rename project
-- Fix commands-api client URL usage
+- Rename project.
+- Fix commands-api client URL usage.
 
 ## v6.0.0
 
-- Add support for executing commands
-- Make labels unique only for a single query
+- Add support for executing commands.
+- Make labels unique only for a single query.
 
 ## v5.1.1
 
-- Fix the link to example dashboard in README
-- Fix plugin name and author
-- Add plugin description
+- Fix the link to example dashboard in README.
+- Fix plugin name and author.
+- Add plugin description.
 
 ## v5.1.0
 
-- Extend supported platforms
-- Fix the name of executable
+- Extend supported platforms.
+- Fix the name of executable.
 
 ## v5.0.2
 
@@ -35,7 +35,7 @@
 
 ## v5.0.1
 
-- Upgrade `grafana-plugin-sdk-go`
+- Upgrade `grafana-plugin-sdk-go`.
 
 ## v5.0.0
 
@@ -54,15 +54,15 @@
 
 ## v4.2.0
 
-- Default aggregation to `auto`
+- Default aggregation to `auto`.
 
 ## v4.1.0
 
-- Add default granularity
+- Add default granularity.
 
 ## v4.0.1
 
-- Rename Telemetry API token to Enapter API token
+- Rename Telemetry API token to Enapter API token.
 
 ## v4.0.0
 
@@ -98,7 +98,7 @@
 
 ## v1.2.6
 
-- Smart labels
+- Smart labels.
 
 ## v1.2.5
 
