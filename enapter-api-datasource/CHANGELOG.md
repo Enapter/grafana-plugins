@@ -1,5 +1,9 @@
 # Changelog
 
+## v7.1.0
+
+- Handle device manifest queries.
+
 ## v7.0.1
 
 - Fix resetting Enapter API URL in datasource config editor
