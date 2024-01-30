@@ -1,5 +1,5 @@
 import { StandardEditorProps } from '@grafana/data';
-import React, { createContext, useContext, useLayoutEffect } from 'react';
+import React, { createContext, useContext } from 'react';
 import { Argument, PanelState } from 'types/types';
 import { Draft, produce } from 'immer';
 
@@ -16,11 +16,6 @@ const PanelContext = createContext<PanelProviderType>({} as PanelProviderType);
 export const PanelProvider: React.FC<PanelContextType> = ({ children, value, onChange }) => {
   const valueRef = React.useRef(value);
   valueRef.current = value;
-
-  useLayoutEffect(() => {
-    onChange(valueRef.current);
-    // eslint-disable-next-line
-  }, []);
 
   const updatePanel = (recipe: (draft: Draft<PanelState>) => void) => {
     onChange(produce(valueRef.current, recipe));

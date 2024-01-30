@@ -23,8 +23,8 @@ export const plugin = new PanelPlugin(Panel);
 plugin.setPanelOptions((builder) =>
   builder.addCustomEditor({
     id: 'enapter-commands-editor',
-    path: 'commandButton',
-    name: '',
+    path: 'commands',
+    name: 'Enapter Commands Editor',
     defaultValue: defaultPanelState,
     editor: Editor,
   })

@@ -6,11 +6,11 @@ import { current, Draft, produce } from 'immer';
 import { replaceVariables } from '../utils/replaceVariables';
 import { ArgValidator } from '../validation/arg-validator';
 
-const getArgs = (props: PanelProps<{ commandButton: PanelState }>) => {
+const getArgs = (props: PanelProps<{ commands: PanelState }>) => {
   const args: any = {};
 
-  if (props.options.commandButton.currentCommand) {
-    const command = props.options.commandButton.currentCommand;
+  if (props.options.commands.currentCommand) {
+    const command = props.options.commands.currentCommand;
 
     if (command.arguments) {
       for (const [argName, arg] of Object.entries(command.arguments)) {
@@ -29,7 +29,7 @@ export const checkAnyArgInvalid = (args: Record<string, Argument>) => {
   return Object.values(args).some((arg) => !arg.isValid);
 };
 
-export const useNotPersistedArgs = (props: PanelProps<{ commandButton: PanelState }>) => {
+export const useNotPersistedArgs = (props: PanelProps<{ commands: PanelState }>) => {
   const [args, setArgs] = useImmer(getArgs(props));
   const isReset = useRef(false);
 

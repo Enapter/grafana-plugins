@@ -60,10 +60,10 @@ const getStyles = (
 };
 
 export const useDecoratedPanel = (
-  props: PanelProps<{ commandButton: PanelState }>,
+  props: PanelProps<{ commands: PanelState }>,
   buttonRef: React.RefObject<HTMLButtonElement>
 ) => {
-  const config = props.options.commandButton;
+  const config = props.options.commands;
   useButtonTextResizer(buttonRef, config);
 
   const styles = useStyles2((theme) =>

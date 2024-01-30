@@ -1,12 +1,12 @@
 import { PanelState } from '../types/types';
-import { V1CommandButtonPanelProps } from './types.v1';
+import { V1CommandButton, V1CommandButtonPanelProps } from './types.v1';
 import { defaultPanelState } from '../module';
 import { PanelProps } from '@grafana/data';
 import React from 'react';
 
-const isEditorV1 = (panel: any): panel is V1CommandButtonPanelProps => {
+export const isEditorV1 = (panel: any): panel is V1CommandButton[] => {
   try {
-    return !!panel?.commands[0]?.deviceId;
+    return !!panel[0].deviceId;
   } catch (_) {
     return false;
   }
@@ -20,7 +20,12 @@ export const migrateEditorV1ToV2 = (panel: any): PanelState => {
   if (isEditorV1(panel)) {
     return {
       ...defaultPanelState,
-      deviceId: panel.commands[0].deviceId,
+      deviceId: panel[0]?.deviceId,
+      appearance: {
+        ...defaultPanelState.appearance,
+        icon: panel[0]?.icon || defaultPanelState.appearance.icon,
+        buttonText: panel[0]?.buttonText || defaultPanelState.appearance.buttonText,
+      },
     };
   }
 
@@ -39,26 +44,21 @@ const isPanelV1 = (
 
 export const migratePanelV1ToV2 = (
   panel: any
-): React.PropsWithChildren<PanelProps<{ commandButton: PanelState }>> => {
+): React.PropsWithChildren<PanelProps<{ commands: PanelState }>> => {
   if (!panel) {
-    return {
-      ...defaultPanelState,
-      options: {
-        commandButton: defaultPanelState,
-      },
-    } as unknown as React.PropsWithChildren<PanelProps<{ commandButton: PanelState }>>;
+    return panel;
   }
 
   if (isPanelV1(panel)) {
     return {
       ...panel,
       options: {
-        commandButton: {
+        commands: {
           ...defaultPanelState,
           deviceId: panel.options.commands[0].deviceId,
         },
       },
-    } as unknown as React.PropsWithChildren<PanelProps<{ commandButton: PanelState }>>;
+    } as unknown as React.PropsWithChildren<PanelProps<{ commands: PanelState }>>;
   }
 
   return panel;

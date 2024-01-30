@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { PanelProps } from '@grafana/data';
 import { Alert, Button, LoadingPlaceholder, Modal } from '@grafana/ui';
 import { ConfirmationType, OriginType, PanelState } from '../types/types';
@@ -12,11 +12,12 @@ import { handleError } from '../utils/handleError';
 import { PanelArgumentField } from './PanelArgumentField';
 import { migratePanelV1ToV2 } from '../migrations/v1-to-v2';
 
-export const Panel: React.FC<PanelProps<{ commandButton: PanelState }>> = (props) => {
-  const data = migratePanelV1ToV2(props);
+export const Panel: React.FC<PanelProps<{ commands: PanelState }>> = (props) => {
+  const data = useMemo(() => migratePanelV1ToV2(props), [props]);
+
   const notificator = useNotificator();
 
-  const { currentCommand, datasource, deviceId } = data.options.commandButton;
+  const { currentCommand, datasource, deviceId } = data.options.commands;
 
   const { isOpen, openModal, closeModal } = useModalControls();
 
