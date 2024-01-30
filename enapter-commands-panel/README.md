@@ -3,7 +3,7 @@
 Enapter Commands panel plugin allows you to create buttons which send commands
 to devices integrated into Enapter EMS.
 
-![Example command button.](https://raw.githubusercontent.com/Enapter/grafana-plugins/d6285cf246f328cfa4a106ff7bc7fd0d543bf603/enapter-commands-panel/example-commands-panel.png)
+![Quick overview.](https://static.enapter.com/enapter-commands-plugin/enapter-commands-plugin-basic-example.png)
 
 ## Usage
 

@@ -1,6 +1,6 @@
 import { ButtonProps } from '@grafana/ui';
 
-export type CommandButton = Pick<Partial<ButtonProps>, 'size' | 'variant' | 'icon'> & {
+export type V1CommandButton = Pick<Partial<ButtonProps>, 'size' | 'variant' | 'icon'> & {
   datasourceName?: string;
   deviceId: string;
   commandName: string;
@@ -11,6 +11,6 @@ export type CommandButton = Pick<Partial<ButtonProps>, 'size' | 'variant' | 'ico
   isButtonTextSetManually: boolean;
 };
 
-export type CommandButtonPanelProps = {
-  commands: CommandButton[];
+export type V1CommandButtonPanelProps = {
+  commands: V1CommandButton[];
 };

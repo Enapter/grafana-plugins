@@ -8,6 +8,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/hashicorp/go-hclog"
 
+	"github.com/Enapter/grafana-plugins/pkg/assetsapi"
 	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
 	"github.com/Enapter/grafana-plugins/pkg/plugin/internal/handlers"
 	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
@@ -55,8 +56,13 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 		Token:  apiToken,
 	})
 
+	assetsAPIClient := assetsapi.NewClient(assetsapi.ClientParams{
+		APIURL: apiURL,
+		Token:  apiToken,
+	})
+
 	queryDataHandler := handlers.NewQueryData(
-		logger, telemetryAPIClient, commandsAPIClient)
+		logger, telemetryAPIClient, commandsAPIClient, assetsAPIClient)
 	checkHealthHandler := handlers.NewCheckHealth(logger, telemetryAPIClient)
 
 	logger.Info("created new data source")

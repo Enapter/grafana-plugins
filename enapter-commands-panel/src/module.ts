@@ -1,8 +1,31 @@
 import { PanelPlugin } from '@grafana/data';
-import { CommandButtonPanel } from './components/CommandButtonPanel';
-import { addEditor } from './components/Editor';
-import { CommandButtonPanelProps } from './types';
+import { Panel } from './components/Panel';
+import { Editor } from './components/Editor';
+import { PanelState } from 'types/types';
 
-export const plugin = new PanelPlugin<CommandButtonPanelProps>(CommandButtonPanel);
+export const defaultPanelState: PanelState = {
+  pluginVersion: '1.0',
+  deviceId: '',
+  commands: {},
+  manifestCommands: {},
+  appearance: {
+    icon: 'play',
+    bgColor: '#3871dc',
+    textColor: '#ffffff',
+    fullWidth: false,
+    fullHeight: false,
+    shouldScaleText: false,
+  },
+};
 
-plugin.setPanelOptions((builder) => addEditor(builder));
+export const plugin = new PanelPlugin(Panel);
+
+plugin.setPanelOptions((builder) =>
+  builder.addCustomEditor({
+    id: 'enapter-commands-editor',
+    path: 'commands',
+    name: 'Enapter Commands Editor',
+    defaultValue: defaultPanelState,
+    editor: Editor,
+  })
+);
