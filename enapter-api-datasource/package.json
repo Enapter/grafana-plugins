@@ -1,6 +1,6 @@
 {
   "name": "enapter-api",
-  "version": "7.1.0",
+  "version": "7.2.0",
   "description": "Enapter API Grafana Datasource Plugin",
   "scripts": {
     "build": "grafana-toolkit plugin:build",

@@ -5,6 +5,7 @@
   "id": "enapter-api",
   "metrics": true,
   "backend": true,
+  "alerting": true,
   "executable": "gpx_enapter_api",
   "info": {
     "description": "",
