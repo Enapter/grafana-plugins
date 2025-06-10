@@ -6,12 +6,26 @@ IFS=$'\n\t'
 plugins_dir=/var/lib/grafana/plugins
 rm -rf $plugins_dir/enapter-*
 mkdir -p $plugins_dir
-cp -r /opt/plugins/enapter-* $plugins_dir
+
+cp -r /opt/plugins/enapter-api-datasource $plugins_dir
+
+DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN="${DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN:-"0"}"
+case "${DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN}" in
+	"0")
+		cp -r /opt/plugins/enapter-commands-panel $plugins_dir
+		;;
+	"1")
+		echo "DEBUG: Enapter Commands Panel plugin disabled." > /dev/stderr
+		;;
+	*)
+		echo "ERROR: Unexpected value of DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN: \`${DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN}\`. Please use either 0 or 1." > /dev/stderr
+		exit 1
+esac
 
 ENAPTER_API_URL=${ENAPTER_API_URL:-https://api.enapter.com}
 ENAPTER_API_TOKEN=${ENAPTER_API_TOKEN:-${TELEMETRY_API_TOKEN:-}}
 if [ -z "$ENAPTER_API_TOKEN" ]; then
-	echo "ENAPTER_API_TOKEN is either empty or missing." > /dev/stderr
+	echo "ERROR: ENAPTER_API_TOKEN is either empty or missing." > /dev/stderr
 	exit 1
 fi
 
