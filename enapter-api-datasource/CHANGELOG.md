@@ -1,5 +1,9 @@
 # Changelog
 
+## v7.3.0
+
+- Support Platform API v3 healthcheck.
+
 ## v7.2.0
 
 - Enable alerting.
