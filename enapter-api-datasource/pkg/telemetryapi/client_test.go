@@ -26,12 +26,11 @@ func (s *ClientSuite) SetupTest() {
 	s.ctx = context.Background()
 	s.token = faker.Word()
 	s.server = StartMockServer(s.T())
-	client, err := telemetryapi.NewClient(telemetryapi.ClientParams{
+	client := telemetryapi.NewClient(telemetryapi.ClientParams{
 		HTTPClient: s.server.NewClient(),
 		BaseURL:    s.server.Address(),
 		Token:      s.token,
 	})
-	s.Require().NoError(err)
 	s.client = client
 }
 
@@ -91,7 +90,7 @@ func (s *ClientSuite) TestGetEmptyUser() {
 ts,k=v
 1,true
 `)
-	timeseries, err := s.client.Timeseries(s.ctx, s.randomGetParams())
+	timeseries, err := s.client.Timeseries(s.ctx, p)
 	s.Require().NoError(err)
 	s.Require().Equal(timeseries.TimeField[0].Unix(), int64(1))
 	s.Require().Equal(*timeseries.DataFields[0].Values[0].(*bool), true)
