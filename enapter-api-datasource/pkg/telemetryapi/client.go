@@ -28,7 +28,7 @@ type ClientParams struct {
 
 const DefaultTimeout = 15 * time.Second
 
-func NewClient(p ClientParams) (Client, error) {
+func NewClient(p ClientParams) Client {
 	if p.HTTPClient == nil {
 		p.HTTPClient = &http.Client{
 			Timeout: DefaultTimeout,
@@ -42,7 +42,7 @@ func NewClient(p ClientParams) (Client, error) {
 		httpClient: p.HTTPClient,
 		baseURL:    p.BaseURL,
 		token:      p.Token,
-	}, nil
+	}
 }
 
 type client struct {
