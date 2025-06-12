@@ -39,11 +39,18 @@ func (s *ClientSuite) TearDownTest() {
 	s.server.Stop()
 }
 
-func (s *ClientSuite) TestReadyOK() {
+func (s *ClientSuite) TestV1ReadyOK() {
 	const errorJSON = `{"errors":[{"code":"unprocessable_entity","message":"Oops."}]}`
 	s.server.ExpectTimeseriesRequestAndReturnCode(
 		http.StatusUnprocessableEntity, errorJSON)
+	err := s.client.Ready(s.ctx)
+	s.Require().NoError(err)
+}
 
+func (s *ClientSuite) TestV3ReadyOK() {
+	const errorJSON = `{"errors":[{"code":"unprocessable_entity","message":"Oops."}]}`
+	s.server.ExpectTimeseriesRequestAndReturnCode(
+		http.StatusNotFound, errorJSON)
 	err := s.client.Ready(s.ctx)
 	s.Require().NoError(err)
 }

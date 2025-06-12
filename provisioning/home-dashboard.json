@@ -100,7 +100,7 @@
             "uid": "PB0170B199208DA35"
           },
           "refId": "A",
-          "text": "telemetry:\n  - device: YOUR_DEVICE\n    attribute: YOUR_TELEMETRY"
+          "text": "telemetry:\n  - device:\n      id: YOUR_DEVICE_ID\n    attribute: YOUR_TELEMETRY"
         }
       ],
       "title": "Enapter Telemetry",

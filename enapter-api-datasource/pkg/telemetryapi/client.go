@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/Enapter/grafana-plugins/pkg/httperr"
 )
 
@@ -58,18 +60,19 @@ func (c *client) Close() {
 func (c *client) Ready(ctx context.Context) error {
 	from := time.Now().Add(-time.Hour)
 	to := time.Now()
+	deviceID := uuid.NewString()
 	_, err := c.Timeseries(ctx, TimeseriesParams{
-		User: "<not specified>",
+		User: "does_not_exist",
 		Query: fmt.Sprintf(`{
 			"from": %q,
 			"to":   %q,
 			"telemetry": [{
-				"device":    "<does not exist>",
-				"attribute": "<does not exist>"
+				"device":    %q,
+				"attribute": "does_not_exist"
 			}],
 			"granularity": 	"1m",
 			"aggregation":	"auto"
-		}`, from.Format(time.RFC3339), to.Format(time.RFC3339)),
+		}`, from.Format(time.RFC3339), to.Format(time.RFC3339), deviceID),
 	})
 	if err == nil {
 		return errUnexpectedAbsenceOfError
@@ -80,11 +83,15 @@ func (c *client) Ready(ctx context.Context) error {
 		return err
 	}
 
-	if multiErr.Errors[0].Code != "unprocessable_entity" {
+	const apiV1Code = "unprocessable_entity"
+	const apiV3Code = "telemetrypersistence/NO_TELEMETRY_ATTRIBUTES_FOUND"
+
+	switch multiErr.Errors[0].Code {
+	case apiV1Code, apiV3Code:
+		return nil
+	default:
 		return err
 	}
-
-	return nil
 }
 
 type TimeseriesParams struct {
@@ -145,7 +152,8 @@ func (c *client) processTimeseriesResponse(resp *http.Response) (*Timeseries, er
 	case http.StatusOK:
 		break
 	case http.StatusBadRequest, http.StatusForbidden, http.StatusUnprocessableEntity,
-		http.StatusTooManyRequests, http.StatusInternalServerError:
+		http.StatusTooManyRequests, http.StatusInternalServerError,
+		http.StatusNotFound:
 		return nil, c.processError(resp)
 	default:
 		return nil, c.processUnexpectedStatus(resp)
