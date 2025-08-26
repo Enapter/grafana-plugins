@@ -2,10 +2,14 @@ ARG GRAFANA_VERSION=11.6.2
 
 FROM grafana/grafana:${GRAFANA_VERSION}
 
-COPY ./enapter-api-datasource/dist /opt/plugins/enapter-api-datasource/dist
-COPY ./enapter-commands-panel/dist /opt/plugins/enapter-commands-panel/dist
+USER root
+RUN apk update && apk add sqlite
+USER grafana
 
-COPY ./provisioning/entrypoint.sh /opt/grafana-entrypoint.sh
+COPY ./enapter-api-datasource/dist /opt/enapter/grafana/plugins/enapter-api-datasource/dist
+COPY ./enapter-commands-panel/dist /opt/enapter/grafana/plugins/enapter-commands-panel/dist
+
+COPY ./provisioning/entrypoint.sh /opt/enapter/grafana/entrypoint.sh
 COPY ./provisioning/home-dashboard.json /usr/share/grafana/public/dashboards/home.json
 
-ENTRYPOINT ["/opt/grafana-entrypoint.sh"]
+ENTRYPOINT ["/opt/enapter/grafana/entrypoint.sh"]

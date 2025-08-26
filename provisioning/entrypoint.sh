@@ -7,12 +7,12 @@ plugins_dir=/var/lib/grafana/plugins
 rm -rf $plugins_dir/enapter-*
 mkdir -p $plugins_dir
 
-cp -r /opt/plugins/enapter-api-datasource $plugins_dir
+cp -r /opt/enapter/grafana/plugins/enapter-api-datasource $plugins_dir
 
 DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN="${DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN:-"0"}"
 case "${DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN}" in
 	"0")
-		cp -r /opt/plugins/enapter-commands-panel $plugins_dir
+		cp -r /opt/enapter/grafana/plugins/enapter-commands-panel $plugins_dir
 		;;
 	"1")
 		echo "DEBUG: Enapter Commands Panel plugin disabled." > /dev/stderr
@@ -47,5 +47,13 @@ EOF
 
 export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=enapter-api,enapter-commands
 export GF_LOG_LEVEL=${GF_LOG_LEVEL:-info}
+export GF_PANELS_DISABLE_SANITIZE_HTML=${GF_PANELS_DISABLE_SANITIZE_HTML:-true}
+
+# Use the data migration CLI utility to force migration of database before
+# starting the server.
+grafana cli admin data-migration encrypt-datasource-passwords
+# Disable the default "Getting Started" panel. See:
+# https://github.com/grafana/grafana/issues/8402.
+sqlite3 /var/lib/grafana/grafana.db "UPDATE user SET help_flags1 = 1 WHERE login = 'admin';"
 
 exec /run.sh
