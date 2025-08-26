@@ -38,9 +38,12 @@ ifndef ENAPTER_API_TOKEN
 ENAPTER_API_TOKEN = $(TELEMETRY_API_TOKEN)
 endif
 
+GRAFANA_CONTAINER ?= enapter-dashboards
+
 .PHONY: grafana-run
 grafana-run:
 	docker run \
+		--name $(GRAFANA_CONTAINER) \
 		--rm \
 		--tty \
 		--env ENAPTER_API_URL=$(ENAPTER_API_URL) \
