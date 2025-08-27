@@ -9,7 +9,10 @@ USER grafana
 COPY ./enapter-api-datasource/dist /opt/enapter/grafana/plugins/enapter-api-datasource/dist
 COPY ./enapter-commands-panel/dist /opt/enapter/grafana/plugins/enapter-commands-panel/dist
 
-COPY ./provisioning/entrypoint.sh /opt/enapter/grafana/entrypoint.sh
 COPY ./provisioning/home-dashboard.json /usr/share/grafana/public/dashboards/home.json
+COPY ./provisioning/default-dashboard-provider.yml /etc/grafana/provisioning/dashboards/default-dashboard-provider.yml
+COPY ./provisioning/vucm-dashboard.json /opt/enapter/grafana/dashboards/enapter-vucm-dashboard.json
+
+COPY ./provisioning/entrypoint.sh /opt/enapter/grafana/entrypoint.sh
 
 ENTRYPOINT ["/opt/enapter/grafana/entrypoint.sh"]

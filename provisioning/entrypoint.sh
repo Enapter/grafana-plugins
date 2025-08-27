@@ -45,6 +45,23 @@ datasources:
     editable: false
 EOF
 
+dashboards_dir=/var/lib/grafana/dashboards
+rm -rf $dashboards_dir/enapter-*
+mkdir -p $dashboards_dir
+
+PROVISION_ENAPTER_VUCM_DASHBOARD="${PROVISION_ENAPTER_VUCM_DASHBOARD:-"0"}"
+case "${PROVISION_ENAPTER_VUCM_DASHBOARD}" in
+	"0")
+		echo "DEBUG: Skip provisioning Enapter VUCM dashboard." > /dev/stderr
+		;;
+	"1")
+		cp /opt/enapter/grafana/dashboards/enapter-vucm-dashboard.json $dashboards_dir
+		;;
+	*)
+		echo "ERROR: Unexpected value of PROVISION_ENAPTER_VUCM_DASHBOARD: \`${PROVISION_ENAPTER_VUCM_DASHBOARD}\`. Please use either 0 or 1." > /dev/stderr
+		exit 1
+esac
+
 export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=enapter-api,enapter-commands
 export GF_LOG_LEVEL=${GF_LOG_LEVEL:-info}
 export GF_PANELS_DISABLE_SANITIZE_HTML=${GF_PANELS_DISABLE_SANITIZE_HTML:-true}
