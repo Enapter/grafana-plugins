@@ -64,7 +64,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<div style=\"font-size: 1.1rem; padding: 0.5rem 1rem\">\n  <ul style=\"flex-grow: 1;\">\n    <li><a target=\"_blank\" href=\"https://grafana.com/docs/grafana/latest/dashboards/use-dashboards/\">Learn about using Grafana dashboards.</a></li>\n    <li><a target=\"_blank\" href=\"https://dashboards.enapter.com/dashboard/new\">Create your first dashboard.</a></li>\n    <li><a target=\"_blank\" href=\"https://developers.enapter.com/docs/tutorial/custom-dashboards/query-language\">Learn to query telemetry stored in Enapter Cloud.</a></li>\n  </ul>\n</div>\n",
+        "content": "<div style=\"font-size: 1.1rem; padding: 0.5rem 1rem\">\n  <ul style=\"flex-grow: 1;\">\n    <li><a target=\"_blank\" href=\"https://grafana.com/docs/grafana/latest/dashboards/use-dashboards/\">Learn about using Grafana dashboards.</a></li>\n    <li><a href=\"/dashboard/new\">Create your first dashboard.</a></li>\n    <li><a target=\"_blank\" href=\"https://developers.enapter.com/docs/tutorial/custom-dashboards/query-language\">Learn to query telemetry stored in Enapter Cloud.</a></li>\n  </ul>\n</div>\n",
         "mode": "markdown"
       },
       "pluginVersion": "11.6.2",
