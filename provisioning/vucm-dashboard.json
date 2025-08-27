@@ -1,0 +1,195 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 2,
+    "links": [],
+    "panels": [
+        {
+            "datasource": {
+                "type": "enapter-api",
+                "uid": "PB0170B199208DA35"
+            },
+            "description": "Whether your device is online.",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "axisPlacement": "auto",
+                        "fillOpacity": 70,
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineWidth": 0,
+                        "spanNulls": false
+                    },
+                    "displayName": "Online",
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green"
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "alignValue": "left",
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": false
+                },
+                "mergeValues": true,
+                "rowHeight": 0.9,
+                "showValue": "never",
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "11.6.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "enapter-api",
+                        "uid": "PB0170B199208DA35"
+                    },
+                    "refId": "A",
+                    "text": "telemetry:\n  - device: $my_device\n    attribute: connection"
+                }
+            ],
+            "title": "Connection",
+            "type": "state-timeline"
+        },
+        {
+            "datasource": {
+                "type": "enapter-api",
+                "uid": "PB0170B199208DA35"
+            },
+            "description": "For how long your device has been up. Works only for devices with `uptime` telemetry attribute defined, such as a virtual UCM.",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "displayName": "Online",
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green"
+                            }
+                        ]
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 24,
+                "x": 0,
+                "y": 4
+            },
+            "id": 2,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+            },
+            "pluginVersion": "11.6.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "enapter-api",
+                        "uid": "PB0170B199208DA35"
+                    },
+                    "refId": "A",
+                    "text": "telemetry:\n  - device: $my_device\n    attribute: uptime"
+                }
+            ],
+            "title": "Uptime",
+            "type": "stat"
+        }
+    ],
+    "preload": false,
+    "schemaVersion": 41,
+    "tags": [],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "text": "virtual-ucm",
+                    "value": "virtual-ucm"
+                },
+                "description": "ID or slug of your device.",
+                "label": "My Device",
+                "name": "my_device",
+                "options": [
+                    {
+                        "selected": true,
+                        "text": "virtual-ucm",
+                        "value": "virtual-ucm"
+                    }
+                ],
+                "query": "virtual-ucm",
+                "type": "textbox"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "My Dashboard",
+    "uid": "a51fa8a0-774b-46c8-9b5f-911296d34ff5",
+    "version": 1
+}
