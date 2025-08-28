@@ -1,15 +1,21 @@
-FROM node:18-alpine AS frontend
+FROM node:22.18.0-alpine AS frontend
 
 WORKDIR /build
 
+COPY ./.npmrc ./.npmrc
 COPY ./package.json ./package.json
 COPY ./package-lock.json ./package-lock.json
-
 RUN --mount=type=cache,target=node_modules npm ci
 
 COPY ./src ./src
-RUN --mount=type=cache,target=node_modules npm run test
+COPY ./.config ./.config
+COPY ./.eslintrc ./.eslintrc
+COPY ./jest.config.js ./jest.config.js
+COPY ./jest-setup.js ./jest-setup.js
+COPY ./tsconfig.json ./tsconfig.json
+RUN --mount=type=cache,target=node_modules npm run test:ci
 
+COPY ./.cprc.json ./.cprc.json
 COPY ./README.md ./README.md
 COPY ./CHANGELOG.md ./CHANGELOG.md
 COPY ./LICENSE ./LICENSE
