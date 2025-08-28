@@ -45,20 +45,17 @@ datasources:
     editable: false
 EOF
 
-dashboards_dir=/var/lib/grafana/dashboards
-rm -rf $dashboards_dir/enapter-*
-mkdir -p $dashboards_dir
-
-PROVISION_ENAPTER_VUCM_DASHBOARD="${PROVISION_ENAPTER_VUCM_DASHBOARD:-"0"}"
-case "${PROVISION_ENAPTER_VUCM_DASHBOARD}" in
+PROVISION_ENAPTER_BUILT_IN_DASHBOARDS="${PROVISION_ENAPTER_BUILT_IN_DASHBOARDS:-"0"}"
+case "${PROVISION_ENAPTER_BUILT_IN_DASHBOARDS}" in
 	"0")
-		echo "DEBUG: Skip provisioning Enapter VUCM dashboard." > /dev/stderr
+		echo "DEBUG: Skip provisioning Enapter built-in dashboards." > /dev/stderr
 		;;
 	"1")
-		cp /opt/enapter/grafana/dashboards/enapter-vucm-dashboard.json $dashboards_dir
+		rm -rf /etc/grafana/provisioning/dashboards/enapter-*
+		cp /opt/enapter/grafana/dashboards/provisioning/provider.yml /etc/grafana/provisioning/dashboards/enapter-provider.yml
 		;;
 	*)
-		echo "ERROR: Unexpected value of PROVISION_ENAPTER_VUCM_DASHBOARD: \`${PROVISION_ENAPTER_VUCM_DASHBOARD}\`. Please use either 0 or 1." > /dev/stderr
+		echo "ERROR: Unexpected value of PROVISION_ENAPTER_BUILT_IN_DASHBOARDS: \`${PROVISION_ENAPTER_BUILT_IN_DASHBOARDS}\`. Please use either 0 or 1." > /dev/stderr
 		exit 1
 esac
 
