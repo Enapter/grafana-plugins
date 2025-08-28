@@ -17,8 +17,7 @@
     },
     "editable": true,
     "fiscalYearStartMonth": 0,
-    "graphTooltip": 0,
-    "id": 2,
+    "graphTooltip": 2,
     "links": [],
     "panels": [
         {
@@ -26,7 +25,7 @@
                 "type": "enapter-api",
                 "uid": "PB0170B199208DA35"
             },
-            "description": "Whether your device is online.",
+            "description": "Connection status of the device",
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -59,7 +58,7 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 24,
+                "w": 19,
                 "x": 0,
                 "y": 0
             },
@@ -88,7 +87,7 @@
                         "uid": "PB0170B199208DA35"
                     },
                     "refId": "A",
-                    "text": "telemetry:\n  - device: $my_device\n    attribute: connection"
+                    "text": "telemetry:\n  - device: $device\n    attribute: connection"
                 }
             ],
             "title": "Connection",
@@ -99,13 +98,13 @@
                 "type": "enapter-api",
                 "uid": "PB0170B199208DA35"
             },
-            "description": "For how long your device has been up. Works only for devices with `uptime` telemetry attribute defined, such as a virtual UCM.",
+            "description": "Time since the last device reboot",
             "fieldConfig": {
                 "defaults": {
                     "color": {
-                        "mode": "thresholds"
+                        "fixedColor": "super-light-green",
+                        "mode": "fixed"
                     },
-                    "displayName": "Online",
                     "mappings": [],
                     "thresholds": {
                         "mode": "absolute",
@@ -121,14 +120,14 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 24,
-                "x": 0,
-                "y": 4
+                "w": 5,
+                "x": 19,
+                "y": 0
             },
             "id": 2,
             "options": {
                 "colorMode": "value",
-                "graphMode": "area",
+                "graphMode": "none",
                 "justifyMode": "auto",
                 "orientation": "auto",
                 "percentChangeColorMode": "standard",
@@ -151,11 +150,106 @@
                         "uid": "PB0170B199208DA35"
                     },
                     "refId": "A",
-                    "text": "telemetry:\n  - device: $my_device\n    attribute: uptime"
+                    "text": "telemetry:\n  - device: $device\n    attribute: uptime"
                 }
             ],
             "title": "Uptime",
             "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "enapter-api",
+                "uid": "PB0170B199208DA35"
+            },
+            "description": "Historical data about the device uptime",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "super-light-green",
+                        "mode": "fixed"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "scheme",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineStyle": {
+                            "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "light-blue"
+                            }
+                        ]
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 4
+            },
+            "id": 3,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "11.6.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "enapter-api",
+                        "uid": "PB0170B199208DA35"
+                    },
+                    "refId": "A",
+                    "text": "telemetry:\n  - device: $device\n    attribute: uptime"
+                }
+            ],
+            "title": "Uptime",
+            "type": "timeseries"
         }
     ],
     "preload": false,
@@ -168,9 +262,9 @@
                     "text": "virtual-ucm",
                     "value": "virtual-ucm"
                 },
-                "description": "ID or slug of your device.",
-                "label": "My Device",
-                "name": "my_device",
+                "description": "ID or slug of your Virtual UCM",
+                "label": "Device",
+                "name": "device",
                 "options": [
                     {
                         "selected": true,
@@ -184,12 +278,12 @@
         ]
     },
     "time": {
-        "from": "now-1h",
+        "from": "now-15m",
         "to": "now"
     },
     "timepicker": {},
     "timezone": "browser",
-    "title": "My Dashboard",
-    "uid": "a51fa8a0-774b-46c8-9b5f-911296d34ff5",
+    "title": "Virtual UCM",
+    "uid": "fewcke8couuwwc",
     "version": 1
 }

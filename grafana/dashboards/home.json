@@ -1,119 +1,119 @@
 {
-  "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": {
-          "type": "grafana",
-          "uid": "-- Grafana --"
-        },
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "type": "dashboard"
-      }
-    ]
-  },
-  "editable": false,
-  "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
-  "id": 1,
-  "links": [],
-  "panels": [
-    {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<div style=\"padding: 2em; height: 100%; display: flex; align-content: center; align-items: center; justify-content: center;\">\n<svg width=\"31\" height=\"32\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M29.047 6.09v19.367l-13.14 3.521V9.611l13.14-3.522Z\" fill=\"#23282f\"></path><path d=\"M29.047 6.09v-.654a.85.85 0 0 0-.628-.82L15.275 1.092a.852.852 0 0 0-.439 0L1.692 4.616a.845.845 0 0 0-.629.82v21.13c0 .385.259.72.629.82l13.144 3.524a.94.94 0 0 0 .439 0l13.144-3.524a.848.848 0 0 0 .628-.82v-1.11l-13.14 3.52V9.612l13.14-3.522Z\" fill=\"#FFF\"></path><path d=\"m2.763 25.913 11.443 3.066v-5.281L2.763 20.63v5.283ZM2.763 18.871l11.443 3.066v-5.283L2.763 13.591v5.28ZM2.763 11.828l11.443 3.064V9.61L2.763 6.545v5.283ZM5.198 5.436l9.858 2.644 9.859-2.642-9.859-2.64-9.858 2.638Z\" fill=\"#23282f\"></path><path d=\"M29.047 13.134v-1.762l-6.57 1.76v1.763l6.57-1.76ZM29.047 20.174v-1.76l-6.57 1.76v1.761l6.57-1.76Z\" fill=\"#FFF\"></path></svg>\n<h1 style=\"margin: 0 0 0 0.4em;\">Welcome to Enapter Dashboards!</h1>\n</div>",
-        "mode": "markdown"
-      },
-      "pluginVersion": "11.6.2",
-      "title": "",
-      "type": "text"
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
     },
-    {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 0,
-        "y": 3
-      },
-      "id": 1,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
+    "editable": false,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 1,
+    "links": [],
+    "panels": [
+        {
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 2,
+            "options": {
+                "code": {
+                    "language": "plaintext",
+                    "showLineNumbers": false,
+                    "showMiniMap": false
+                },
+                "content": "<div style=\"padding: 2em; height: 100%; display: flex; align-content: center; align-items: center; justify-content: center;\">\n<svg width=\"31\" height=\"32\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M29.047 6.09v19.367l-13.14 3.521V9.611l13.14-3.522Z\" fill=\"#23282f\"></path><path d=\"M29.047 6.09v-.654a.85.85 0 0 0-.628-.82L15.275 1.092a.852.852 0 0 0-.439 0L1.692 4.616a.845.845 0 0 0-.629.82v21.13c0 .385.259.72.629.82l13.144 3.524a.94.94 0 0 0 .439 0l13.144-3.524a.848.848 0 0 0 .628-.82v-1.11l-13.14 3.52V9.612l13.14-3.522Z\" fill=\"#FFF\"></path><path d=\"m2.763 25.913 11.443 3.066v-5.281L2.763 20.63v5.283ZM2.763 18.871l11.443 3.066v-5.283L2.763 13.591v5.28ZM2.763 11.828l11.443 3.064V9.61L2.763 6.545v5.283ZM5.198 5.436l9.858 2.644 9.859-2.642-9.859-2.64-9.858 2.638Z\" fill=\"#23282f\"></path><path d=\"M29.047 13.134v-1.762l-6.57 1.76v1.763l6.57-1.76ZM29.047 20.174v-1.76l-6.57 1.76v1.761l6.57-1.76Z\" fill=\"#FFF\"></path></svg>\n<h1 style=\"margin: 0 0 0 0.4em;\">Welcome to Enapter Dashboards!</h1>\n</div>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "11.6.2",
+            "title": "",
+            "type": "text"
         },
-        "content": "<div style=\"font-size: 1.1rem; padding: 0.5rem 1rem\">\n  <ul style=\"flex-grow: 1;\">\n    <li><a target=\"_blank\" href=\"https://grafana.com/docs/grafana/latest/dashboards/use-dashboards/\">Learn about using Grafana dashboards.</a></li>\n    <li><a href=\"/dashboard/new\">Create your first dashboard.</a></li>\n    <li><a target=\"_blank\" href=\"https://developers.enapter.com/docs/tutorial/custom-dashboards/query-language\">Learn to query telemetry stored in Enapter Cloud.</a></li>\n  </ul>\n</div>\n",
-        "mode": "markdown"
-      },
-      "pluginVersion": "11.6.2",
-      "title": "Getting Started",
-      "type": "text"
+        {
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 0,
+                "y": 3
+            },
+            "id": 1,
+            "options": {
+                "code": {
+                    "language": "plaintext",
+                    "showLineNumbers": false,
+                    "showMiniMap": false
+                },
+                "content": "<div style=\"font-size: 1.1rem; padding: 0.5rem 1rem\">\n  <ul style=\"flex-grow: 1;\">\n    <li><a target=\"_blank\" href=\"https://grafana.com/docs/grafana/latest/dashboards/use-dashboards/\">Learn about using Grafana dashboards from the Grafana documentation.</a></li>\n    <li><a target=\"_blank\" href=\"https://developers.enapter.com/docs/tutorial/custom-dashboards/query-language\">Learn to query telemetry using the Enapter datasource plugin.</a></li>\n    <li><a href=\"/dashboard/new\">Create your first dashboard.</a></li>\n  </ul>\n</div>\n",
+                "mode": "markdown"
+            },
+            "pluginVersion": "11.6.2",
+            "title": "Getting Started",
+            "type": "text"
+        },
+        {
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 3
+            },
+            "id": 3,
+            "options": {
+                "includeVars": false,
+                "keepTime": false,
+                "maxItems": 10,
+                "query": "",
+                "showFolderNames": true,
+                "showHeadings": true,
+                "showRecentlyViewed": true,
+                "showSearch": true,
+                "showStarred": true,
+                "tags": []
+            },
+            "pluginVersion": "11.6.2",
+            "title": "Dashboards",
+            "type": "dashlist"
+        }
+    ],
+    "preload": false,
+    "schemaVersion": 41,
+    "tags": [],
+    "templating": {
+        "list": []
     },
-    {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 12,
-        "y": 3
-      },
-      "id": 3,
-      "options": {
-        "includeVars": false,
-        "keepTime": false,
-        "maxItems": 10,
-        "query": "",
-        "showFolderNames": true,
-        "showHeadings": true,
-        "showRecentlyViewed": true,
-        "showSearch": true,
-        "showStarred": true,
-        "tags": []
-      },
-      "pluginVersion": "11.6.2",
-      "title": "Dashboards",
-      "type": "dashlist"
-    }
-  ],
-  "preload": false,
-  "schemaVersion": 41,
-  "tags": [],
-  "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
-  "timepicker": {
-    "hidden": true
-  },
-  "timezone": "browser",
-  "title": "Home",
-  "version": 6
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {
+        "hidden": true
+    },
+    "timezone": "browser",
+    "title": "Home",
+    "version": 6
 }
