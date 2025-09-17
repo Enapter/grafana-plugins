@@ -1,5 +1,9 @@
 # Changelog
 
+## v7.4.0
+
+- Add @offset query modifier.
+
 ## v7.3.0
 
 - Support Platform API v3 healthcheck.
