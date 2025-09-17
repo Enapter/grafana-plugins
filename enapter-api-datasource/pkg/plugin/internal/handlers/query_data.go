@@ -190,20 +190,23 @@ func (h *QueryData) handleTelemetryQuery(
 		return nil, nil
 	}
 
-	queryText, err := h.prepareQueryText(props.Text, query.Interval, query.TimeRange)
+	preparedQuery, err := h.prepareQuery(props.Text, query.Interval, query.TimeRange)
 	if err != nil {
 		return nil, fmt.Errorf("prepare query text: %w", err)
 	}
 
 	timeseries, err := h.telemetryAPIClient.Timeseries(ctx, telemetryapi.TimeseriesParams{
 		User:  user,
-		Query: queryText,
+		Query: preparedQuery.text,
 	})
 	if err != nil {
 		if errors.Is(err, telemetryapi.ErrNoValues) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("request timeseries: %w", err)
+	}
+	if offset := preparedQuery.offset; offset != 0 {
+		timeseries = timeseries.ShiftTime(preparedQuery.offset)
 	}
 
 	frame, err := h.timeseriesToDataFrame(timeseries)
@@ -219,6 +222,9 @@ func (h *QueryData) handleTelemetryQuery(
 func (h *QueryData) userFacingError(err error) error {
 	if errors.Is(err, errUnsupportedTimeseriesDataType) {
 		return ErrMetricDataTypeIsNotSupported
+	}
+	if errors.Is(err, ErrInvalidOffset) {
+		return err
 	}
 
 	if e := (&yaml.TypeError{}); errors.As(err, &e) {
@@ -250,18 +256,42 @@ func (h *QueryData) userFacingError(err error) error {
 	return ErrSomethingWentWrong
 }
 
-func (h *QueryData) prepareQueryText(
+type preparedQuery struct {
+	text   string
+	offset time.Duration
+}
+
+func (h *QueryData) prepareQuery(
 	text string, interval time.Duration, timeRange backend.TimeRange,
-) (string, error) {
+) (*preparedQuery, error) {
 	dec := yaml.NewDecoder(strings.NewReader(text))
 
 	var obj map[string]interface{}
 	if err := dec.Decode(&obj); err != nil {
-		return "", fmt.Errorf("decode YAML: %w", err)
+		return nil, fmt.Errorf("decode YAML: %w", err)
 	}
 
-	obj["from"] = timeRange.From.Format(time.RFC3339Nano)
-	obj["to"] = timeRange.To.Format(time.RFC3339Nano)
+	from := timeRange.From
+	to := timeRange.To
+	var offset time.Duration
+	if offsetInterface, ok := obj["@offset"]; ok {
+		offsetString, ok := offsetInterface.(string)
+		if !ok {
+			return nil, fmt.Errorf("%w: unexpected type: want %T, have %T",
+				ErrInvalidOffset, offsetString, offsetInterface)
+		}
+		var err error
+		offset, err = time.ParseDuration(offsetString)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrInvalidOffset, err)
+		}
+		from = from.Add(-offset)
+		to = to.Add(-offset)
+		delete(obj, "@offset")
+	}
+
+	obj["from"] = from.Format(time.RFC3339Nano)
+	obj["to"] = to.Format(time.RFC3339Nano)
 
 	if _, ok := obj["granularity"]; !ok {
 		obj["granularity"] = h.DefaultGranularity(interval).String()
@@ -273,10 +303,13 @@ func (h *QueryData) prepareQueryText(
 
 	out, err := json.Marshal(obj)
 	if err != nil {
-		return "", fmt.Errorf("encode JSON: %w", err)
+		return nil, fmt.Errorf("encode JSON: %w", err)
 	}
 
-	return string(out), nil
+	return &preparedQuery{
+		text:   string(out),
+		offset: offset,
+	}, nil
 }
 
 func (h *QueryData) DefaultGranularity(interval time.Duration) time.Duration {

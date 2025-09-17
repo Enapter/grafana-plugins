@@ -149,6 +149,23 @@ func (s *QueryDataSuite) TestInvalidYAML() {
 	s.Require().ErrorIs(err, handlers.ErrInvalidYAML)
 }
 
+func (s *QueryDataSuite) TestInvalidOffset() {
+	req := dataRequest{
+		user: faker.Email(),
+		queries: []query{{
+			refID:    s.randomRefID(),
+			from:     time.Now().Add(-time.Duration(rand.Int()+1) * time.Hour),
+			to:       time.Now().Add(-time.Duration(rand.Int()+1) * time.Minute),
+			interval: time.Duration(rand.Int()) * time.Second,
+			text: string(s.shouldMarshalJSON(map[string]interface{}{
+				"@offset": "42",
+			})),
+		}},
+	}
+	_, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().ErrorIs(err, handlers.ErrInvalidOffset)
+}
+
 func newFloat64(v float64) *float64 { return &v }
 func newInt64(v int64) *int64       { return &v }
 func newBool(v bool) *bool          { return &v }
@@ -240,6 +257,65 @@ func (s *QueryDataSuite) TestString() {
 	s.Require().Equal(int64(2), timestampField.At(1).(time.Time).Unix())
 	s.Require().Equal("foo", *dataFields[0].At(0).(*string))
 	s.Require().Equal("bar", *dataFields[0].At(1).(*string))
+}
+
+func (s *QueryDataSuite) TestOffset() {
+	req := dataRequest{
+		user: faker.Email(),
+		queries: []query{{
+			refID:    s.randomRefID(),
+			from:     time.Unix(5, 0),
+			to:       time.Unix(10, 0),
+			interval: time.Second,
+			text: string(s.shouldMarshalJSON(map[string]interface{}{
+				"granularity": "42s",
+				"aggregation": "auto",
+				"@offset":     "2s",
+			})),
+		}},
+	}
+	timeseries := &telemetryapi.Timeseries{
+		TimeField: []time.Time{
+			time.Unix(3, 0),
+			time.Unix(4, 0),
+			time.Unix(5, 0),
+			time.Unix(6, 0),
+			time.Unix(7, 0),
+		},
+		DataFields: []*telemetryapi.TimeseriesDataField{{
+			Type: telemetryapi.TimeseriesDataTypeInteger,
+			Values: []interface{}{
+				newInt64(1),
+				newInt64(2),
+				newInt64(3),
+				newInt64(4),
+				newInt64(5),
+			},
+		}},
+	}
+	s.mockTelemetryAPIClient.ExpectGetAndReturn(telemetryapi.TimeseriesParams{
+		User: req.user,
+		Query: string(s.shouldMarshalJSON(map[string]interface{}{
+			"aggregation": "auto",
+			"from":        "1970-01-01T00:00:03Z",
+			"granularity": "42s",
+			"to":          "1970-01-01T00:00:08Z",
+		})),
+	}, timeseries, nil)
+	frames, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().Nil(err)
+	timestampField, dataFields := s.extractTimeseriesFields(frames)
+	s.Require().Len(dataFields, 1)
+	s.Require().Equal(int64(5), timestampField.At(0).(time.Time).Unix())
+	s.Require().Equal(int64(6), timestampField.At(1).(time.Time).Unix())
+	s.Require().Equal(int64(7), timestampField.At(2).(time.Time).Unix())
+	s.Require().Equal(int64(8), timestampField.At(3).(time.Time).Unix())
+	s.Require().Equal(int64(9), timestampField.At(4).(time.Time).Unix())
+	s.Require().Equal(int64(1), *dataFields[0].At(0).(*int64))
+	s.Require().Equal(int64(2), *dataFields[0].At(1).(*int64))
+	s.Require().Equal(int64(3), *dataFields[0].At(2).(*int64))
+	s.Require().Equal(int64(4), *dataFields[0].At(3).(*int64))
+	s.Require().Equal(int64(5), *dataFields[0].At(4).(*int64))
 }
 
 func (s *QueryDataSuite) TestNoUserInfo() {
@@ -537,8 +613,9 @@ func (s *QueryDataSuite) expectExecuteAndReturn(
 func (s *QueryDataSuite) queryTextWithTimeRange(q query) string {
 	var obj map[string]interface{}
 	if err := yaml.Unmarshal([]byte(q.text), &obj); err == nil {
-		obj["from"] = q.from.Format(time.RFC3339Nano)
-		obj["to"] = q.to.Format(time.RFC3339Nano)
+		obj["from"] = q.from.UTC().Format(time.RFC3339Nano)
+		obj["to"] = q.to.UTC().Format(time.RFC3339Nano)
+		delete(obj, "@offset")
 	}
 
 	out, err := json.Marshal(obj)
@@ -613,7 +690,7 @@ func (s *QueryDataSuite) handleDataRequest(req dataRequest) backend.Responses {
 		queries[i] = backend.DataQuery{
 			RefID:     q.refID,
 			QueryType: q.queryType,
-			TimeRange: backend.TimeRange{From: q.from, To: q.to},
+			TimeRange: backend.TimeRange{From: q.from.UTC(), To: q.to.UTC()},
 			Interval:  q.interval,
 			JSON: s.shouldMarshalJSON(map[string]interface{}{
 				"text":    q.text,

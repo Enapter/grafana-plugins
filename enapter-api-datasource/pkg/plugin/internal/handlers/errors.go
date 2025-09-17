@@ -15,4 +15,6 @@ var (
 		"The requested metric data type is currently not supported.")
 	ErrInvalidYAML = errors.New(
 		"The query is not a valid YAML.")
+	ErrInvalidOffset = errors.New(
+		"The offset specified in the query is invalid.")
 )

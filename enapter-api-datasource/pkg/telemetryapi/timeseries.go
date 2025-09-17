@@ -17,6 +17,17 @@ func (ts *Timeseries) Len() int {
 	return len(ts.TimeField)
 }
 
+func (ts *Timeseries) ShiftTime(offset time.Duration) *Timeseries {
+	timeField := make([]time.Time, len(ts.TimeField))
+	for i, timestamp := range ts.TimeField {
+		timeField[i] = timestamp.Add(offset)
+	}
+	return &Timeseries{
+		TimeField:  timeField,
+		DataFields: ts.DataFields,
+	}
+}
+
 type TimeseriesTags map[string]string
 
 func parseTimeseriesTags(s string) (TimeseriesTags, error) {
