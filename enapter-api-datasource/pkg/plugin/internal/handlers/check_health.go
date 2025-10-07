@@ -5,18 +5,16 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/hashicorp/go-hclog"
-
-	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
 )
 
 var _ backend.CheckHealthHandler = (*CheckHealth)(nil)
 
 type CheckHealth struct {
 	logger hclog.Logger
-	client telemetryapi.Client
+	client telemetryAPIClient
 }
 
-func NewCheckHealth(logger hclog.Logger, client telemetryapi.Client) *CheckHealth {
+func NewCheckHealth(logger hclog.Logger, client telemetryAPIClient) *CheckHealth {
 	return &CheckHealth{
 		logger: logger.Named("check_health_handler"),
 		client: client,

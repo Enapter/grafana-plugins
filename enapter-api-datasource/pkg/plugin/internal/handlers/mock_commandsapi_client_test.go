@@ -8,8 +8,6 @@ import (
 	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
 )
 
-var _ commandsapi.Client = (*MockCommandsAPIClient)(nil)
-
 type MockCommandsAPIClient struct {
 	suite          *suite.Suite
 	executeHandler func(commandsapi.ExecuteParams) (

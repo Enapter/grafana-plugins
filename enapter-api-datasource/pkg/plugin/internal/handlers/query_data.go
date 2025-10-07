@@ -22,16 +22,36 @@ import (
 
 var _ backend.QueryDataHandler = (*QueryData)(nil)
 
+type telemetryAPIClient interface {
+	Timeseries(
+		context.Context, telemetryapi.TimeseriesParams,
+	) (*telemetryapi.Timeseries, error)
+	Ready(ctx context.Context) error
+	Close()
+}
+
+type commandsAPIClient interface {
+	Execute(
+		context.Context, commandsapi.ExecuteParams,
+	) (commandsapi.CommandResponse, error)
+}
+
+type assetsAPIClient interface {
+	DeviceByID(
+		context.Context, assetsapi.DeviceByIDParams,
+	) (*assetsapi.Device, error)
+}
+
 type QueryData struct {
 	logger             hclog.Logger
-	telemetryAPIClient telemetryapi.Client
-	commandsAPIClient  commandsapi.Client
-	assetsAPIClient    assetsapi.Client
+	telemetryAPIClient telemetryAPIClient
+	commandsAPIClient  commandsAPIClient
+	assetsAPIClient    assetsAPIClient
 }
 
 func NewQueryData(
-	logger hclog.Logger, telemetryAPIClient telemetryapi.Client,
-	commandsAPIClient commandsapi.Client, assetsAPIClient assetsapi.Client,
+	logger hclog.Logger, telemetryAPIClient telemetryAPIClient,
+	commandsAPIClient commandsAPIClient, assetsAPIClient assetsAPIClient,
 ) *QueryData {
 	return &QueryData{
 		logger:             logger.Named("query_handler"),

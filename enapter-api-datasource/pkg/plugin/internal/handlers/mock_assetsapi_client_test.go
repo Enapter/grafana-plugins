@@ -8,8 +8,6 @@ import (
 	"github.com/Enapter/grafana-plugins/pkg/assetsapi"
 )
 
-var _ assetsapi.Client = (*MockAssetsAPIClient)(nil)
-
 type MockAssetsAPIClient struct {
 	suite             *suite.Suite
 	deviceByIDHandler func(assetsapi.DeviceByIDParams) (*assetsapi.Device, error)

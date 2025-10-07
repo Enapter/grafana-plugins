@@ -19,7 +19,7 @@ type ClientSuite struct {
 	ctx    context.Context
 	token  string
 	server *MockServer
-	client telemetryapi.Client
+	client *telemetryapi.Client
 }
 
 func (s *ClientSuite) SetupTest() {

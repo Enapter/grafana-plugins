@@ -8,8 +8,6 @@ import (
 	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
 )
 
-var _ telemetryapi.Client = (*MockTelemetryAPIClient)(nil)
-
 type MockTelemetryAPIClient struct {
 	suite             *suite.Suite
 	timeseriesHandler func(telemetryapi.TimeseriesParams) (

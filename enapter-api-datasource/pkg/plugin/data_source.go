@@ -18,7 +18,7 @@ var _ instancemgmt.InstanceDisposer = (*dataSource)(nil)
 
 type dataSource struct {
 	logger             hclog.Logger
-	telemetryAPIClient telemetryapi.Client
+	telemetryAPIClient *telemetryapi.Client
 
 	backend.QueryDataHandler
 	backend.CheckHealthHandler

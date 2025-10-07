@@ -17,11 +17,7 @@ type (
 	ExpandDeviceParams = enapterhttp.ExpandDeviceParams
 )
 
-type Client interface {
-	DeviceByID(context.Context, DeviceByIDParams) (*Device, error)
-}
-
-type client struct {
+type Client struct {
 	apiURL  string
 	token   string
 	timeout time.Duration
@@ -35,12 +31,12 @@ type ClientParams struct {
 
 const DefaultTimeout = 15 * time.Second
 
-func NewClient(p ClientParams) Client {
+func NewClient(p ClientParams) *Client {
 	if p.Timeout == 0 {
 		p.Timeout = DefaultTimeout
 	}
 
-	return &client{
+	return &Client{
 		apiURL:  p.APIURL,
 		token:   p.Token,
 		timeout: p.Timeout,
@@ -53,7 +49,7 @@ type DeviceByIDParams struct {
 	Expand   ExpandDeviceParams
 }
 
-func (c *client) DeviceByID(
+func (c *Client) DeviceByID(
 	ctx context.Context, p DeviceByIDParams,
 ) (*Device, error) {
 	enapterHTTPClient, err := c.newEnapterHTTPClient(p.User)
@@ -75,7 +71,7 @@ func (c *client) DeviceByID(
 	return &resp.Device, nil
 }
 
-func (c *client) respErrorToMultiError(respErr enapterhttp.ResponseError) error {
+func (c *Client) respErrorToMultiError(respErr enapterhttp.ResponseError) error {
 	if len(respErr.Errors) == 0 {
 		return respErr
 	}
@@ -96,7 +92,7 @@ func (c *client) respErrorToMultiError(respErr enapterhttp.ResponseError) error 
 	return multiErr
 }
 
-func (c *client) newEnapterHTTPClient(user string) (*enapterhttp.Client, error) {
+func (c *Client) newEnapterHTTPClient(user string) (*enapterhttp.Client, error) {
 	transport := http.DefaultTransport
 
 	if c.token != "" {
