@@ -15,7 +15,6 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/Enapter/grafana-plugins/pkg/core"
-	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
 )
 
 var _ backend.QueryDataHandler = (*QueryData)(nil)
@@ -217,26 +216,10 @@ func (h *QueryData) userFacingError(err error) error {
 		return ErrInvalidYAML
 	}
 
-	var multiErr *enapterapi.MultiError
-
-	if ok := errors.As(err, &multiErr); !ok {
-		return ErrSomethingWentWrong
-	}
-
-	switch len(multiErr.Errors) {
-	case 0: // should never happen
-		h.logger.Error("multi error does not contains errors")
-		return ErrSomethingWentWrong
-	case 1:
-		// noop
-	default:
-		h.logger.Warn("multi error contains multiple errors, " +
-			"but this is not supported yet; will return only the first error")
-	}
-
-	if msg := multiErr.Errors[0].Message; len(msg) > 0 {
+	var apiError core.EnapterAPIError
+	if errors.As(err, &apiError) && len(apiError.Message) > 0 {
 		//nolint: goerr113 // user-facing
-		return errors.New(msg)
+		return errors.New(apiError.Message)
 	}
 
 	return ErrSomethingWentWrong

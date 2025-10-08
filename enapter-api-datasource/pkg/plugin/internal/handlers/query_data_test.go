@@ -145,6 +145,25 @@ func (s *QueryDataSuite) TestInvalidYAML() {
 	s.Require().ErrorIs(err, handlers.ErrInvalidYAML)
 }
 
+func (s *QueryDataSuite) TestEnapterAPIError() {
+	req := s.randomDataRequestWithSingleTelemetryQuery()
+	timeseries := core.NewTimeseries([]core.TimeseriesDataType{
+		core.TimeseriesDataTypeInteger,
+	})
+	s.expectQueryTimeseriesAndReturn(req, &core.QueryTimeseriesResponse{
+		Timeseries: timeseries,
+	}, core.EnapterAPIError{
+		Code:    "apollo_13",
+		Message: "Houston, we have a problem.",
+		Details: map[string]any{
+			"command_module_pilot": "Jack Swigert",
+		},
+	})
+	_, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().Error(err)
+	s.Require().Equal("Houston, we have a problem.", err.Error())
+}
+
 func (s *QueryDataSuite) TestInvalidOffset() {
 	req := dataRequest{
 		user: faker.Email(),
