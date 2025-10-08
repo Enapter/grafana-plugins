@@ -14,50 +14,21 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"gopkg.in/yaml.v3"
 
-	"github.com/Enapter/grafana-plugins/pkg/assetsapi"
-	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
+	"github.com/Enapter/grafana-plugins/pkg/core"
 	"github.com/Enapter/grafana-plugins/pkg/httperr"
-	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
 )
 
 var _ backend.QueryDataHandler = (*QueryData)(nil)
 
-type telemetryAPIClient interface {
-	Timeseries(
-		context.Context, telemetryapi.TimeseriesParams,
-	) (*telemetryapi.Timeseries, error)
-	Ready(ctx context.Context) error
-	Close()
-}
-
-type commandsAPIClient interface {
-	Execute(
-		context.Context, commandsapi.ExecuteParams,
-	) (commandsapi.CommandResponse, error)
-}
-
-type assetsAPIClient interface {
-	DeviceByID(
-		context.Context, assetsapi.DeviceByIDParams,
-	) (*assetsapi.Device, error)
-}
-
 type QueryData struct {
-	logger             hclog.Logger
-	telemetryAPIClient telemetryAPIClient
-	commandsAPIClient  commandsAPIClient
-	assetsAPIClient    assetsAPIClient
+	logger     hclog.Logger
+	enapterAPI core.EnapterAPIPort
 }
 
-func NewQueryData(
-	logger hclog.Logger, telemetryAPIClient telemetryAPIClient,
-	commandsAPIClient commandsAPIClient, assetsAPIClient assetsAPIClient,
-) *QueryData {
+func NewQueryData(logger hclog.Logger, enapterAPI core.EnapterAPIPort) *QueryData {
 	return &QueryData{
-		logger:             logger.Named("query_handler"),
-		telemetryAPIClient: telemetryAPIClient,
-		commandsAPIClient:  commandsAPIClient,
-		assetsAPIClient:    assetsAPIClient,
+		logger:     logger.Named("query_handler"),
+		enapterAPI: enapterAPI,
 	}
 }
 
@@ -132,20 +103,18 @@ func (h *QueryData) handleCommandQuery(
 		return nil, fmt.Errorf("parse query properties: %w", err)
 	}
 
-	cmdResp, err := h.commandsAPIClient.Execute(ctx, commandsapi.ExecuteParams{
-		User: user,
-		Request: commandsapi.CommandRequest{
-			CommandName: props.Payload.CommandName,
-			CommandArgs: props.Payload.CommandArgs,
-			DeviceID:    props.Payload.DeviceID,
-			HardwareID:  props.Payload.HardwareID,
-		},
+	resp, err := h.enapterAPI.ExecuteCommand(ctx, &core.ExecuteCommandRequest{
+		User:        user,
+		CommandName: props.Payload.CommandName,
+		CommandArgs: props.Payload.CommandArgs,
+		DeviceID:    props.Payload.DeviceID,
+		HardwareID:  props.Payload.HardwareID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("commands api: %w", err)
+		return nil, fmt.Errorf("execute command: %w", err)
 	}
 
-	frame, err := h.commandResponseToDataFrame(cmdResp)
+	frame, err := h.commandResponseToDataFrame(resp)
 	if err != nil {
 		return nil, fmt.Errorf("convert cmd resp to data frame: %w", err)
 	}
@@ -171,21 +140,17 @@ func (h *QueryData) handleManifestQuery(
 		return nil, fmt.Errorf("parse query properties: %w", err)
 	}
 
-	device, err := h.assetsAPIClient.DeviceByID(
-		ctx, assetsapi.DeviceByIDParams{
-			User:     user,
-			DeviceID: props.Payload.DeviceID,
-			Expand: assetsapi.ExpandDeviceParams{
-				Manifest: true,
-			},
-		})
+	resp, err := h.enapterAPI.GetDeviceManifest(ctx, &core.GetDeviceManifestRequest{
+		User:     user,
+		DeviceID: props.Payload.DeviceID,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("assets api: %w", err)
+		return nil, fmt.Errorf("get device manifest: %w", err)
 	}
 
 	return data.Frames{
 		&data.Frame{Fields: data.Fields{
-			data.NewField("manifest", nil, []json.RawMessage{device.Manifest}),
+			data.NewField("manifest", nil, []json.RawMessage{resp.Manifest}),
 		}},
 	}, nil
 }
@@ -215,16 +180,17 @@ func (h *QueryData) handleTelemetryQuery(
 		return nil, fmt.Errorf("prepare query text: %w", err)
 	}
 
-	timeseries, err := h.telemetryAPIClient.Timeseries(ctx, telemetryapi.TimeseriesParams{
+	resp, err := h.enapterAPI.QueryTimeseries(ctx, &core.QueryTimeseriesRequest{
 		User:  user,
 		Query: preparedQuery.text,
 	})
 	if err != nil {
-		if errors.Is(err, telemetryapi.ErrNoValues) {
+		if errors.Is(err, core.ErrTimeseriesEmpty) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("request timeseries: %w", err)
+		return nil, fmt.Errorf("query timeseries: %w", err)
 	}
+	timeseries := resp.Timeseries
 	if offset := preparedQuery.offset; offset != 0 {
 		timeseries = timeseries.ShiftTime(preparedQuery.offset)
 	}
@@ -364,7 +330,7 @@ func (h *QueryData) DefaultGranularity(interval time.Duration) time.Duration {
 }
 
 func (h *QueryData) commandResponseToDataFrame(
-	resp commandsapi.CommandResponse,
+	resp *core.ExecuteCommandResponse,
 ) (*data.Frame, error) {
 	payloadBytes, err := json.Marshal(resp.Payload)
 	if err != nil {
@@ -377,7 +343,9 @@ func (h *QueryData) commandResponseToDataFrame(
 	}}, nil
 }
 
-func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {
+func (h *QueryData) timeseriesToDataFrame(
+	timeseries *core.Timeseries,
+) (*data.Frame, error) {
 	frameFields := make([]*data.Field, len(timeseries.DataFields)+1)
 
 	frameFields[0] = data.NewField("time", nil, timeseries.TimeField)
@@ -386,24 +354,24 @@ func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (
 		var frameField *data.Field
 
 		switch dataField.Type {
-		case telemetryapi.TimeseriesDataTypeFloat:
+		case core.TimeseriesDataTypeFloat:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*float64, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeInteger:
+		case core.TimeseriesDataTypeInteger:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*int64, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeString:
+		case core.TimeseriesDataTypeString:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*string, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeBoolean:
+		case core.TimeseriesDataTypeBoolean:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*bool, len(dataField.Values)))
 		default:
-			return nil, fmt.Errorf("%w: %s",
+			return nil, fmt.Errorf("%w: %T",
 				errUnsupportedTimeseriesDataType, dataField.Type)
 		}
 

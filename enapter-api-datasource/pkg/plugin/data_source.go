@@ -8,17 +8,15 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/Enapter/grafana-plugins/pkg/assetsapi"
-	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
+	"github.com/Enapter/grafana-plugins/pkg/http"
 	"github.com/Enapter/grafana-plugins/pkg/plugin/internal/handlers"
-	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
 )
 
 var _ instancemgmt.InstanceDisposer = (*dataSource)(nil)
 
 type dataSource struct {
-	logger             hclog.Logger
-	telemetryAPIClient *telemetryapi.Client
+	logger              hclog.Logger
+	enapterAPIv1Adapter *http.EnapterAPIv1Adapter
 
 	backend.QueryDataHandler
 	backend.CheckHealthHandler
@@ -43,37 +41,27 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 	apiURL := jsonData["enapterAPIURL"]
 	apiToken := settings.DecryptedSecureJSONData["enapterAPIToken"]
 
-	telemetryAPIClient := telemetryapi.NewClient(telemetryapi.ClientParams{
-		BaseURL: apiURL + "/telemetry",
-		Token:   apiToken,
+	enapterAPIv1Adapter := http.NewEnapterAPIv1Adapter(http.EnapterAPIv1AdapterParams{
+		Logger:   logger,
+		APIURL:   apiURL,
+		APIToken: apiToken,
 	})
 
-	commandsAPIClient := commandsapi.NewClient(commandsapi.ClientParams{
-		APIURL: apiURL,
-		Token:  apiToken,
-	})
-
-	assetsAPIClient := assetsapi.NewClient(assetsapi.ClientParams{
-		APIURL: apiURL,
-		Token:  apiToken,
-	})
-
-	queryDataHandler := handlers.NewQueryData(
-		logger, telemetryAPIClient, commandsAPIClient, assetsAPIClient)
-	checkHealthHandler := handlers.NewCheckHealth(logger, telemetryAPIClient)
+	queryDataHandler := handlers.NewQueryData(logger, enapterAPIv1Adapter)
+	checkHealthHandler := handlers.NewCheckHealth(logger, enapterAPIv1Adapter)
 
 	logger.Info("created new data source")
 
 	return &dataSource{
-		logger:             logger,
-		telemetryAPIClient: telemetryAPIClient,
-		QueryDataHandler:   queryDataHandler,
-		CheckHealthHandler: checkHealthHandler,
+		logger:              logger,
+		enapterAPIv1Adapter: enapterAPIv1Adapter,
+		QueryDataHandler:    queryDataHandler,
+		CheckHealthHandler:  checkHealthHandler,
 	}, nil
 }
 
 func (d *dataSource) Dispose() {
-	d.telemetryAPIClient.Close()
+	d.enapterAPIv1Adapter.Close()
 
 	d.logger.Info("disposed data source")
 }
