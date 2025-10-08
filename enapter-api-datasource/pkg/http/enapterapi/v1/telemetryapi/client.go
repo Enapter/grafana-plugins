@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Enapter/grafana-plugins/pkg/httperr"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
 )
 
 type ClientParams struct {
@@ -72,7 +72,7 @@ func (c *Client) Ready(ctx context.Context) error {
 		return errUnexpectedAbsenceOfError
 	}
 
-	var multiErr *httperr.MultiError
+	var multiErr *enapterapi.MultiError
 	if ok := errors.As(err, &multiErr); !ok || len(multiErr.Errors) != 1 {
 		return err
 	}
@@ -303,7 +303,7 @@ func (c *Client) drainAndClose(rc io.ReadCloser) error {
 }
 
 func (c *Client) processError(resp *http.Response) error {
-	multiErr, err := httperr.ParseMultiError(resp.Body)
+	multiErr, err := enapterapi.ParseMultiError(resp.Body)
 	if err != nil {
 		return fmt.Errorf("multi-error: <not available>: %w", err)
 	}

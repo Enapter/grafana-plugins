@@ -9,7 +9,7 @@ import (
 
 	enapterhttp "github.com/Enapter/http-api-go-client/pkg/client"
 
-	"github.com/Enapter/grafana-plugins/pkg/httperr"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
 )
 
 type (
@@ -76,13 +76,13 @@ func (c *Client) respErrorToMultiError(respErr enapterhttp.ResponseError) error 
 		return respErr
 	}
 
-	multiErr := new(httperr.MultiError)
+	multiErr := new(enapterapi.MultiError)
 
 	for _, e := range respErr.Errors {
 		if len(e.Code) == 0 {
 			e.Code = "<empty>"
 		}
-		multiErr.Errors = append(multiErr.Errors, httperr.Error{
+		multiErr.Errors = append(multiErr.Errors, enapterapi.Error{
 			Code:    e.Code,
 			Message: e.Message,
 			Details: e.Details,

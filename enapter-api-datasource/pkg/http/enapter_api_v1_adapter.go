@@ -6,11 +6,11 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/Enapter/grafana-plugins/pkg/assetsapi"
-	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
 	"github.com/Enapter/grafana-plugins/pkg/core"
-	"github.com/Enapter/grafana-plugins/pkg/httperr"
-	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi/v1/assetsapi"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi/v1/commandsapi"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi/v1/telemetryapi"
 )
 
 type EnapterAPIv1AdapterParams struct {
@@ -67,7 +67,7 @@ func (a *EnapterAPIv1Adapter) QueryTimeseries(
 		if errors.Is(err, telemetryapi.ErrNoValues) {
 			return nil, core.ErrTimeseriesEmpty
 		}
-		if multiErr := new(httperr.MultiError); errors.As(err, &multiErr) {
+		if multiErr := new(enapterapi.MultiError); errors.As(err, &multiErr) {
 			return nil, a.convertMultiError(multiErr)
 		}
 		return nil, err
@@ -128,7 +128,7 @@ func (a *EnapterAPIv1Adapter) GetDeviceManifest(
 }
 
 func (a *EnapterAPIv1Adapter) convertMultiError(
-	multiErr *httperr.MultiError,
+	multiErr *enapterapi.MultiError,
 ) error {
 	switch len(multiErr.Errors) {
 	case 0:

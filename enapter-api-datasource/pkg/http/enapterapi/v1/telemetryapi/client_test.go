@@ -11,7 +11,7 @@ import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi/v1/telemetryapi"
 )
 
 type ClientSuite struct {

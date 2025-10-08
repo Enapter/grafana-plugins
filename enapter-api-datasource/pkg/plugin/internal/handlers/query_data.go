@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/Enapter/grafana-plugins/pkg/core"
-	"github.com/Enapter/grafana-plugins/pkg/httperr"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
 )
 
 var _ backend.QueryDataHandler = (*QueryData)(nil)
@@ -217,7 +217,7 @@ func (h *QueryData) userFacingError(err error) error {
 		return ErrInvalidYAML
 	}
 
-	var multiErr *httperr.MultiError
+	var multiErr *enapterapi.MultiError
 
 	if ok := errors.As(err, &multiErr); !ok {
 		return ErrSomethingWentWrong

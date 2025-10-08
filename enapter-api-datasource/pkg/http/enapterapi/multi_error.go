@@ -1,4 +1,4 @@
-package httperr
+package enapterapi
 
 import (
 	"encoding/json"
