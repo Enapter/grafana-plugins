@@ -1,4 +1,4 @@
-package plugin
+package grafana
 
 import (
 	"encoding/json"
@@ -8,22 +8,22 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/hashicorp/go-hclog"
 
+	"github.com/Enapter/grafana-plugins/pkg/core"
 	"github.com/Enapter/grafana-plugins/pkg/http"
-	"github.com/Enapter/grafana-plugins/pkg/plugin/internal/handlers"
 )
 
-var _ instancemgmt.InstanceDisposer = (*dataSource)(nil)
+var _ instancemgmt.InstanceDisposer = (*dataSourceInstance)(nil)
 
-type dataSource struct {
+type dataSourceInstance struct {
 	logger              hclog.Logger
 	enapterAPIv1Adapter *http.EnapterAPIv1Adapter
-
 	backend.QueryDataHandler
 	backend.CheckHealthHandler
 }
 
-func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSettings,
-) (inst instancemgmt.Instance, retErr error) {
+func newDataSourceInstance(
+	logger hclog.Logger, settings backend.DataSourceInstanceSettings,
+) (_ *dataSourceInstance, retErr error) {
 	logger = logger.Named(fmt.Sprintf("data_source[%q]", settings.Name))
 
 	defer func() {
@@ -47,20 +47,22 @@ func newDataSource(logger hclog.Logger, settings backend.DataSourceInstanceSetti
 		APIToken: apiToken,
 	})
 
-	queryDataHandler := handlers.NewQueryData(logger, enapterAPIv1Adapter)
-	checkHealthHandler := handlers.NewCheckHealth(logger, enapterAPIv1Adapter)
+	dataSource := core.NewDataSource(core.DataSourceParams{
+		Logger:     logger,
+		EnapterAPI: enapterAPIv1Adapter,
+	})
 
 	logger.Info("created new data source")
 
-	return &dataSource{
+	return &dataSourceInstance{
 		logger:              logger,
 		enapterAPIv1Adapter: enapterAPIv1Adapter,
-		QueryDataHandler:    queryDataHandler,
-		CheckHealthHandler:  checkHealthHandler,
+		QueryDataHandler:    dataSource,
+		CheckHealthHandler:  dataSource,
 	}, nil
 }
 
-func (d *dataSource) Dispose() {
+func (d *dataSourceInstance) Dispose() {
 	d.enapterAPIv1Adapter.Close()
 
 	d.logger.Info("disposed data source")

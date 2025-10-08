@@ -1,4 +1,4 @@
-package handlers_test
+package core_test
 
 import (
 	"context"
@@ -16,27 +16,29 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/Enapter/grafana-plugins/pkg/core"
-	"github.com/Enapter/grafana-plugins/pkg/plugin/internal/handlers"
 )
 
-type QueryDataSuite struct {
+type DataSourceSuite struct {
 	suite.Suite
 	ctx                   context.Context
 	logger                hclog.Logger
 	mockEnapterAPIAdapter *MockEnapterAPIAdapter
-	queryDataHandler      *handlers.QueryData
+	dataSource            *core.DataSource
 }
 
-func (s *QueryDataSuite) SetupSuite() {
+func (s *DataSourceSuite) SetupSuite() {
 	s.ctx = context.Background()
 	s.mockEnapterAPIAdapter = NewMockEnapterAPIAdapter(&s.Suite)
 	s.logger = hclog.Default()
-	s.queryDataHandler = handlers.NewQueryData(s.logger, s.mockEnapterAPIAdapter)
+	s.dataSource = core.NewDataSource(core.DataSourceParams{
+		Logger:     s.logger,
+		EnapterAPI: s.mockEnapterAPIAdapter,
+	})
 }
 
 var errFake = errors.New("fake error")
 
-func (s *QueryDataSuite) TestDefaultGranularity() {
+func (s *DataSourceSuite) TestDefaultGranularity() {
 	for in, out := range map[time.Duration]time.Duration{
 		999 * time.Millisecond:  time.Second,
 		1000 * time.Millisecond: time.Second,
@@ -84,16 +86,16 @@ func (s *QueryDataSuite) TestDefaultGranularity() {
 		in := in
 		out := out
 		s.Run(in.String(), func() {
-			gran := s.queryDataHandler.DefaultGranularity(in)
+			gran := s.dataSource.DefaultGranularity(in)
 			s.Require().Equal(out, gran)
 		})
 	}
 }
 
-func (s *QueryDataSuite) TestCommandRequest() {
+func (s *DataSourceSuite) TestCommandRequest() {
 	req := s.randomDataRequestWithSingleCommandQuery()
 	stateIn := faker.Word()
-	payloadIn := map[string]interface{}{
+	payloadIn := map[string]any{
 		faker.Word(): faker.Word(),
 		faker.Word(): faker.Word(),
 	}
@@ -108,15 +110,15 @@ func (s *QueryDataSuite) TestCommandRequest() {
 	s.Require().Equal(payloadIn, payloadOut)
 }
 
-func (s *QueryDataSuite) TestTelemetryAPIError() {
+func (s *DataSourceSuite) TestTelemetryAPIError() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	s.expectQueryTimeseriesAndReturn(req, nil, errFake)
 	frames, err := s.handleDataRequestWithSingleQuery(req)
-	s.Require().ErrorIs(err, handlers.ErrSomethingWentWrong)
+	s.Require().ErrorIs(err, core.ErrSomethingWentWrong)
 	s.Require().Nil(frames)
 }
 
-func (s *QueryDataSuite) TestHandleNoValuesError() {
+func (s *DataSourceSuite) TestHandleNoValuesError() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	s.expectQueryTimeseriesAndReturn(req, nil, core.ErrTimeseriesEmpty)
 	frames, err := s.handleDataRequestWithSingleQuery(req)
@@ -124,7 +126,7 @@ func (s *QueryDataSuite) TestHandleNoValuesError() {
 	s.Require().Nil(frames)
 }
 
-func (s *QueryDataSuite) TestEmptyTextNoError() {
+func (s *DataSourceSuite) TestEmptyTextNoError() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	req.queries[0].text = ""
 	frames, err := s.handleDataRequestWithSingleQuery(req)
@@ -132,7 +134,7 @@ func (s *QueryDataSuite) TestEmptyTextNoError() {
 	s.Require().Nil(frames)
 }
 
-func (s *QueryDataSuite) TestInvalidYAML() {
+func (s *DataSourceSuite) TestInvalidYAML() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	req.queries[0].text = "that's not yaml"
 	timeseries := core.NewTimeseries([]core.TimeseriesDataType{
@@ -142,10 +144,10 @@ func (s *QueryDataSuite) TestInvalidYAML() {
 		Timeseries: timeseries,
 	}, nil)
 	_, err := s.handleDataRequestWithSingleQuery(req)
-	s.Require().ErrorIs(err, handlers.ErrInvalidYAML)
+	s.Require().ErrorIs(err, core.ErrInvalidYAML)
 }
 
-func (s *QueryDataSuite) TestEnapterAPIError() {
+func (s *DataSourceSuite) TestEnapterAPIError() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	timeseries := core.NewTimeseries([]core.TimeseriesDataType{
 		core.TimeseriesDataTypeInteger,
@@ -164,7 +166,7 @@ func (s *QueryDataSuite) TestEnapterAPIError() {
 	s.Require().Equal("Houston, we have a problem.", err.Error())
 }
 
-func (s *QueryDataSuite) TestInvalidOffset() {
+func (s *DataSourceSuite) TestInvalidOffset() {
 	req := dataRequest{
 		user: faker.Email(),
 		queries: []query{{
@@ -172,13 +174,13 @@ func (s *QueryDataSuite) TestInvalidOffset() {
 			from:     time.Now().Add(-time.Duration(rand.Int()+1) * time.Hour),
 			to:       time.Now().Add(-time.Duration(rand.Int()+1) * time.Minute),
 			interval: time.Duration(rand.Int()) * time.Second,
-			text: string(s.shouldMarshalJSON(map[string]interface{}{
+			text: string(s.shouldMarshalJSON(map[string]any{
 				"@offset": "42",
 			})),
 		}},
 	}
 	_, err := s.handleDataRequestWithSingleQuery(req)
-	s.Require().ErrorIs(err, handlers.ErrInvalidOffset)
+	s.Require().ErrorIs(err, core.ErrInvalidOffset)
 }
 
 func newFloat64(v float64) *float64 { return &v }
@@ -187,7 +189,7 @@ func newBool(v bool) *bool          { return &v }
 func newString(v string) *string    { return &v }
 
 //nolint:dupl // FIXME
-func (s *QueryDataSuite) TestFloat64() {
+func (s *DataSourceSuite) TestFloat64() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
@@ -196,7 +198,7 @@ func (s *QueryDataSuite) TestFloat64() {
 		},
 		DataFields: []*core.TimeseriesDataField{{
 			Type: core.TimeseriesDataTypeFloat,
-			Values: []interface{}{
+			Values: []any{
 				newFloat64(42.2),
 				newFloat64(43.3),
 			},
@@ -216,7 +218,7 @@ func (s *QueryDataSuite) TestFloat64() {
 }
 
 //nolint:dupl // FIXME
-func (s *QueryDataSuite) TestInt64() {
+func (s *DataSourceSuite) TestInt64() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
@@ -225,7 +227,7 @@ func (s *QueryDataSuite) TestInt64() {
 		},
 		DataFields: []*core.TimeseriesDataField{{
 			Type: core.TimeseriesDataTypeInteger,
-			Values: []interface{}{
+			Values: []any{
 				newInt64(42),
 				newInt64(43),
 			},
@@ -244,7 +246,7 @@ func (s *QueryDataSuite) TestInt64() {
 	s.Require().Equal(int64(43), *dataFields[0].At(1).(*int64))
 }
 
-func (s *QueryDataSuite) TestHide() {
+func (s *DataSourceSuite) TestHide() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	req.queries[0].hide = true
 	frames, err := s.handleDataRequestWithSingleQuery(req)
@@ -252,7 +254,7 @@ func (s *QueryDataSuite) TestHide() {
 	s.Require().Nil(frames)
 }
 
-func (s *QueryDataSuite) TestString() {
+func (s *DataSourceSuite) TestString() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
@@ -261,7 +263,7 @@ func (s *QueryDataSuite) TestString() {
 		},
 		DataFields: []*core.TimeseriesDataField{{
 			Type: core.TimeseriesDataTypeString,
-			Values: []interface{}{
+			Values: []any{
 				newString("foo"),
 				newString("bar"),
 			},
@@ -280,7 +282,7 @@ func (s *QueryDataSuite) TestString() {
 	s.Require().Equal("bar", *dataFields[0].At(1).(*string))
 }
 
-func (s *QueryDataSuite) TestOffset() {
+func (s *DataSourceSuite) TestOffset() {
 	req := dataRequest{
 		user: faker.Email(),
 		queries: []query{{
@@ -288,7 +290,7 @@ func (s *QueryDataSuite) TestOffset() {
 			from:     time.Unix(5, 0),
 			to:       time.Unix(10, 0),
 			interval: time.Second,
-			text: string(s.shouldMarshalJSON(map[string]interface{}{
+			text: string(s.shouldMarshalJSON(map[string]any{
 				"granularity": "42s",
 				"aggregation": "auto",
 				"@offset":     "2s",
@@ -305,7 +307,7 @@ func (s *QueryDataSuite) TestOffset() {
 		},
 		DataFields: []*core.TimeseriesDataField{{
 			Type: core.TimeseriesDataTypeInteger,
-			Values: []interface{}{
+			Values: []any{
 				newInt64(1),
 				newInt64(2),
 				newInt64(3),
@@ -317,7 +319,7 @@ func (s *QueryDataSuite) TestOffset() {
 	s.mockEnapterAPIAdapter.ExpectQueryTimeseriesAndReturn(
 		&core.QueryTimeseriesRequest{
 			User: req.user,
-			Query: string(s.shouldMarshalJSON(map[string]interface{}{
+			Query: string(s.shouldMarshalJSON(map[string]any{
 				"aggregation": "auto",
 				"from":        "1970-01-01T00:00:03Z",
 				"granularity": "42s",
@@ -340,7 +342,7 @@ func (s *QueryDataSuite) TestOffset() {
 	s.Require().Equal(int64(5), *dataFields[0].At(4).(*int64))
 }
 
-func (s *QueryDataSuite) TestNoUserInfo() {
+func (s *DataSourceSuite) TestNoUserInfo() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	req.user = ""
 	timeseries := &core.Timeseries{
@@ -350,7 +352,7 @@ func (s *QueryDataSuite) TestNoUserInfo() {
 		},
 		DataFields: []*core.TimeseriesDataField{{
 			Type: core.TimeseriesDataTypeString,
-			Values: []interface{}{
+			Values: []any{
 				newString("foo"),
 				newString("bar"),
 			},
@@ -369,7 +371,7 @@ func (s *QueryDataSuite) TestNoUserInfo() {
 	s.Require().Equal("bar", *dataFields[0].At(1).(*string))
 }
 
-func (s *QueryDataSuite) TestStringArrayIsUnsupported() {
+func (s *DataSourceSuite) TestStringArrayIsUnsupported() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
@@ -378,7 +380,7 @@ func (s *QueryDataSuite) TestStringArrayIsUnsupported() {
 		},
 		DataFields: []*core.TimeseriesDataField{{
 			Type: core.TimeseriesDataTypeStringArray,
-			Values: []interface{}{
+			Values: []any{
 				[]string{"foo", "foo"},
 				[]string{"bar", "bar"},
 			},
@@ -388,10 +390,10 @@ func (s *QueryDataSuite) TestStringArrayIsUnsupported() {
 		Timeseries: timeseries,
 	}, nil)
 	_, err := s.handleDataRequestWithSingleQuery(req)
-	s.Require().Error(err, handlers.ErrMetricDataTypeIsNotSupported)
+	s.Require().Error(err, core.ErrMetricDataTypeIsNotSupported)
 }
 
-func (s *QueryDataSuite) TestBool() {
+func (s *DataSourceSuite) TestBool() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
@@ -400,7 +402,7 @@ func (s *QueryDataSuite) TestBool() {
 		},
 		DataFields: []*core.TimeseriesDataField{{
 			Type: core.TimeseriesDataTypeBoolean,
-			Values: []interface{}{
+			Values: []any{
 				newBool(true),
 				newBool(false),
 			},
@@ -419,7 +421,7 @@ func (s *QueryDataSuite) TestBool() {
 	s.Require().Equal(false, *dataFields[0].At(1).(*bool))
 }
 
-func (s *QueryDataSuite) TestMultipleFields() {
+func (s *DataSourceSuite) TestMultipleFields() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
@@ -429,14 +431,14 @@ func (s *QueryDataSuite) TestMultipleFields() {
 		DataFields: []*core.TimeseriesDataField{
 			{
 				Type: core.TimeseriesDataTypeFloat,
-				Values: []interface{}{
+				Values: []any{
 					newFloat64(42.2),
 					newFloat64(43.3),
 				},
 			},
 			{
 				Type: core.TimeseriesDataTypeString,
-				Values: []interface{}{
+				Values: []any{
 					newString("foo"),
 					newString("bar"),
 				},
@@ -458,7 +460,7 @@ func (s *QueryDataSuite) TestMultipleFields() {
 	s.Require().Equal("bar", *dataFields[1].At(1).(*string))
 }
 
-func (s *QueryDataSuite) TestMultipleFieldsWithNil() {
+func (s *DataSourceSuite) TestMultipleFieldsWithNil() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
@@ -468,14 +470,14 @@ func (s *QueryDataSuite) TestMultipleFieldsWithNil() {
 		DataFields: []*core.TimeseriesDataField{
 			{
 				Type: core.TimeseriesDataTypeFloat,
-				Values: []interface{}{
+				Values: []any{
 					newFloat64(42.2),
 					(*float64)(nil),
 				},
 			},
 			{
 				Type: core.TimeseriesDataTypeString,
-				Values: []interface{}{
+				Values: []any{
 					newString("foo"),
 					newString("bar"),
 				},
@@ -497,7 +499,7 @@ func (s *QueryDataSuite) TestMultipleFieldsWithNil() {
 	s.Require().Equal("bar", *dataFields[1].At(1).(*string))
 }
 
-func (s *QueryDataSuite) TestDoNotRenderIntervals() {
+func (s *DataSourceSuite) TestDoNotRenderIntervals() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
 	req.queries[0].text = `{"A fact":"$__interval is $__interval_ms milliseconds.",` +
 		`"granularity":"42s","aggregation":"avg"}`
@@ -512,7 +514,7 @@ func (s *QueryDataSuite) TestDoNotRenderIntervals() {
 	s.Require().NoError(err)
 }
 
-func (s *QueryDataSuite) TestUniqueLabelsEmpty() {
+func (s *DataSourceSuite) TestUniqueLabelsEmpty() {
 	s.testUniqueLabels([]core.TimeseriesTags{
 		{"foo": "bar"},
 	}, []data.Labels{
@@ -520,7 +522,7 @@ func (s *QueryDataSuite) TestUniqueLabelsEmpty() {
 	})
 }
 
-func (s *QueryDataSuite) TestUniqueLabelsNoop() {
+func (s *DataSourceSuite) TestUniqueLabelsNoop() {
 	s.testUniqueLabels([]core.TimeseriesTags{
 		{"foo": "bar"},
 		{"goo": "jar"},
@@ -530,7 +532,7 @@ func (s *QueryDataSuite) TestUniqueLabelsNoop() {
 	})
 }
 
-func (s *QueryDataSuite) TestUniqueLabelsRemoveDuplicate() {
+func (s *DataSourceSuite) TestUniqueLabelsRemoveDuplicate() {
 	s.testUniqueLabels([]core.TimeseriesTags{
 		{"foo": "bar", "goo": "jar"},
 		{"foo": "bar", "goo": "JAR"},
@@ -540,7 +542,7 @@ func (s *QueryDataSuite) TestUniqueLabelsRemoveDuplicate() {
 	})
 }
 
-func (s *QueryDataSuite) TestUniqueLabelsDefaultName() {
+func (s *DataSourceSuite) TestUniqueLabelsDefaultName() {
 	s.testUniqueLabels([]core.TimeseriesTags{
 		{"foo": "bar", "telemetry": "h2_flow"},
 	}, []data.Labels{
@@ -548,7 +550,7 @@ func (s *QueryDataSuite) TestUniqueLabelsDefaultName() {
 	})
 }
 
-func (s *QueryDataSuite) testUniqueLabels(
+func (s *DataSourceSuite) testUniqueLabels(
 	tagsIn []core.TimeseriesTags, labelsOut []data.Labels,
 ) {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
@@ -574,7 +576,7 @@ func (s *QueryDataSuite) testUniqueLabels(
 	}
 }
 
-func (s *QueryDataSuite) extractTimeseriesFields(frames data.Frames) (
+func (s *DataSourceSuite) extractTimeseriesFields(frames data.Frames) (
 	timestamp *data.Field, dataFields []*data.Field,
 ) {
 	s.Require().Len(frames, 1)
@@ -587,9 +589,9 @@ func (s *QueryDataSuite) extractTimeseriesFields(frames data.Frames) (
 	return time, values
 }
 
-func (s *QueryDataSuite) extractCommandResponse(
+func (s *DataSourceSuite) extractCommandResponse(
 	frames data.Frames,
-) (state string, payload map[string]interface{}) {
+) (state string, payload map[string]any) {
 	s.Require().Len(frames, 1)
 	fields := frames[0].Fields
 
@@ -608,7 +610,7 @@ func (s *QueryDataSuite) extractCommandResponse(
 	return state, payload
 }
 
-func (s *QueryDataSuite) expectQueryTimeseriesAndReturn(
+func (s *DataSourceSuite) expectQueryTimeseriesAndReturn(
 	req dataRequest, resp *core.QueryTimeseriesResponse, err error,
 ) {
 	for _, q := range req.queries {
@@ -620,7 +622,7 @@ func (s *QueryDataSuite) expectQueryTimeseriesAndReturn(
 	}
 }
 
-func (s *QueryDataSuite) expectExecuteCommandAndReturn(
+func (s *DataSourceSuite) expectExecuteCommandAndReturn(
 	req dataRequest, resp *core.ExecuteCommandResponse, err error,
 ) {
 	for _, q := range req.queries {
@@ -628,14 +630,14 @@ func (s *QueryDataSuite) expectExecuteCommandAndReturn(
 			&core.ExecuteCommandRequest{
 				User:        req.user,
 				CommandName: q.payload["commandName"].(string),
-				CommandArgs: q.payload["commandArgs"].(map[string]interface{}),
+				CommandArgs: q.payload["commandArgs"].(map[string]any),
 				DeviceID:    q.payload["deviceId"].(string),
 			}, resp, err)
 	}
 }
 
-func (s *QueryDataSuite) queryTextWithTimeRange(q query) string {
-	var obj map[string]interface{}
+func (s *DataSourceSuite) queryTextWithTimeRange(q query) string {
+	var obj map[string]any
 	if err := yaml.Unmarshal([]byte(q.text), &obj); err == nil {
 		obj["from"] = q.from.UTC().Format(time.RFC3339Nano)
 		obj["to"] = q.to.UTC().Format(time.RFC3339Nano)
@@ -647,7 +649,7 @@ func (s *QueryDataSuite) queryTextWithTimeRange(q query) string {
 	return string(out)
 }
 
-func (s *QueryDataSuite) randomDataRequestWithSingleTelemetryQuery() dataRequest {
+func (s *DataSourceSuite) randomDataRequestWithSingleTelemetryQuery() dataRequest {
 	return dataRequest{
 		user: faker.Email(),
 		queries: []query{{
@@ -655,7 +657,7 @@ func (s *QueryDataSuite) randomDataRequestWithSingleTelemetryQuery() dataRequest
 			from:     time.Now().Add(-time.Duration(rand.Int()+1) * time.Hour),
 			to:       time.Now().Add(-time.Duration(rand.Int()+1) * time.Minute),
 			interval: time.Duration(rand.Int()) * time.Second,
-			text: string(s.shouldMarshalJSON(map[string]interface{}{
+			text: string(s.shouldMarshalJSON(map[string]any{
 				faker.Word():  faker.Sentence(),
 				faker.Word():  rand.Int(),
 				faker.Word():  rand.Int()%2 == 0,
@@ -666,15 +668,15 @@ func (s *QueryDataSuite) randomDataRequestWithSingleTelemetryQuery() dataRequest
 	}
 }
 
-func (s *QueryDataSuite) randomDataRequestWithSingleCommandQuery() dataRequest {
+func (s *DataSourceSuite) randomDataRequestWithSingleCommandQuery() dataRequest {
 	return dataRequest{
 		user: faker.Email(),
 		queries: []query{{
 			refID:     s.randomRefID(),
 			queryType: "command",
-			payload: map[string]interface{}{
+			payload: map[string]any{
 				"commandName": faker.Word(),
-				"commandArgs": map[string]interface{}{
+				"commandArgs": map[string]any{
 					faker.Word(): faker.Word(),
 					faker.Word(): faker.Word(),
 				},
@@ -684,12 +686,12 @@ func (s *QueryDataSuite) randomDataRequestWithSingleCommandQuery() dataRequest {
 	}
 }
 
-func (s *QueryDataSuite) randomRefID() string {
+func (s *DataSourceSuite) randomRefID() string {
 	const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	return string(abc[rand.Int()%len(abc)])
 }
 
-func (s *QueryDataSuite) handleDataRequestWithSingleQuery(
+func (s *DataSourceSuite) handleDataRequestWithSingleQuery(
 	req dataRequest,
 ) (data.Frames, error) {
 	s.Require().Len(req.queries, 1)
@@ -701,7 +703,7 @@ func (s *QueryDataSuite) handleDataRequestWithSingleQuery(
 	return resp.Frames, resp.Error
 }
 
-func (s *QueryDataSuite) handleDataRequest(req dataRequest) backend.Responses {
+func (s *DataSourceSuite) handleDataRequest(req dataRequest) backend.Responses {
 	var user *backend.User
 	if req.user != "" {
 		user = &backend.User{
@@ -716,7 +718,7 @@ func (s *QueryDataSuite) handleDataRequest(req dataRequest) backend.Responses {
 			QueryType: q.queryType,
 			TimeRange: backend.TimeRange{From: q.from.UTC(), To: q.to.UTC()},
 			Interval:  q.interval,
-			JSON: s.shouldMarshalJSON(map[string]interface{}{
+			JSON: s.shouldMarshalJSON(map[string]any{
 				"text":    q.text,
 				"hide":    q.hide,
 				"payload": q.payload,
@@ -724,7 +726,7 @@ func (s *QueryDataSuite) handleDataRequest(req dataRequest) backend.Responses {
 		}
 	}
 
-	resp, err := s.queryDataHandler.QueryData(s.ctx, &backend.QueryDataRequest{
+	resp, err := s.dataSource.QueryData(s.ctx, &backend.QueryDataRequest{
 		PluginContext: backend.PluginContext{
 			User: user,
 		},
@@ -736,7 +738,7 @@ func (s *QueryDataSuite) handleDataRequest(req dataRequest) backend.Responses {
 	return resp.Responses
 }
 
-func (s *QueryDataSuite) shouldMarshalJSON(o interface{}) []byte {
+func (s *DataSourceSuite) shouldMarshalJSON(o any) []byte {
 	data, err := json.Marshal(o)
 	s.Require().NoError(err)
 	return data
@@ -755,10 +757,10 @@ type query struct {
 	interval  time.Duration
 	hide      bool
 	text      string
-	payload   map[string]interface{}
+	payload   map[string]any
 }
 
 func TestQueryData(t *testing.T) {
 	t.Parallel()
-	suite.Run(t, new(QueryDataSuite))
+	suite.Run(t, new(DataSourceSuite))
 }
