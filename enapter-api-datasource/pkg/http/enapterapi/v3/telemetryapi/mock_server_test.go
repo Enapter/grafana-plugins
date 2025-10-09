@@ -40,8 +40,13 @@ func (s *MockServer) NewClient() *http.Client {
 
 func (s *MockServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
-	case "/v1/timeseries":
-		s.timeseriesHandler(w, r)
+	case "/v3/telemetry/query_timeseries":
+		switch r.Method {
+		case http.MethodPost:
+			s.timeseriesHandler(w, r)
+		default:
+			http.NotFound(w, r)
+		}
 	default:
 		http.NotFound(w, r)
 	}

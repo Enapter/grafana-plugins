@@ -31,7 +31,7 @@ func NewClient(p ClientParams) *Client {
 		}
 	}
 	if p.BaseURL == "" {
-		p.BaseURL = "https://api.enapter.com/telemetry"
+		p.BaseURL = "https://api.enapter.com/v3/telemetry"
 	}
 
 	return &Client{
@@ -77,15 +77,12 @@ func (c *Client) Ready(ctx context.Context) error {
 		return err
 	}
 
-	const apiV1Code = "unprocessable_entity"
-	const apiV3Code = "telemetrypersistence/NO_TELEMETRY_ATTRIBUTES_FOUND"
-
-	switch multiErr.Errors[0].Code {
-	case apiV1Code, apiV3Code:
-		return nil
-	default:
+	const expectedCode = "telemetrypersistence/NO_TELEMETRY_ATTRIBUTES_FOUND"
+	if multiErr.Errors[0].Code != expectedCode {
 		return err
 	}
+
+	return nil
 }
 
 type TimeseriesParams struct {
@@ -120,7 +117,7 @@ func (c *Client) Timeseries(ctx context.Context, p TimeseriesParams) (_ *Timeser
 }
 
 func (c *Client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (*http.Request, error) {
-	urlString := c.baseURL + "/v1/timeseries"
+	urlString := c.baseURL + "/query_timeseries"
 
 	req, err := http.NewRequestWithContext(
 		ctx, http.MethodPost, urlString, strings.NewReader(p.Query))

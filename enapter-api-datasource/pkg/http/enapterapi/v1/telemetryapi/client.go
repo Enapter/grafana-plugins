@@ -77,15 +77,12 @@ func (c *Client) Ready(ctx context.Context) error {
 		return err
 	}
 
-	const apiV1Code = "unprocessable_entity"
-	const apiV3Code = "telemetrypersistence/NO_TELEMETRY_ATTRIBUTES_FOUND"
-
-	switch multiErr.Errors[0].Code {
-	case apiV1Code, apiV3Code:
-		return nil
-	default:
+	const expectedCode = "unprocessable_entity"
+	if multiErr.Errors[0].Code != expectedCode {
 		return err
 	}
+
+	return nil
 }
 
 type TimeseriesParams struct {

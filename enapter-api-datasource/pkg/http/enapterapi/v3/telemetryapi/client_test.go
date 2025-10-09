@@ -11,7 +11,7 @@ import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi/v1/telemetryapi"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi/v3/telemetryapi"
 )
 
 type ClientSuite struct {
@@ -28,7 +28,7 @@ func (s *ClientSuite) SetupTest() {
 	s.server = StartMockServer(s.T())
 	client := telemetryapi.NewClient(telemetryapi.ClientParams{
 		HTTPClient: s.server.NewClient(),
-		BaseURL:    s.server.Address(),
+		BaseURL:    s.server.Address() + "/v3/telemetry",
 		Token:      s.token,
 	})
 	s.client = client
@@ -39,16 +39,8 @@ func (s *ClientSuite) TearDownTest() {
 	s.server.Stop()
 }
 
-func (s *ClientSuite) TestV1ReadyOK() {
-	const errorJSON = `{"errors":[{"code":"unprocessable_entity","message":"Oops."}]}`
-	s.server.ExpectTimeseriesRequestAndReturnCode(
-		http.StatusUnprocessableEntity, errorJSON)
-	err := s.client.Ready(s.ctx)
-	s.Require().NoError(err)
-}
-
-func (s *ClientSuite) TestV3ReadyOK() {
-	const errorJSON = `{"errors":[{"code":"unprocessable_entity","message":"Oops."}]}`
+func (s *ClientSuite) TestReadyOK() {
+	const errorJSON = `{"errors":[{"code":"telemetrypersistence/NO_TELEMETRY_ATTRIBUTES_FOUND","message":"Oops."}]}`
 	s.server.ExpectTimeseriesRequestAndReturnCode(
 		http.StatusNotFound, errorJSON)
 	err := s.client.Ready(s.ctx)
