@@ -23,6 +23,7 @@ case "${DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN}" in
 esac
 
 ENAPTER_API_URL=${ENAPTER_API_URL:-https://api.enapter.com}
+ENAPTER_API_VERSION=${ENAPTER_API_VERSION:-v3}
 ENAPTER_API_TOKEN=${ENAPTER_API_TOKEN:-${TELEMETRY_API_TOKEN:-}}
 if [ -z "$ENAPTER_API_TOKEN" ]; then
 	echo "ERROR: ENAPTER_API_TOKEN is either empty or missing." > /dev/stderr
@@ -39,9 +40,10 @@ datasources:
     isDefault: true
     jsonData:
       enapterAPIURL: "$ENAPTER_API_URL"
+      enapterAPIVersion: "$ENAPTER_API_VERSION"
     secureJsonData:
       enapterAPIToken: "$ENAPTER_API_TOKEN"
-    version: 1
+    version: 2
     editable: false
 EOF
 

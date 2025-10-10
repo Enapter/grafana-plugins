@@ -14,9 +14,14 @@ import (
 
 var _ instancemgmt.InstanceDisposer = (*dataSourceInstance)(nil)
 
+type enapterAPIAdapter interface {
+	core.EnapterAPIPort
+	Close()
+}
+
 type dataSourceInstance struct {
-	logger              hclog.Logger
-	enapterAPIv1Adapter *http.EnapterAPIv1Adapter
+	logger            hclog.Logger
+	enapterAPIAdapter enapterAPIAdapter
 	backend.QueryDataHandler
 	backend.CheckHealthHandler
 }
@@ -39,31 +44,51 @@ func newDataSourceInstance(
 	}
 
 	apiURL := jsonData["enapterAPIURL"]
+	apiVersion := jsonData["enapterAPIVersion"]
 	apiToken := settings.DecryptedSecureJSONData["enapterAPIToken"]
 
-	enapterAPIv1Adapter := http.NewEnapterAPIv1Adapter(http.EnapterAPIv1AdapterParams{
-		Logger:   logger,
-		APIURL:   apiURL,
-		APIToken: apiToken,
-	})
+	var enapterAPIAdapter enapterAPIAdapter
+
+	switch apiVersion {
+	case "v1":
+		enapterAPIAdapter = http.NewEnapterAPIv1Adapter(
+			http.EnapterAPIv1AdapterParams{
+				Logger:   logger,
+				APIURL:   apiURL,
+				APIToken: apiToken,
+			})
+	case "v3":
+		enapterAPIAdapter = http.NewEnapterAPIv3Adapter(
+			http.EnapterAPIv3AdapterParams{
+				Logger:   logger,
+				APIURL:   apiURL,
+				APIToken: apiToken,
+			})
+	default:
+		return nil, fmt.Errorf(`%w: want "v1" or "v3", have %q`,
+			errUnsupportedAPIVersion, apiVersion)
+	}
 
 	dataSource := core.NewDataSource(core.DataSourceParams{
 		Logger:     logger,
-		EnapterAPI: enapterAPIv1Adapter,
+		EnapterAPI: enapterAPIAdapter,
 	})
 
-	logger.Info("created new data source")
+	logger.Info("created new data source",
+		"api_url", apiURL,
+		"api_version", apiVersion,
+	)
 
 	return &dataSourceInstance{
-		logger:              logger,
-		enapterAPIv1Adapter: enapterAPIv1Adapter,
-		QueryDataHandler:    dataSource,
-		CheckHealthHandler:  dataSource,
+		logger:             logger,
+		enapterAPIAdapter:  enapterAPIAdapter,
+		QueryDataHandler:   dataSource,
+		CheckHealthHandler: dataSource,
 	}, nil
 }
 
 func (d *dataSourceInstance) Dispose() {
-	d.enapterAPIv1Adapter.Close()
+	d.enapterAPIAdapter.Close()
 
 	d.logger.Info("disposed data source")
 }
