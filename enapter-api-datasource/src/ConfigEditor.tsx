@@ -19,6 +19,15 @@ export class ConfigEditor extends PureComponent<Props, State> {
     onOptionsChange({ ...options, jsonData });
   };
 
+  onEnapterAPIVersionChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { onOptionsChange, options } = this.props;
+    const jsonData = {
+      ...options.jsonData,
+      enapterAPIVersion: event.target.value || 'v3',
+    };
+    onOptionsChange({ ...options, jsonData });
+  };
+
   // Secure field (only sent to the backend)
   onEnapterAPITokenChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
@@ -60,6 +69,17 @@ export class ConfigEditor extends PureComponent<Props, State> {
             onChange={this.onEnapterAPIURLChange}
             value={jsonData.enapterAPIURL}
             placeholder="Enapter API URL."
+          />
+        </div>
+
+        <div className="gf-form">
+          <FormField
+            label="Enapter API version"
+            labelWidth={10}
+            inputWidth={30}
+            onChange={this.onEnapterAPIVersionChange}
+            value={jsonData.enapterAPIVersion}
+            placeholder="v1 or v3"
           />
         </div>
 
