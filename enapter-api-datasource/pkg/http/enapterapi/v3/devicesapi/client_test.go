@@ -8,6 +8,7 @@ import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
 	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi/v3/devicesapi"
 )
 
@@ -88,10 +89,63 @@ func (s *ClientSuite) TestGetManifest() {
 	s.Require().Equal(expectedManifest, string(manifest))
 }
 
+func (s *ClientSuite) TestExecuteCommandInvalidContentType() {
+	s.server.ExpectExecuteCommandRequestAndReturnInvalidContentType()
+	manifest, err := s.client.ExecuteCommand(s.ctx, s.randomExecuteCommandParams())
+	s.Require().Error(err)
+	s.Require().Nil(manifest)
+	s.Require().Equal(
+		"process response: unexpected content type: "+
+			"want application/json, have text/html",
+		err.Error())
+}
+
+func (s *ClientSuite) TestExecuteCommandError() {
+	const errorJSON = `{"errors":[{"message":"Oops."}]}`
+	s.server.ExpectExecuteCommandRequestAndReturnCode(
+		http.StatusBadRequest, errorJSON)
+	_, err := s.client.ExecuteCommand(s.ctx, s.randomExecuteCommandParams())
+	multiErr := new(enapterapi.MultiError)
+	s.Require().ErrorAs(err, &multiErr)
+	s.Require().Equal("Oops.", multiErr.Errors[0].Message)
+}
+
+func (s *ClientSuite) TestExecuteCommand() {
+	params := s.randomExecuteCommandParams()
+	expectedExecution := &devicesapi.CommandExecution{
+		State: "SUCCESS",
+		Response: devicesapi.CommandResponse{
+			State:   "SUCCEEDED",
+			Payload: map[string]any{},
+		},
+	}
+	s.server.ExpectExecuteCommandRequestCheckItAndReturnData(func(r *http.Request) {
+		s.Require().Equal([]string{params.User}, r.Header["X-Enapter-Auth-User"])
+		s.Require().Equal([]string{s.token}, r.Header["X-Enapter-Auth-Token"])
+		s.Require().Equal(params.DeviceID, r.PathValue("device_id"))
+	}, expectedExecution)
+	execution, err := s.client.ExecuteCommand(s.ctx, params)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedExecution, execution)
+}
+
 func (s *ClientSuite) randomGetManifestParams() devicesapi.GetManifestParams {
 	return devicesapi.GetManifestParams{
 		User:     faker.Word(),
 		DeviceID: faker.UUIDHyphenated(),
+	}
+}
+
+func (s *ClientSuite) randomExecuteCommandParams() devicesapi.ExecuteCommandParams {
+	return devicesapi.ExecuteCommandParams{
+		User:     faker.Word(),
+		DeviceID: faker.UUIDHyphenated(),
+		Request: devicesapi.CommandRequest{
+			Name: faker.Word(),
+			Arguments: map[string]any{
+				faker.Word(): faker.Sentence(),
+			},
+		},
 	}
 }
 
