@@ -101,7 +101,7 @@ func (c *Client) Timeseries(ctx context.Context, p TimeseriesParams) (_ *Timeser
 		return nil, fmt.Errorf("do HTTP request: %w", err)
 	}
 	defer func() {
-		if err := c.drainAndClose(resp.Body); err != nil {
+		if err := enapterapi.DrainAndClose(resp.Body); err != nil {
 			if retErr == nil {
 				retErr = err
 			}
@@ -292,11 +292,6 @@ func (c *Client) parseTimeseriesCSVRecord(
 	}
 
 	return time.Unix(timestamp, 0), values, nil
-}
-
-func (c *Client) drainAndClose(rc io.ReadCloser) error {
-	_, _ = io.Copy(io.Discard, rc)
-	return rc.Close()
 }
 
 func (c *Client) processError(resp *http.Response) error {
