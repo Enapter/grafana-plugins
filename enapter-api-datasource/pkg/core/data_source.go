@@ -236,7 +236,7 @@ func (d *DataSource) userFacingError(err error) error {
 		return ErrMetricDataTypeIsNotSupported
 	}
 	if errors.Is(err, ErrInvalidOffset) {
-		return err
+		return ErrInvalidOffset
 	}
 
 	if e := (&yaml.TypeError{}); errors.As(err, &e) {
