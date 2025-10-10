@@ -84,12 +84,17 @@ func (d *DataSource) handleQuery(
 		context.Context, backend.PluginContext, backend.DataQuery,
 	) (data.Frames, error)
 
-	switch query.QueryType {
+	queryType := "telemetry"
+	if t := query.QueryType; t != "" {
+		queryType = t
+	}
+
+	switch queryType {
 	case "command":
 		handler = d.handleCommandQuery
 	case "manifest":
 		handler = d.handleManifestQuery
-	case "", "telemetry":
+	case "telemetry":
 		handler = d.handleTelemetryQuery
 	default:
 		return nil, errUnexpectedQueryType
@@ -97,7 +102,7 @@ func (d *DataSource) handleQuery(
 
 	frames, err := handler(ctx, pCtx, query)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", query.QueryType, err)
+		return nil, fmt.Errorf("%s: %w", queryType, err)
 	}
 
 	return frames, nil
