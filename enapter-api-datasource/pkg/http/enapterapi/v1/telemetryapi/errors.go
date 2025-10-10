@@ -10,7 +10,6 @@ var (
 	errUnexpectedContentType        = errors.New("unexpected content type")
 	errUnexpectedTimeseriesDataType = errors.New("unexpected timeseries data type")
 	errUnexpectedFieldName          = errors.New("unexpected field name")
-	errEmptyData                    = errors.New("empty data")
 	ErrNoValues                     = errors.New("no values")
 	errBadKeyValuePair              = errors.New("bad key value pair")
 )

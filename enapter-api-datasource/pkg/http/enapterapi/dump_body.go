@@ -1,11 +1,11 @@
-package telemetryapi
+package enapterapi
 
 import (
 	"fmt"
 	"io"
 )
 
-func dumpBody(body io.Reader) (string, error) {
+func DumpBody(body io.Reader) (string, error) {
 	data, err := io.ReadAll(body)
 	if err != nil {
 		return "", fmt.Errorf("read: %w", err)
