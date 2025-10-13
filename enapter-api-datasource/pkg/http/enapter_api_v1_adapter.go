@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -52,7 +53,13 @@ func (a *EnapterAPIv1Adapter) Close() {
 }
 
 func (a *EnapterAPIv1Adapter) Ready(ctx context.Context) error {
-	return a.telemetryAPIClient.Ready(ctx)
+	if err := a.telemetryAPIClient.Ready(ctx); err != nil {
+		return fmt.Errorf("telemetry api: %w", err)
+	}
+	if err := a.assetsAPIClient.Ready(ctx); err != nil {
+		return fmt.Errorf("assets api: %w", err)
+	}
+	return nil
 }
 
 func (a *EnapterAPIv1Adapter) QueryTimeseries(

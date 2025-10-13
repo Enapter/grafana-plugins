@@ -49,6 +49,28 @@ type DeviceByIDParams struct {
 	Expand   ExpandDeviceParams
 }
 
+func (c *Client) Ready(ctx context.Context) error {
+	_, err := c.DeviceByID(ctx, DeviceByIDParams{
+		User:     "does_not_exist",
+		DeviceID: "does_not_exist",
+	})
+	if err == nil {
+		return errUnexpectedAbsenceOfError
+	}
+
+	var multiErr *enapterapi.MultiError
+	if ok := errors.As(err, &multiErr); !ok || len(multiErr.Errors) != 1 {
+		return err
+	}
+
+	const expectedCode = "not_found"
+	if multiErr.Errors[0].Code != expectedCode {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) DeviceByID(
 	ctx context.Context, p DeviceByIDParams,
 ) (*Device, error) {
