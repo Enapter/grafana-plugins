@@ -40,6 +40,8 @@ endif
 
 GRAFANA_CONTAINER ?= enapter-dashboards
 
+DOCKER_NETWORK ?= bridge
+
 .PHONY: grafana-run
 grafana-run:
 	docker run \
@@ -51,5 +53,6 @@ grafana-run:
 		--env DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN=$(DISABLE_ENAPTER_COMMANDS_PANEL_PLUGIN) \
 		--env PROVISION_ENAPTER_BUILT_IN_DASHBOARDS=$(PROVISION_ENAPTER_BUILT_IN_DASHBOARDS) \
 		--interactive \
+		--network $(DOCKER_NETWORK) \
 		--publish $(GRAFANA_PORT):3000 \
 		$(GRAFANA_TAG)
