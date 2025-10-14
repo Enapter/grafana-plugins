@@ -1,4 +1,4 @@
-package handlers
+package core
 
 import (
 	"context"
@@ -13,47 +13,59 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/hashicorp/go-hclog"
 	"gopkg.in/yaml.v3"
-
-	"github.com/Enapter/grafana-plugins/pkg/assetsapi"
-	"github.com/Enapter/grafana-plugins/pkg/commandsapi"
-	"github.com/Enapter/grafana-plugins/pkg/httperr"
-	"github.com/Enapter/grafana-plugins/pkg/telemetryapi"
 )
 
-var _ backend.QueryDataHandler = (*QueryData)(nil)
+var (
+	_ backend.CheckHealthHandler = (*DataSource)(nil)
+	_ backend.QueryDataHandler   = (*DataSource)(nil)
+)
 
-type QueryData struct {
-	logger             hclog.Logger
-	telemetryAPIClient telemetryapi.Client
-	commandsAPIClient  commandsapi.Client
-	assetsAPIClient    assetsapi.Client
+type DataSource struct {
+	logger     hclog.Logger
+	enapterAPI EnapterAPIPort
 }
 
-func NewQueryData(
-	logger hclog.Logger, telemetryAPIClient telemetryapi.Client,
-	commandsAPIClient commandsapi.Client, assetsAPIClient assetsapi.Client,
-) *QueryData {
-	return &QueryData{
-		logger:             logger.Named("query_handler"),
-		telemetryAPIClient: telemetryAPIClient,
-		commandsAPIClient:  commandsAPIClient,
-		assetsAPIClient:    assetsAPIClient,
+type DataSourceParams struct {
+	Logger     hclog.Logger
+	EnapterAPI EnapterAPIPort
+}
+
+func NewDataSource(p DataSourceParams) *DataSource {
+	return &DataSource{
+		logger:     p.Logger,
+		enapterAPI: p.EnapterAPI,
 	}
 }
 
-func (h *QueryData) QueryData(
+func (d *DataSource) CheckHealth(
+	ctx context.Context, _ *backend.CheckHealthRequest,
+) (*backend.CheckHealthResult, error) {
+	if err := d.enapterAPI.Ready(ctx); err != nil {
+		d.logger.Error("Enapter API is not ready", "error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: err.Error(),
+		}, nil
+	}
+	return &backend.CheckHealthResult{
+		Status:  backend.HealthStatusOk,
+		Message: "ok",
+	}, nil
+}
+
+func (d *DataSource) QueryData(
 	ctx context.Context, req *backend.QueryDataRequest,
 ) (*backend.QueryDataResponse, error) {
 	resp := backend.NewQueryDataResponse()
 
 	for _, q := range req.Queries {
-		frames, err := h.handleQuery(ctx, req.PluginContext, q)
+		frames, err := d.handleQuery(ctx, req.PluginContext, q)
 		if err != nil {
-			h.logger.Warn("failed to handle query",
+			d.logger.Warn("failed to handle query",
 				"ref_id", q.RefID,
 				"error", err)
 
-			err = h.userFacingError(err)
+			err = d.userFacingError(err)
 		}
 
 		resp.Responses[q.RefID] = backend.DataResponse{
@@ -65,33 +77,38 @@ func (h *QueryData) QueryData(
 	return resp, nil
 }
 
-func (h *QueryData) handleQuery(
+func (d *DataSource) handleQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
 	var handler func(
 		context.Context, backend.PluginContext, backend.DataQuery,
 	) (data.Frames, error)
 
-	switch query.QueryType {
+	queryType := "telemetry"
+	if t := query.QueryType; t != "" {
+		queryType = t
+	}
+
+	switch queryType {
 	case "command":
-		handler = h.handleCommandQuery
+		handler = d.handleCommandQuery
 	case "manifest":
-		handler = h.handleManifestQuery
-	case "", "telemetry":
-		handler = h.handleTelemetryQuery
+		handler = d.handleManifestQuery
+	case "telemetry":
+		handler = d.handleTelemetryQuery
 	default:
 		return nil, errUnexpectedQueryType
 	}
 
 	frames, err := handler(ctx, pCtx, query)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", query.QueryType, err)
+		return nil, fmt.Errorf("%s: %w", queryType, err)
 	}
 
 	return frames, nil
 }
 
-func (h *QueryData) handleCommandQuery(
+func (d *DataSource) handleCommandQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
 	user := ""
@@ -102,30 +119,28 @@ func (h *QueryData) handleCommandQuery(
 	//nolint:tagliatelle // js
 	var props struct {
 		Payload struct {
-			CommandName string                 `json:"commandName"`
-			CommandArgs map[string]interface{} `json:"commandArgs"`
-			DeviceID    string                 `json:"deviceId"`
-			HardwareID  string                 `json:"hardwareId"`
+			CommandName string         `json:"commandName"`
+			CommandArgs map[string]any `json:"commandArgs"`
+			DeviceID    string         `json:"deviceId"`
+			HardwareID  string         `json:"hardwareId"`
 		} `json:"payload"`
 	}
 	if err := json.Unmarshal(query.JSON, &props); err != nil {
 		return nil, fmt.Errorf("parse query properties: %w", err)
 	}
 
-	cmdResp, err := h.commandsAPIClient.Execute(ctx, commandsapi.ExecuteParams{
-		User: user,
-		Request: commandsapi.CommandRequest{
-			CommandName: props.Payload.CommandName,
-			CommandArgs: props.Payload.CommandArgs,
-			DeviceID:    props.Payload.DeviceID,
-			HardwareID:  props.Payload.HardwareID,
-		},
+	resp, err := d.enapterAPI.ExecuteCommand(ctx, &ExecuteCommandRequest{
+		User:        user,
+		CommandName: props.Payload.CommandName,
+		CommandArgs: props.Payload.CommandArgs,
+		DeviceID:    props.Payload.DeviceID,
+		HardwareID:  props.Payload.HardwareID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("commands api: %w", err)
+		return nil, fmt.Errorf("execute command: %w", err)
 	}
 
-	frame, err := h.commandResponseToDataFrame(cmdResp)
+	frame, err := d.commandResponseToDataFrame(resp)
 	if err != nil {
 		return nil, fmt.Errorf("convert cmd resp to data frame: %w", err)
 	}
@@ -133,7 +148,7 @@ func (h *QueryData) handleCommandQuery(
 	return data.Frames{frame}, nil
 }
 
-func (h *QueryData) handleManifestQuery(
+func (d *DataSource) handleManifestQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
 	user := ""
@@ -151,26 +166,22 @@ func (h *QueryData) handleManifestQuery(
 		return nil, fmt.Errorf("parse query properties: %w", err)
 	}
 
-	device, err := h.assetsAPIClient.DeviceByID(
-		ctx, assetsapi.DeviceByIDParams{
-			User:     user,
-			DeviceID: props.Payload.DeviceID,
-			Expand: assetsapi.ExpandDeviceParams{
-				Manifest: true,
-			},
-		})
+	resp, err := d.enapterAPI.GetDeviceManifest(ctx, &GetDeviceManifestRequest{
+		User:     user,
+		DeviceID: props.Payload.DeviceID,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("assets api: %w", err)
+		return nil, fmt.Errorf("get device manifest: %w", err)
 	}
 
 	return data.Frames{
 		&data.Frame{Fields: data.Fields{
-			data.NewField("manifest", nil, []json.RawMessage{device.Manifest}),
+			data.NewField("manifest", nil, []json.RawMessage{resp.Manifest}),
 		}},
 	}, nil
 }
 
-func (h *QueryData) handleTelemetryQuery(
+func (d *DataSource) handleTelemetryQuery(
 	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
 ) (data.Frames, error) {
 	user := ""
@@ -190,67 +201,52 @@ func (h *QueryData) handleTelemetryQuery(
 		return nil, nil
 	}
 
-	preparedQuery, err := h.prepareQuery(props.Text, query.Interval, query.TimeRange)
+	preparedQuery, err := d.prepareQuery(props.Text, query.Interval, query.TimeRange)
 	if err != nil {
 		return nil, fmt.Errorf("prepare query text: %w", err)
 	}
 
-	timeseries, err := h.telemetryAPIClient.Timeseries(ctx, telemetryapi.TimeseriesParams{
+	resp, err := d.enapterAPI.QueryTimeseries(ctx, &QueryTimeseriesRequest{
 		User:  user,
 		Query: preparedQuery.text,
 	})
 	if err != nil {
-		if errors.Is(err, telemetryapi.ErrNoValues) {
+		if errors.Is(err, ErrTimeseriesEmpty) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("request timeseries: %w", err)
+		return nil, fmt.Errorf("query timeseries: %w", err)
 	}
+	timeseries := resp.Timeseries
 	if offset := preparedQuery.offset; offset != 0 {
 		timeseries = timeseries.ShiftTime(preparedQuery.offset)
 	}
 
-	frame, err := h.timeseriesToDataFrame(timeseries)
+	frame, err := d.timeseriesToDataFrame(timeseries)
 	if err != nil {
 		return nil, fmt.Errorf("convert timeseries to data frame: %w", err)
 	}
 
-	h.makeLabelsUnique(frame)
+	d.makeLabelsUnique(frame)
 
 	return data.Frames{frame}, nil
 }
 
-func (h *QueryData) userFacingError(err error) error {
+func (d *DataSource) userFacingError(err error) error {
 	if errors.Is(err, errUnsupportedTimeseriesDataType) {
 		return ErrMetricDataTypeIsNotSupported
 	}
 	if errors.Is(err, ErrInvalidOffset) {
-		return err
+		return ErrInvalidOffset
 	}
 
 	if e := (&yaml.TypeError{}); errors.As(err, &e) {
 		return ErrInvalidYAML
 	}
 
-	var multiErr *httperr.MultiError
-
-	if ok := errors.As(err, &multiErr); !ok {
-		return ErrSomethingWentWrong
-	}
-
-	switch len(multiErr.Errors) {
-	case 0: // should never happen
-		h.logger.Error("multi error does not contains errors")
-		return ErrSomethingWentWrong
-	case 1:
-		// noop
-	default:
-		h.logger.Warn("multi error contains multiple errors, " +
-			"but this is not supported yet; will return only the first error")
-	}
-
-	if msg := multiErr.Errors[0].Message; len(msg) > 0 {
+	var apiError EnapterAPIError
+	if errors.As(err, &apiError) && len(apiError.Message) > 0 {
 		//nolint: goerr113 // user-facing
-		return errors.New(msg)
+		return errors.New(apiError.Message)
 	}
 
 	return ErrSomethingWentWrong
@@ -261,12 +257,12 @@ type preparedQuery struct {
 	offset time.Duration
 }
 
-func (h *QueryData) prepareQuery(
+func (d *DataSource) prepareQuery(
 	text string, interval time.Duration, timeRange backend.TimeRange,
 ) (*preparedQuery, error) {
 	dec := yaml.NewDecoder(strings.NewReader(text))
 
-	var obj map[string]interface{}
+	var obj map[string]any
 	if err := dec.Decode(&obj); err != nil {
 		return nil, fmt.Errorf("decode YAML: %w", err)
 	}
@@ -294,7 +290,7 @@ func (h *QueryData) prepareQuery(
 	obj["to"] = to.Format(time.RFC3339Nano)
 
 	if _, ok := obj["granularity"]; !ok {
-		obj["granularity"] = h.DefaultGranularity(interval).String()
+		obj["granularity"] = d.DefaultGranularity(interval).String()
 	}
 
 	if _, ok := obj["aggregation"]; !ok {
@@ -312,7 +308,7 @@ func (h *QueryData) prepareQuery(
 	}, nil
 }
 
-func (h *QueryData) DefaultGranularity(interval time.Duration) time.Duration {
+func (d *DataSource) DefaultGranularity(interval time.Duration) time.Duration {
 	const minInterval = time.Second
 	if interval <= minInterval {
 		return minInterval
@@ -343,8 +339,8 @@ func (h *QueryData) DefaultGranularity(interval time.Duration) time.Duration {
 	return granularities[len(granularities)-1]
 }
 
-func (h *QueryData) commandResponseToDataFrame(
-	resp commandsapi.CommandResponse,
+func (d *DataSource) commandResponseToDataFrame(
+	resp *ExecuteCommandResponse,
 ) (*data.Frame, error) {
 	payloadBytes, err := json.Marshal(resp.Payload)
 	if err != nil {
@@ -357,7 +353,9 @@ func (h *QueryData) commandResponseToDataFrame(
 	}}, nil
 }
 
-func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (*data.Frame, error) {
+func (d *DataSource) timeseriesToDataFrame(
+	timeseries *Timeseries,
+) (*data.Frame, error) {
 	frameFields := make([]*data.Field, len(timeseries.DataFields)+1)
 
 	frameFields[0] = data.NewField("time", nil, timeseries.TimeField)
@@ -366,24 +364,24 @@ func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (
 		var frameField *data.Field
 
 		switch dataField.Type {
-		case telemetryapi.TimeseriesDataTypeFloat:
+		case TimeseriesDataTypeFloat:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*float64, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeInteger:
+		case TimeseriesDataTypeInteger:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*int64, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeString:
+		case TimeseriesDataTypeString:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*string, len(dataField.Values)))
-		case telemetryapi.TimeseriesDataTypeBoolean:
+		case TimeseriesDataTypeBoolean:
 			frameField = data.NewField(
 				"", data.Labels(dataField.Tags),
 				make([]*bool, len(dataField.Values)))
 		default:
-			return nil, fmt.Errorf("%w: %s",
+			return nil, fmt.Errorf("%w: %T",
 				errUnsupportedTimeseriesDataType, dataField.Type)
 		}
 
@@ -402,7 +400,7 @@ func (h *QueryData) timeseriesToDataFrame(timeseries *telemetryapi.Timeseries) (
 	return data.NewFrame("", frameFields...), nil
 }
 
-func (h *QueryData) makeLabelsUnique(frame *data.Frame) {
+func (d *DataSource) makeLabelsUnique(frame *data.Frame) {
 	if len(frame.Fields) == 0 {
 		return
 	}

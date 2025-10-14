@@ -1,4 +1,4 @@
-package plugin
+package grafana
 
 import (
 	"os"
@@ -6,11 +6,16 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
-	hclog "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-hclog"
 )
 
-func Serve() error {
-	p := &plugin{
+type Plugin struct {
+	name   string
+	logger hclog.Logger
+}
+
+func NewPlugin() *Plugin {
+	return &Plugin{
 		name: "enapter-api",
 		logger: hclog.New(&hclog.LoggerOptions{
 			Level:      hclog.Debug,
@@ -18,19 +23,15 @@ func Serve() error {
 			JSONFormat: true,
 		}),
 	}
-	return p.serve()
 }
 
-type plugin struct {
-	name   string
-	logger hclog.Logger
-}
-
-func (p *plugin) serve() error {
+func (p *Plugin) Serve() error {
 	var manageOpts datasource.ManageOpts
 	return datasource.Manage(p.name, p.newDataSource, manageOpts)
 }
 
-func (p *plugin) newDataSource(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	return newDataSource(p.logger, settings)
+func (p *Plugin) newDataSource(
+	settings backend.DataSourceInstanceSettings,
+) (instancemgmt.Instance, error) {
+	return newDataSourceInstance(p.logger, settings)
 }

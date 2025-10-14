@@ -1,5 +1,12 @@
 # Changelog
 
+## v8.0.0
+
+- Add support for Enapter API v3.
+- Require explicit API version configuration on data source instance creation.
+- Fix error message about invalid offset.
+- Upgrade go to 1.22.
+
 ## v7.4.0
 
 - Add @offset query modifier.

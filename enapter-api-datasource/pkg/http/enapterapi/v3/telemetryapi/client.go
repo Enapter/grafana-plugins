@@ -13,14 +13,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Enapter/grafana-plugins/pkg/httperr"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
 )
-
-type Client interface {
-	Timeseries(ctx context.Context, p TimeseriesParams) (*Timeseries, error)
-	Ready(ctx context.Context) error
-	Close()
-}
 
 type ClientParams struct {
 	HTTPClient *http.Client
@@ -30,34 +24,33 @@ type ClientParams struct {
 
 const DefaultTimeout = 15 * time.Second
 
-func NewClient(p ClientParams) Client {
+func NewClient(p ClientParams) *Client {
 	if p.HTTPClient == nil {
 		p.HTTPClient = &http.Client{
 			Timeout: DefaultTimeout,
 		}
 	}
 	if p.BaseURL == "" {
-		p.BaseURL = "https://api.enapter.com/telemetry"
+		panic("BaseURL missing or empty")
 	}
-
-	return &client{
+	return &Client{
 		httpClient: p.HTTPClient,
 		baseURL:    p.BaseURL,
 		token:      p.Token,
 	}
 }
 
-type client struct {
+type Client struct {
 	httpClient *http.Client
 	baseURL    string
 	token      string
 }
 
-func (c *client) Close() {
+func (c *Client) Close() {
 	c.httpClient.CloseIdleConnections()
 }
 
-func (c *client) Ready(ctx context.Context) error {
+func (c *Client) Ready(ctx context.Context) error {
 	from := time.Now().Add(-time.Hour)
 	to := time.Now()
 	deviceID := uuid.NewString()
@@ -78,20 +71,17 @@ func (c *client) Ready(ctx context.Context) error {
 		return errUnexpectedAbsenceOfError
 	}
 
-	var multiErr *httperr.MultiError
+	var multiErr *enapterapi.MultiError
 	if ok := errors.As(err, &multiErr); !ok || len(multiErr.Errors) != 1 {
 		return err
 	}
 
-	const apiV1Code = "unprocessable_entity"
-	const apiV3Code = "telemetrypersistence/NO_TELEMETRY_ATTRIBUTES_FOUND"
-
-	switch multiErr.Errors[0].Code {
-	case apiV1Code, apiV3Code:
-		return nil
-	default:
+	const expectedCode = "telemetrypersistence/NO_TELEMETRY_ATTRIBUTES_FOUND"
+	if multiErr.Errors[0].Code != expectedCode {
 		return err
 	}
+
+	return nil
 }
 
 type TimeseriesParams struct {
@@ -99,7 +89,7 @@ type TimeseriesParams struct {
 	Query string
 }
 
-func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (_ *Timeseries, retErr error) {
+func (c *Client) Timeseries(ctx context.Context, p TimeseriesParams) (_ *Timeseries, retErr error) {
 	req, err := c.newTimeseriesRequest(ctx, p)
 	if err != nil {
 		return nil, fmt.Errorf("new timeseries request: %w", err)
@@ -110,7 +100,7 @@ func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (_ *Timeser
 		return nil, fmt.Errorf("do HTTP request: %w", err)
 	}
 	defer func() {
-		if err := c.drainAndClose(resp.Body); err != nil {
+		if err := enapterapi.DrainAndClose(resp.Body); err != nil {
 			if retErr == nil {
 				retErr = err
 			}
@@ -125,8 +115,8 @@ func (c *client) Timeseries(ctx context.Context, p TimeseriesParams) (_ *Timeser
 	return timeseries, nil
 }
 
-func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (*http.Request, error) {
-	urlString := c.baseURL + "/v1/timeseries"
+func (c *Client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (*http.Request, error) {
+	urlString := c.baseURL + "/query_timeseries"
 
 	req, err := http.NewRequestWithContext(
 		ctx, http.MethodPost, urlString, strings.NewReader(p.Query))
@@ -147,7 +137,7 @@ func (c *client) newTimeseriesRequest(ctx context.Context, p TimeseriesParams) (
 	return req, nil
 }
 
-func (c *client) processTimeseriesResponse(resp *http.Response) (*Timeseries, error) {
+func (c *Client) processTimeseriesResponse(resp *http.Response) (*Timeseries, error) {
 	switch resp.StatusCode {
 	case http.StatusOK:
 		break
@@ -197,7 +187,7 @@ func (c *client) processTimeseriesResponse(resp *http.Response) (*Timeseries, er
 	return timeseries, nil
 }
 
-func (c *client) parseTimeseriesCSV(
+func (c *Client) parseTimeseriesCSV(
 	reader io.Reader, dataTypes []TimeseriesDataType,
 ) (*Timeseries, error) {
 	csvReader := csv.NewReader(reader)
@@ -248,7 +238,7 @@ func (c *client) parseTimeseriesCSV(
 	return timeseries, nil
 }
 
-func (c *client) parseCSVHeader(record []string, numDataFields int) ([]TimeseriesTags, error) {
+func (c *Client) parseCSVHeader(record []string, numDataFields int) ([]TimeseriesTags, error) {
 	if want := (numDataFields + 1); len(record) != want {
 		return nil, fmt.Errorf("%w: want %d, have %d",
 			errUnexpectedNumberOfFields, want, len(record))
@@ -274,7 +264,7 @@ func (c *client) parseCSVHeader(record []string, numDataFields int) ([]Timeserie
 	return tagsList, nil
 }
 
-func (c *client) parseTimeseriesCSVRecord(
+func (c *Client) parseTimeseriesCSVRecord(
 	record []string, dataTypes []TimeseriesDataType,
 ) (time.Time, []interface{}, error) {
 	if want := len(dataTypes) + 1; len(record) != want {
@@ -303,13 +293,8 @@ func (c *client) parseTimeseriesCSVRecord(
 	return time.Unix(timestamp, 0), values, nil
 }
 
-func (c *client) drainAndClose(rc io.ReadCloser) error {
-	_, _ = io.Copy(io.Discard, rc)
-	return rc.Close()
-}
-
-func (c *client) processError(resp *http.Response) error {
-	multiErr, err := httperr.ParseMultiError(resp.Body)
+func (c *Client) processError(resp *http.Response) error {
+	multiErr, err := enapterapi.ParseMultiError(resp.Body)
 	if err != nil {
 		return fmt.Errorf("multi-error: <not available>: %w", err)
 	}
@@ -317,8 +302,8 @@ func (c *client) processError(resp *http.Response) error {
 	return multiErr
 }
 
-func (c *client) processUnexpectedStatus(resp *http.Response) error {
-	dump, err := dumpBody(resp.Body)
+func (c *Client) processUnexpectedStatus(resp *http.Response) error {
+	dump, err := enapterapi.DumpBody(resp.Body)
 	if err != nil {
 		//nolint:errorlint // two errors
 		return fmt.Errorf("%w: %s: body dump: <not available>: %v",

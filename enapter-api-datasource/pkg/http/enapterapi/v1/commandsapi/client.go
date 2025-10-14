@@ -9,14 +9,10 @@ import (
 
 	enapterhttp "github.com/Enapter/http-api-go-client/pkg/client"
 
-	"github.com/Enapter/grafana-plugins/pkg/httperr"
+	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
 )
 
-type Client interface {
-	Execute(ctx context.Context, p ExecuteParams) (CommandResponse, error)
-}
-
-type client struct {
+type Client struct {
 	apiURL  string
 	token   string
 	timeout time.Duration
@@ -30,12 +26,14 @@ type ClientParams struct {
 
 const DefaultTimeout = 15 * time.Second
 
-func NewClient(p ClientParams) Client {
+func NewClient(p ClientParams) *Client {
+	if p.APIURL == "" {
+		panic("APIURL missing or empty")
+	}
 	if p.Timeout == 0 {
 		p.Timeout = DefaultTimeout
 	}
-
-	return &client{
+	return &Client{
 		apiURL:  p.APIURL,
 		token:   p.Token,
 		timeout: p.Timeout,
@@ -59,7 +57,7 @@ type CommandResponse struct {
 	Payload map[string]interface{}
 }
 
-func (c *client) Execute(ctx context.Context, p ExecuteParams) (CommandResponse, error) {
+func (c *Client) Execute(ctx context.Context, p ExecuteParams) (CommandResponse, error) {
 	enapterHTTPClient, err := c.newEnapterHTTPClient(p.User)
 	if err != nil {
 		return CommandResponse{}, fmt.Errorf("new Enapter HTTP client: %w", err)
@@ -84,18 +82,18 @@ func (c *client) Execute(ctx context.Context, p ExecuteParams) (CommandResponse,
 	}, nil
 }
 
-func (c *client) respErrorToMultiError(respErr enapterhttp.ResponseError) error {
+func (c *Client) respErrorToMultiError(respErr enapterhttp.ResponseError) error {
 	if len(respErr.Errors) == 0 {
 		return respErr
 	}
 
-	multiErr := new(httperr.MultiError)
+	multiErr := new(enapterapi.MultiError)
 
 	for _, e := range respErr.Errors {
 		if len(e.Code) == 0 {
 			e.Code = "<empty>"
 		}
-		multiErr.Errors = append(multiErr.Errors, httperr.Error{
+		multiErr.Errors = append(multiErr.Errors, enapterapi.Error{
 			Code:    e.Code,
 			Message: e.Message,
 			Details: e.Details,
@@ -105,7 +103,7 @@ func (c *client) respErrorToMultiError(respErr enapterhttp.ResponseError) error 
 	return multiErr
 }
 
-func (c *client) newEnapterHTTPClient(user string) (*enapterhttp.Client, error) {
+func (c *Client) newEnapterHTTPClient(user string) (*enapterhttp.Client, error) {
 	transport := http.DefaultTransport
 
 	if c.token != "" {
