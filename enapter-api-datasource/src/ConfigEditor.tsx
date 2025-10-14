@@ -1,13 +1,41 @@
 import React, { ChangeEvent, PureComponent } from 'react';
 import { LegacyForms } from '@grafana/ui';
-import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
+import { DataSourcePluginOptionsEditorProps, SelectableValue } from '@grafana/data';
 import { MyDataSourceOptions, MySecureJsonData } from './types';
 
-const { SecretFormField, FormField } = LegacyForms;
+const { SecretFormField, FormField, Select } = LegacyForms;
 
 interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
 
 interface State {}
+
+const apiVersions = ['v1', 'v3'] as const;
+type ApiVersion = (typeof apiVersions)[number];
+type ApiVersionOption = SelectableValue<ApiVersion>;
+
+const apiVersionOptions: ApiVersionOption[] = [
+  { label: 'v1', value: 'v1' },
+  { label: 'v3', value: 'v3' },
+];
+
+const toApiVersionOptionOrDefault = (
+  version: string | undefined,
+  defaultOption: ApiVersionOption = { label: 'v3', value: 'v3' }
+): ApiVersionOption => {
+  if (!version) {
+    return defaultOption;
+  }
+
+  return apiVersionOptions.find((o) => o.value === version) || defaultOption;
+};
+
+const toValidApiVersion = (value: string | undefined, defaultValue: ApiVersion = 'v3'): ApiVersion => {
+  if (!value) {
+    return defaultValue;
+  }
+
+  return apiVersions.find((v) => v === String(value).toLowerCase()) || defaultValue;
+};
 
 export class ConfigEditor extends PureComponent<Props, State> {
   onEnapterAPIURLChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -19,11 +47,11 @@ export class ConfigEditor extends PureComponent<Props, State> {
     onOptionsChange({ ...options, jsonData });
   };
 
-  onEnapterAPIVersionChange = (event: ChangeEvent<HTMLInputElement>) => {
+  onEnapterAPIVersionChange = (option: ApiVersionOption) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
       ...options.jsonData,
-      enapterAPIVersion: event.target.value || 'v3',
+      enapterAPIVersion: toValidApiVersion(option.value),
     };
     onOptionsChange({ ...options, jsonData });
   };
@@ -76,10 +104,14 @@ export class ConfigEditor extends PureComponent<Props, State> {
           <FormField
             label="Enapter API version"
             labelWidth={10}
-            inputWidth={30}
-            onChange={this.onEnapterAPIVersionChange}
-            value={jsonData.enapterAPIVersion}
-            placeholder="v1 or v3"
+            inputEl={
+              <Select
+                width={30}
+                options={apiVersionOptions}
+                value={toApiVersionOptionOrDefault(jsonData.enapterAPIVersion)}
+                onChange={this.onEnapterAPIVersionChange}
+              />
+            }
           />
         </div>
 
