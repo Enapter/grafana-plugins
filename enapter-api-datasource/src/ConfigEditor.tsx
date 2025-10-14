@@ -45,6 +45,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
       ...options,
       jsonData: {
         ...options.jsonData,
+        enapterAPIURL: options.jsonData.enapterAPIURL || 'https://api.enapter.com',
         enapterAPIVersion: toValidApiVersion(options.jsonData.enapterAPIVersion),
       },
     });

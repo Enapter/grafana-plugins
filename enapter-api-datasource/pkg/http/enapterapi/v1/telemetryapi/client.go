@@ -31,9 +31,8 @@ func NewClient(p ClientParams) *Client {
 		}
 	}
 	if p.BaseURL == "" {
-		p.BaseURL = "https://api.enapter.com/telemetry"
+		panic("BaseURL missing or empty")
 	}
-
 	return &Client{
 		httpClient: p.HTTPClient,
 		baseURL:    p.BaseURL,

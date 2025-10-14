@@ -27,7 +27,7 @@ func NewClient(p ClientParams) *Client {
 		}
 	}
 	if p.BaseURL == "" {
-		p.BaseURL = "https://api.enapter.com/v3/devices"
+		panic("BaseURL missing or empty")
 	}
 	return &Client{
 		httpClient: p.HTTPClient,

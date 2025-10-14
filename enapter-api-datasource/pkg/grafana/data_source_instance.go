@@ -51,19 +51,25 @@ func newDataSourceInstance(
 
 	switch apiVersion {
 	case "v1":
-		enapterAPIAdapter = http.NewEnapterAPIv1Adapter(
-			http.EnapterAPIv1AdapterParams{
-				Logger:   logger,
-				APIURL:   apiURL,
-				APIToken: apiToken,
-			})
+		a, err := http.NewEnapterAPIv1Adapter(http.EnapterAPIv1AdapterParams{
+			Logger:   logger,
+			APIURL:   apiURL,
+			APIToken: apiToken,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("new Enapter API v1 adapter: %w", err)
+		}
+		enapterAPIAdapter = a
 	case "v3":
-		enapterAPIAdapter = http.NewEnapterAPIv3Adapter(
-			http.EnapterAPIv3AdapterParams{
-				Logger:   logger,
-				APIURL:   apiURL,
-				APIToken: apiToken,
-			})
+		a, err := http.NewEnapterAPIv3Adapter(http.EnapterAPIv3AdapterParams{
+			Logger:   logger,
+			APIURL:   apiURL,
+			APIToken: apiToken,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("new Enapter API v3 adapter: %w", err)
+		}
+		enapterAPIAdapter = a
 	default:
 		return nil, fmt.Errorf(`%w: want "v1" or "v3", have %q`,
 			errUnsupportedAPIVersion, apiVersion)

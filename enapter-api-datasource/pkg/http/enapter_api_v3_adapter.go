@@ -26,7 +26,10 @@ type EnapterAPIv3Adapter struct {
 	devicesAPIClient   *devicesapi.Client
 }
 
-func NewEnapterAPIv3Adapter(p EnapterAPIv3AdapterParams) *EnapterAPIv3Adapter {
+func NewEnapterAPIv3Adapter(p EnapterAPIv3AdapterParams) (*EnapterAPIv3Adapter, error) {
+	if p.APIURL == "" {
+		return nil, errEnapterAPIURLEmptyOrMissing
+	}
 	telemetryAPIClient := telemetryapi.NewClient(telemetryapi.ClientParams{
 		BaseURL: p.APIURL + "/v3/telemetry",
 		Token:   p.APIToken,
@@ -39,7 +42,7 @@ func NewEnapterAPIv3Adapter(p EnapterAPIv3AdapterParams) *EnapterAPIv3Adapter {
 		logger:             p.Logger.Named("enapter_api_v3_adapter"),
 		telemetryAPIClient: telemetryAPIClient,
 		devicesAPIClient:   devicesAPIClient,
-	}
+	}, nil
 }
 
 func (a *EnapterAPIv3Adapter) Close() {

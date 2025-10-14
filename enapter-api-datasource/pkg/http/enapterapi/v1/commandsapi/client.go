@@ -27,10 +27,12 @@ type ClientParams struct {
 const DefaultTimeout = 15 * time.Second
 
 func NewClient(p ClientParams) *Client {
+	if p.APIURL == "" {
+		panic("APIURL missing or empty")
+	}
 	if p.Timeout == 0 {
 		p.Timeout = DefaultTimeout
 	}
-
 	return &Client{
 		apiURL:  p.APIURL,
 		token:   p.Token,

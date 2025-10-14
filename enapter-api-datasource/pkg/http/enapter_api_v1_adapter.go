@@ -27,7 +27,10 @@ type EnapterAPIv1Adapter struct {
 	assetsAPIClient    *assetsapi.Client
 }
 
-func NewEnapterAPIv1Adapter(p EnapterAPIv1AdapterParams) *EnapterAPIv1Adapter {
+func NewEnapterAPIv1Adapter(p EnapterAPIv1AdapterParams) (*EnapterAPIv1Adapter, error) {
+	if p.APIURL == "" {
+		return nil, errEnapterAPIURLEmptyOrMissing
+	}
 	telemetryAPIClient := telemetryapi.NewClient(telemetryapi.ClientParams{
 		BaseURL: p.APIURL + "/telemetry",
 		Token:   p.APIToken,
@@ -45,7 +48,7 @@ func NewEnapterAPIv1Adapter(p EnapterAPIv1AdapterParams) *EnapterAPIv1Adapter {
 		telemetryAPIClient: telemetryAPIClient,
 		commandsAPIClient:  commandsAPIClient,
 		assetsAPIClient:    assetsAPIClient,
-	}
+	}, nil
 }
 
 func (a *EnapterAPIv1Adapter) Close() {
