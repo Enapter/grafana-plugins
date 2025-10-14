@@ -38,6 +38,18 @@ const toValidApiVersion = (value: string | undefined, defaultValue: ApiVersion =
 };
 
 export class ConfigEditor extends PureComponent<Props, State> {
+  componentDidMount() {
+    const { onOptionsChange, options } = this.props;
+
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...options.jsonData,
+        enapterAPIVersion: toValidApiVersion(options.jsonData.enapterAPIVersion),
+      },
+    });
+  }
+
   onEnapterAPIURLChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
