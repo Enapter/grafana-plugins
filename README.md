@@ -18,6 +18,7 @@ This repo contains the following Enapter Grafana plugins:
 ```bash
 docker run \
 	--env ENAPTER_API_TOKEN=<YOUR_ENAPTER_API_TOKEN> \
+	--env ENAPTER_API_VERSION=v1 \
 	--rm \
 	--interactive \
 	--tty \
