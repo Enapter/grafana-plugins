@@ -38,10 +38,11 @@ func newDataSourceInstance(
 		}
 	}()
 
-	var jsonData map[string]string
+	var jsonData map[string]any
 	if err := json.Unmarshal(settings.JSONData, &jsonData); err != nil {
 		return nil, fmt.Errorf("JSON data: %w", err)
 	}
+	logger.Info("loaded", "json_data", jsonData)
 
 	apiURL := jsonData["enapterAPIURL"]
 	apiVersion := jsonData["enapterAPIVersion"]
@@ -53,7 +54,7 @@ func newDataSourceInstance(
 	case "v1":
 		a, err := http.NewEnapterAPIv1Adapter(http.EnapterAPIv1AdapterParams{
 			Logger:   logger,
-			APIURL:   apiURL,
+			APIURL:   apiURL.(string),
 			APIToken: apiToken,
 		})
 		if err != nil {
@@ -63,7 +64,7 @@ func newDataSourceInstance(
 	case "v3":
 		a, err := http.NewEnapterAPIv3Adapter(http.EnapterAPIv3AdapterParams{
 			Logger:   logger,
-			APIURL:   apiURL,
+			APIURL:   apiURL.(string),
 			APIToken: apiToken,
 		})
 		if err != nil {
