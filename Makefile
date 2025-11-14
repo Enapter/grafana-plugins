@@ -24,11 +24,13 @@ enapter-grafana-plugins.tar.gz: $(PLUGINS)
 	rm -f $@
 	tar --create --gzip --file $@ $(addsuffix /dist,$^)
 
-GRAFANA_TAG ?= enapter/grafana-plugins:dev
+GRAFANA_VERSION ?= 11.6
+GRAFANA_TAG ?= enapter/grafana-plugins:$(GRAFANA_VERSION)-dev
 
 .PHONY: grafana-build
 grafana-build: $(PLUGINS)
 	$(DOCKER_BUILD) \
+		--build-arg GRAFANA_VERSION=$(GRAFANA_VERSION) \
 		--tag $(GRAFANA_TAG) \
 		.
 
