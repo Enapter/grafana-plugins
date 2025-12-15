@@ -1,9 +1,12 @@
 package enapterapi
 
 import (
+	"errors"
 	"fmt"
 	"io"
 )
+
+var errEmptyData = errors.New("empty data")
 
 func DumpBody(body io.Reader) (string, error) {
 	data, err := io.ReadAll(body)

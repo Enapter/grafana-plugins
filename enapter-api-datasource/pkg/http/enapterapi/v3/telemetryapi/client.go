@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Enapter/grafana-plugins/pkg/http/enapterapi"
+	httputil "github.com/Enapter/grafana-plugins/pkg/http/util"
 )
 
 type ClientParams struct {
@@ -100,7 +101,7 @@ func (c *Client) Timeseries(ctx context.Context, p TimeseriesParams) (_ *Timeser
 		return nil, fmt.Errorf("do HTTP request: %w", err)
 	}
 	defer func() {
-		if err := enapterapi.DrainAndClose(resp.Body); err != nil {
+		if err := httputil.DrainAndClose(resp.Body); err != nil {
 			if retErr == nil {
 				retErr = err
 			}
@@ -303,7 +304,7 @@ func (c *Client) processError(resp *http.Response) error {
 }
 
 func (c *Client) processUnexpectedStatus(resp *http.Response) error {
-	dump, err := enapterapi.DumpBody(resp.Body)
+	dump, err := httputil.DumpBody(resp.Body)
 	if err != nil {
 		//nolint:errorlint // two errors
 		return fmt.Errorf("%w: %s: body dump: <not available>: %v",
