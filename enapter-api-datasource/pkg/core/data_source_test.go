@@ -23,16 +23,19 @@ type DataSourceSuite struct {
 	ctx                   context.Context
 	logger                hclog.Logger
 	mockEnapterAPIAdapter *MockEnapterAPIAdapter
+	mockUserResolver      *MockUserResolver
 	dataSource            *core.DataSource
 }
 
 func (s *DataSourceSuite) SetupSuite() {
 	s.ctx = context.Background()
 	s.mockEnapterAPIAdapter = NewMockEnapterAPIAdapter(&s.Suite)
+	s.mockUserResolver = NewMockUserResolver(&s.Suite)
 	s.logger = hclog.Default()
 	s.dataSource = core.NewDataSource(core.DataSourceParams{
-		Logger:     s.logger,
-		EnapterAPI: s.mockEnapterAPIAdapter,
+		Logger:       s.logger,
+		EnapterAPI:   s.mockEnapterAPIAdapter,
+		UserResolver: s.mockUserResolver,
 	})
 }
 
@@ -92,8 +95,54 @@ func (s *DataSourceSuite) TestDefaultGranularity() {
 	}
 }
 
+func (s *DataSourceSuite) TestUserResolution() {
+	req := s.randomDataRequestWithSingleCommandQuery()
+	s.expectResolveUserAndReturn(req.user, "other_"+req.user, nil)
+	s.mockEnapterAPIAdapter.ExpectExecuteCommandAndReturn(
+		&core.ExecuteCommandRequest{
+			User:        "other_" + req.user,
+			CommandName: req.queries[0].payload["commandName"].(string),
+			CommandArgs: req.queries[0].payload["commandArgs"].(map[string]any),
+			DeviceID:    req.queries[0].payload["deviceId"].(string),
+		}, &core.ExecuteCommandResponse{
+			State:   faker.Word(),
+			Payload: nil,
+		}, nil)
+	_, err := s.handleDataRequestWithSingleQuery(req)
+	s.Require().NoError(err)
+}
+
+func (s *DataSourceSuite) TestUserResolutionError() {
+	req := s.randomDataRequestWithSingleCommandQuery()
+	s.expectResolveUserAndReturn(req.user, "", errFake)
+	_, err := s.dataSource.QueryData(s.ctx, &backend.QueryDataRequest{
+		PluginContext: backend.PluginContext{
+			User: &backend.User{
+				Email: req.user,
+			},
+		},
+		Headers: nil,
+		Queries: []backend.DataQuery{{
+			RefID:     req.queries[0].refID,
+			QueryType: req.queries[0].queryType,
+			TimeRange: backend.TimeRange{
+				From: req.queries[0].from.UTC(),
+				To:   req.queries[0].to.UTC(),
+			},
+			Interval: req.queries[0].interval,
+			JSON: s.shouldMarshalJSON(map[string]any{
+				"text":    req.queries[0].text,
+				"hide":    req.queries[0].hide,
+				"payload": req.queries[0].payload,
+			}),
+		}},
+	})
+	s.Require().ErrorIs(err, errFake)
+}
+
 func (s *DataSourceSuite) TestCommandRequest() {
 	req := s.randomDataRequestWithSingleCommandQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	stateIn := faker.Word()
 	payloadIn := map[string]any{
 		faker.Word(): faker.Word(),
@@ -112,6 +161,7 @@ func (s *DataSourceSuite) TestCommandRequest() {
 
 func (s *DataSourceSuite) TestTelemetryAPIError() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	s.expectQueryTimeseriesAndReturn(req, nil, errFake)
 	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().ErrorIs(err, core.ErrSomethingWentWrong)
@@ -120,6 +170,7 @@ func (s *DataSourceSuite) TestTelemetryAPIError() {
 
 func (s *DataSourceSuite) TestHandleNoValuesError() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	s.expectQueryTimeseriesAndReturn(req, nil, core.ErrTimeseriesEmpty)
 	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().NoError(err)
@@ -128,6 +179,7 @@ func (s *DataSourceSuite) TestHandleNoValuesError() {
 
 func (s *DataSourceSuite) TestEmptyTextNoError() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	req.queries[0].text = ""
 	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().NoError(err)
@@ -140,6 +192,7 @@ func (s *DataSourceSuite) TestInvalidYAML() {
 	timeseries := core.NewTimeseries([]core.TimeseriesDataType{
 		core.TimeseriesDataTypeInteger,
 	})
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	s.expectQueryTimeseriesAndReturn(req, &core.QueryTimeseriesResponse{
 		Timeseries: timeseries,
 	}, nil)
@@ -149,6 +202,7 @@ func (s *DataSourceSuite) TestInvalidYAML() {
 
 func (s *DataSourceSuite) TestEnapterAPIError() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	timeseries := core.NewTimeseries([]core.TimeseriesDataType{
 		core.TimeseriesDataTypeInteger,
 	})
@@ -179,6 +233,7 @@ func (s *DataSourceSuite) TestInvalidOffset() {
 			})),
 		}},
 	}
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	_, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().ErrorIs(err, core.ErrInvalidOffset)
 }
@@ -191,6 +246,7 @@ func newString(v string) *string    { return &v }
 //nolint:dupl // FIXME
 func (s *DataSourceSuite) TestFloat64() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -220,6 +276,7 @@ func (s *DataSourceSuite) TestFloat64() {
 //nolint:dupl // FIXME
 func (s *DataSourceSuite) TestInt64() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -248,6 +305,7 @@ func (s *DataSourceSuite) TestInt64() {
 
 func (s *DataSourceSuite) TestHide() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	req.queries[0].hide = true
 	frames, err := s.handleDataRequestWithSingleQuery(req)
 	s.Require().Nil(err)
@@ -256,6 +314,7 @@ func (s *DataSourceSuite) TestHide() {
 
 func (s *DataSourceSuite) TestString() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -316,6 +375,7 @@ func (s *DataSourceSuite) TestOffset() {
 			},
 		}},
 	}
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	s.mockEnapterAPIAdapter.ExpectQueryTimeseriesAndReturn(
 		&core.QueryTimeseriesRequest{
 			User: req.user,
@@ -373,6 +433,7 @@ func (s *DataSourceSuite) TestNoUserInfo() {
 
 func (s *DataSourceSuite) TestStringArrayIsUnsupported() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -395,6 +456,7 @@ func (s *DataSourceSuite) TestStringArrayIsUnsupported() {
 
 func (s *DataSourceSuite) TestBool() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	timeseries := &core.Timeseries{
 		TimeField: []time.Time{
 			time.Unix(1, 0),
@@ -445,6 +507,7 @@ func (s *DataSourceSuite) TestMultipleFields() {
 			},
 		},
 	}
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	s.expectQueryTimeseriesAndReturn(req, &core.QueryTimeseriesResponse{
 		Timeseries: timeseries,
 	}, nil)
@@ -484,6 +547,7 @@ func (s *DataSourceSuite) TestMultipleFieldsWithNil() {
 			},
 		},
 	}
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	s.expectQueryTimeseriesAndReturn(req, &core.QueryTimeseriesResponse{
 		Timeseries: timeseries,
 	}, nil)
@@ -501,6 +565,7 @@ func (s *DataSourceSuite) TestMultipleFieldsWithNil() {
 
 func (s *DataSourceSuite) TestDoNotRenderIntervals() {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	req.queries[0].text = `{"A fact":"$__interval is $__interval_ms milliseconds.",` +
 		`"granularity":"42s","aggregation":"avg"}`
 	req.queries[0].interval = time.Duration(rand.Int()+1) * time.Second
@@ -554,6 +619,7 @@ func (s *DataSourceSuite) testUniqueLabels(
 	tagsIn []core.TimeseriesTags, labelsOut []data.Labels,
 ) {
 	req := s.randomDataRequestWithSingleTelemetryQuery()
+	s.expectResolveUserAndReturn(req.user, req.user, nil)
 	dataFieldsIn := make([]*core.TimeseriesDataField, len(tagsIn))
 	for i, tags := range tagsIn {
 		dataFieldsIn[i] = &core.TimeseriesDataField{
@@ -608,6 +674,14 @@ func (s *DataSourceSuite) extractCommandResponse(
 	s.Require().NoError(err)
 
 	return state, payload
+}
+
+func (s *DataSourceSuite) expectResolveUserAndReturn(userIn, userOut string, err error) {
+	s.mockUserResolver.ExpectResolveUserAndReturn(&core.ResolveUserRequest{
+		Email: userIn,
+	}, &core.ResolveUserResponse{
+		ID: userOut,
+	}, err)
 }
 
 func (s *DataSourceSuite) expectQueryTimeseriesAndReturn(

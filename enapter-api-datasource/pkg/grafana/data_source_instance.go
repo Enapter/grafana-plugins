@@ -75,9 +75,17 @@ func newDataSourceInstance(
 			errUnsupportedAPIVersion, apiVersion)
 	}
 
+	var userResolver core.UserResolverPort = core.NoopUserResolver{}
+	if url := jsonData["userResolverURL"]; url != "" {
+		userResolver = http.NewUserResolverAdapter(http.UserResolverAdapterParams{
+			URL: url,
+		})
+	}
+
 	dataSource := core.NewDataSource(core.DataSourceParams{
-		Logger:     logger,
-		EnapterAPI: enapterAPIAdapter,
+		Logger:       logger,
+		EnapterAPI:   enapterAPIAdapter,
+		UserResolver: userResolver,
 	})
 
 	logger.Info("created new data source",

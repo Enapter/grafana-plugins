@@ -21,19 +21,22 @@ var (
 )
 
 type DataSource struct {
-	logger     hclog.Logger
-	enapterAPI EnapterAPIPort
+	logger       hclog.Logger
+	enapterAPI   EnapterAPIPort
+	userResolver UserResolverPort
 }
 
 type DataSourceParams struct {
-	Logger     hclog.Logger
-	EnapterAPI EnapterAPIPort
+	Logger       hclog.Logger
+	EnapterAPI   EnapterAPIPort
+	UserResolver UserResolverPort
 }
 
 func NewDataSource(p DataSourceParams) *DataSource {
 	return &DataSource{
-		logger:     p.Logger,
-		enapterAPI: p.EnapterAPI,
+		logger:       p.Logger,
+		enapterAPI:   p.EnapterAPI,
+		userResolver: p.UserResolver,
 	}
 }
 
@@ -56,10 +59,15 @@ func (d *DataSource) CheckHealth(
 func (d *DataSource) QueryData(
 	ctx context.Context, req *backend.QueryDataRequest,
 ) (*backend.QueryDataResponse, error) {
+	user, err := d.resolveUser(ctx, req.PluginContext.User)
+	if err != nil {
+		return nil, fmt.Errorf("resolve user: %w", err)
+	}
+
 	resp := backend.NewQueryDataResponse()
 
 	for _, q := range req.Queries {
-		frames, err := d.handleQuery(ctx, req.PluginContext, q)
+		frames, err := d.handleQuery(ctx, user, q)
 		if err != nil {
 			d.logger.Warn("failed to handle query",
 				"ref_id", q.RefID,
@@ -77,11 +85,26 @@ func (d *DataSource) QueryData(
 	return resp, nil
 }
 
+func (d *DataSource) resolveUser(
+	ctx context.Context, user *backend.User,
+) (string, error) {
+	if user == nil {
+		return "", nil
+	}
+	resp, err := d.userResolver.ResolveUser(ctx, &ResolveUserRequest{
+		Email: user.Email,
+	})
+	if err != nil {
+		return "", err
+	}
+	return resp.ID, nil
+}
+
 func (d *DataSource) handleQuery(
-	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
+	ctx context.Context, user string, query backend.DataQuery,
 ) (data.Frames, error) {
 	var handler func(
-		context.Context, backend.PluginContext, backend.DataQuery,
+		ctx context.Context, user string, query backend.DataQuery,
 	) (data.Frames, error)
 
 	queryType := "telemetry"
@@ -100,7 +123,7 @@ func (d *DataSource) handleQuery(
 		return nil, errUnexpectedQueryType
 	}
 
-	frames, err := handler(ctx, pCtx, query)
+	frames, err := handler(ctx, user, query)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", queryType, err)
 	}
@@ -109,13 +132,8 @@ func (d *DataSource) handleQuery(
 }
 
 func (d *DataSource) handleCommandQuery(
-	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
+	ctx context.Context, user string, query backend.DataQuery,
 ) (data.Frames, error) {
-	user := ""
-	if pCtx.User != nil {
-		user = pCtx.User.Email
-	}
-
 	//nolint:tagliatelle // js
 	var props struct {
 		Payload struct {
@@ -149,13 +167,8 @@ func (d *DataSource) handleCommandQuery(
 }
 
 func (d *DataSource) handleManifestQuery(
-	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
+	ctx context.Context, user string, query backend.DataQuery,
 ) (data.Frames, error) {
-	user := ""
-	if pCtx.User != nil {
-		user = pCtx.User.Email
-	}
-
 	//nolint:tagliatelle // js
 	var props struct {
 		Payload struct {
@@ -182,13 +195,8 @@ func (d *DataSource) handleManifestQuery(
 }
 
 func (d *DataSource) handleTelemetryQuery(
-	ctx context.Context, pCtx backend.PluginContext, query backend.DataQuery,
+	ctx context.Context, user string, query backend.DataQuery,
 ) (data.Frames, error) {
-	user := ""
-	if pCtx.User != nil {
-		user = pCtx.User.Email
-	}
-
 	var props struct {
 		Hide bool   `json:"hide"`
 		Text string `json:"text"`
