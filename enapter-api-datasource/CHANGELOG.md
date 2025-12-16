@@ -1,5 +1,9 @@
 # Changelog
 
+## v8.1.0
+
+- Add optional user resolving.
+
 ## v8.0.0
 
 - Add support for Enapter API v3.
