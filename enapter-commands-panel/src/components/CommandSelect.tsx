@@ -61,7 +61,7 @@ export const CommandSelect: React.FC = () => {
       updatePanel((draft) => {
         draft.currentCommand = cloneDeep(current(draft.commands[v.value!]));
       });
-    });0
+    });
   };
 
   return (
