@@ -3,3 +3,6 @@
 
 # Release
 enapter-grafana-plugins.tar.gz
+
+# Env
+.env
