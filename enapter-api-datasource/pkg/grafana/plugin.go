@@ -33,5 +33,5 @@ func (p *Plugin) Serve() error {
 func (p *Plugin) newDataSource(
 	settings backend.DataSourceInstanceSettings,
 ) (instancemgmt.Instance, error) {
-	return newDataSourceInstance(p.logger, settings)
+	return NewDataSourceInstance(p.logger, settings)
 }

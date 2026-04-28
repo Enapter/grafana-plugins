@@ -26,7 +26,7 @@ type dataSourceInstance struct {
 	backend.CheckHealthHandler
 }
 
-func newDataSourceInstance(
+func NewDataSourceInstance(
 	logger hclog.Logger, settings backend.DataSourceInstanceSettings,
 ) (_ *dataSourceInstance, retErr error) {
 	logger = logger.Named(fmt.Sprintf("data_source[%q]", settings.Name))
@@ -38,13 +38,17 @@ func newDataSourceInstance(
 		}
 	}()
 
-	var jsonData map[string]string
+	var jsonData struct {
+		EnapterAPIURL     string `json:"enapterAPIURL"`
+		EnapterAPIVersion string `json:"enapterAPIVersion"`
+		UserResolverURL   string `json:"userResolverURL"`
+	}
 	if err := json.Unmarshal(settings.JSONData, &jsonData); err != nil {
 		return nil, fmt.Errorf("JSON data: %w", err)
 	}
 
-	apiURL := jsonData["enapterAPIURL"]
-	apiVersion := jsonData["enapterAPIVersion"]
+	apiURL := jsonData.EnapterAPIURL
+	apiVersion := jsonData.EnapterAPIVersion
 	apiToken := settings.DecryptedSecureJSONData["enapterAPIToken"]
 
 	var enapterAPIAdapter enapterAPIAdapter
@@ -76,7 +80,7 @@ func newDataSourceInstance(
 	}
 
 	var userResolver core.UserResolverPort = core.NoopUserResolver{}
-	if url := jsonData["userResolverURL"]; url != "" {
+	if url := jsonData.UserResolverURL; url != "" {
 		userResolver = http.NewUserResolverAdapter(http.UserResolverAdapterParams{
 			URL: url,
 		})
