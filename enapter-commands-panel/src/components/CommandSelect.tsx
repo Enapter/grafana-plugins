@@ -3,6 +3,8 @@ import { Field, Select, useStyles2 } from '@grafana/ui';
 import { usePanel } from './PanelProvider';
 import { GrafanaTheme2, SelectableValue } from '@grafana/data';
 import { css } from '@emotion/css';
+import { cloneDeep } from 'lodash';
+import { current } from 'immer';
 
 const getStyles = (theme: GrafanaTheme2) => {
   return {
@@ -52,7 +54,13 @@ export const CommandSelect: React.FC = () => {
 
   const handleOnChange = async (v: SelectableValue<string>) => {
     updatePanel((draft) => {
-      draft.currentCommand = draft.commands[v.value!];
+      draft.currentCommand = undefined;
+    });
+
+    requestAnimationFrame(() => {
+      updatePanel((draft) => {
+        draft.currentCommand = cloneDeep(current(draft.commands[v.value!]));
+      });
     });
   };
 
