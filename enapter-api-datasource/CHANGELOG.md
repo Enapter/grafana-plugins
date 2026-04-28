@@ -1,5 +1,9 @@
 # Changelog
 
+## v8.1.1
+
+- Fix support for non-string fields in JSON data (e.g. `tlsSkipVerify`).
+
 ## v8.1.0
 
 - Add optional user resolving.

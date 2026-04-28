@@ -1,6 +1,6 @@
 {
     "name": "enapter-api",
-    "version": "8.1.0",
+    "version": "8.1.1",
     "description": "Enapter API Grafana Datasource Plugin",
     "scripts": {
         "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
